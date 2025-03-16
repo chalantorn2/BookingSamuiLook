@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* กำหนดให้ใช้ฟอนต์ Prompt ทั้งเว็บไซต์ */
+@layer base {
+  html {
+    font-family: "Prompt", sans-serif;
+  }
+
+  body {
+    font-family: "Prompt", sans-serif;
+  }
+}
