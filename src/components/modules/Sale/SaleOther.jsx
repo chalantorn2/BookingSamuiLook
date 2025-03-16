@@ -284,100 +284,103 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
 
             {/* Collapsible Sections */}
             <div className="space-y-6">
-              {/* ข้อมูลผู้โดยสาร */}
-              <section className="border rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3 flex justify-between items-center">
-                  <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
-                </div>
-                <div className="p-4">
-                  <div className="bg-blue-500 text-white p-2 rounded-t-md">
-                    <div className="text-center">ชื่อผู้โดยสาร</div>
+              {/* แถวสำหรับข้อมูลผู้โดยสารและข้อมูลซัพพลายเออร์ */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* ข้อมูลผู้โดยสาร - ด้านซ้าย */}
+                <section className="border rounded-lg overflow-hidden">
+                  <div className="bg-blue-500 text-white p-3 flex justify-between items-center">
+                    <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
                   </div>
+                  <div className="p-4">
+                    <div className="bg-blue-500 text-white p-2 rounded-t-md">
+                      <div className="text-center">ชื่อผู้โดยสาร</div>
+                    </div>
 
-                  {passengers.map((passenger) => (
-                    <div
-                      key={passenger.id}
-                      className="p-2 border-b flex items-center"
-                    >
-                      <input
-                        type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="ชื่อตามหนังสือเดินทาง"
-                        value={passenger.name}
-                        onChange={(e) => {
-                          const updatedPassengers = [...passengers];
-                          const index = updatedPassengers.findIndex(
-                            (p) => p.id === passenger.id
-                          );
-                          updatedPassengers[index].name = e.target.value;
-                          setPassengers(updatedPassengers);
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removePassenger(passenger.id)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                        disabled={passengers.length === 1}
+                    {passengers.map((passenger) => (
+                      <div
+                        key={passenger.id}
+                        className="p-2 border-b flex items-center"
                       >
-                        <FiTrash2 size={18} />
-                      </button>
-                    </div>
-                  ))}
+                        <input
+                          type="text"
+                          className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="ชื่อตามหนังสือเดินทาง"
+                          value={passenger.name}
+                          onChange={(e) => {
+                            const updatedPassengers = [...passengers];
+                            const index = updatedPassengers.findIndex(
+                              (p) => p.id === passenger.id
+                            );
+                            updatedPassengers[index].name = e.target.value;
+                            setPassengers(updatedPassengers);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removePassenger(passenger.id)}
+                          className="ml-2 text-red-500 hover:text-red-700"
+                          disabled={passengers.length === 1}
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
 
-                  <button
-                    type="button"
-                    onClick={addPassenger}
-                    className="mt-2 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
-                  >
-                    <FiPlus className="mr-1" /> เพิ่มผู้โดยสาร
-                  </button>
-                </div>
-              </section>
+                    <button
+                      type="button"
+                      onClick={addPassenger}
+                      className="mt-4 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
+                    >
+                      <FiPlus className="mr-1" /> เพิ่มผู้โดยสาร
+                    </button>
+                  </div>
+                </section>
 
-              {/* ข้อมูลซัพพลายเออร์ */}
-              <section className="border rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">ข้อมูลซัพพลายเออร์</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        รหัสซัพพลายเออร์
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="รหัส"
-                        value={formData.supplier}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            supplier: e.target.value,
-                          });
-                        }}
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <label className="block text-sm font-medium mb-1">
-                        ชื่อซัพพลายเออร์
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="ชื่อซัพพลายเออร์"
-                        value={formData.supplierName}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            supplierName: e.target.value,
-                          });
-                        }}
-                      />
+                {/* ข้อมูลซัพพลายเออร์ - ด้านขวา */}
+                <section className="border rounded-lg overflow-hidden">
+                  <div className="bg-blue-500 text-white p-3">
+                    <h2 className="font-semibold">ข้อมูลซัพพลายเออร์</h2>
+                  </div>
+                  <div className="p-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          รหัสซัพพลายเออร์
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="รหัส"
+                          value={formData.supplier}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              supplier: e.target.value,
+                            });
+                          }}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium mb-1">
+                          ชื่อซัพพลายเออร์
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="ชื่อซัพพลายเออร์"
+                          value={formData.supplierName}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              supplierName: e.target.value,
+                            });
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              </div>
 
               {/* ประเภทบริการ */}
               <section className="border rounded-lg overflow-hidden">
@@ -423,165 +426,6 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                   </div>
 
                   {renderServiceForm()}
-                </div>
-              </section>
-
-              {/* ตารางราคา */}
-              <section className="border rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">ราคา</h2>
-                </div>
-                <div className="p-4">
-                  <div className="mt-4">
-                    {/* หัวข้อตาราง */}
-                    <div className="bg-blue-500 text-white grid grid-cols-4 text-center p-2 rounded-t-md">
-                      <div>Net</div>
-                      <div>Sale</div>
-                      <div>Pax</div>
-                      <div>Total</div>
-                    </div>
-
-                    {/* แถวข้อมูล */}
-                    <div>
-                      {/* Adult */}
-                      <div className="flex items-center border-b">
-                        <span className="w-16 text-sm font-medium">Adult</span>
-                        <div className="flex-1 grid grid-cols-4 gap-2 p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0.00"
-                            value={pricing.adult.net || ""}
-                            onChange={(e) =>
-                              updatePricing("adult", "net", e.target.value)
-                            }
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0.00"
-                            value={pricing.adult.sale || ""}
-                            onChange={(e) =>
-                              updatePricing("adult", "sale", e.target.value)
-                            }
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0"
-                            value={pricing.adult.pax || ""}
-                            onChange={(e) =>
-                              updatePricing("adult", "pax", e.target.value)
-                            }
-                          />
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2 bg-gray-100"
-                            placeholder="0.00"
-                            value={pricing.adult.total || "0.00"}
-                            disabled
-                          />
-                        </div>
-                      </div>
-
-                      {/* Child */}
-                      <div className="flex items-center border-b">
-                        <span className="w-16 text-sm font-medium">Child</span>
-                        <div className="flex-1 grid grid-cols-4 gap-2 p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0.00"
-                            value={pricing.child.net || ""}
-                            onChange={(e) =>
-                              updatePricing("child", "net", e.target.value)
-                            }
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0.00"
-                            value={pricing.child.sale || ""}
-                            onChange={(e) =>
-                              updatePricing("child", "sale", e.target.value)
-                            }
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0"
-                            value={pricing.child.pax || ""}
-                            onChange={(e) =>
-                              updatePricing("child", "pax", e.target.value)
-                            }
-                          />
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2 bg-gray-100"
-                            placeholder="0.00"
-                            value={pricing.child.total || "0.00"}
-                            disabled
-                          />
-                        </div>
-                      </div>
-
-                      {/* Infant */}
-                      <div className="flex items-center border-b">
-                        <span className="w-16 text-sm font-medium">Infant</span>
-                        <div className="flex-1 grid grid-cols-4 gap-2 p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0.00"
-                            value={pricing.infant.net || ""}
-                            onChange={(e) =>
-                              updatePricing("infant", "net", e.target.value)
-                            }
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0.00"
-                            value={pricing.infant.sale || ""}
-                            onChange={(e) =>
-                              updatePricing("infant", "sale", e.target.value)
-                            }
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            className="w-full border rounded-md p-2"
-                            placeholder="0"
-                            value={pricing.infant.pax || ""}
-                            onChange={(e) =>
-                              updatePricing("infant", "pax", e.target.value)
-                            }
-                          />
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2 bg-gray-100"
-                            placeholder="0.00"
-                            value={pricing.infant.total || "0.00"}
-                            disabled
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </section>
 

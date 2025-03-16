@@ -52,7 +52,11 @@ const SaleHeader = ({ formData, setFormData, section }) => {
           <textarea
             className="w-full border rounded-md p-2 h-24"
             placeholder="ที่อยู่และข้อมูลติดต่อ"
-            value={formData.contactDetails || ""}
+            value={
+              formData.contactDetails ||
+              "88 หมู่ 7 ต.ไสไทย อ.เมือง จ.กระบี่ 89111"
+            }
+            disabled
             onChange={(e) =>
               setFormData({ ...formData, contactDetails: e.target.value })
             }
@@ -144,7 +148,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
               type="text"
               className="w-full border rounded-md p-2"
               placeholder="ชื่อผู้บันทึก"
-              value={formData.salesName || ""}
+              value={formData.salesName || "นายชลันธร มานพ"}
               onChange={(e) =>
                 setFormData({ ...formData, salesName: e.target.value })
               }
