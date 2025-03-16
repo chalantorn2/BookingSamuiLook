@@ -3,7 +3,7 @@ import React from "react";
 const TrainForm = () => {
   return (
     <>
-      <div className="bg-blue-500 text-white p-2 rounded-t-md">
+      <div className="bg-blue-500 text-white p-2 ">
         <div className="text-center font-medium">Train Booking</div>
       </div>
 
@@ -43,7 +43,6 @@ const TrainForm = () => {
             />
           </div>
 
-          {/* Price Calculation */}
           {/* Price Calculation */}
           <div className="mt-8">
             <div className="grid grid-cols-4 bg-blue-500 text-white p-2 rounded-t-md text-center">

@@ -100,78 +100,18 @@ const SaleDeposit = () => {
                 <h2 className="text-lg font-semibold border-b pb-2 mb-4">
                   ราคาและวันที่
                 </h2>
-                <div className="bg-blue-50 p-4 rounded-md mb-4">
-                  <div className="text-sm text-gray-600 mb-1">
-                    ยอดมัดจำทั้งหมด
-                  </div>
-                  <div className="text-2xl font-bold text-blue-600">0.00</div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      วันที่:
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded-md p-2"
-                      value={formData.date || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, date: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      เลขที่เอกสาร:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border rounded-md p-2 bg-gray-100"
-                      placeholder="DP-2025001"
-                      value={formData.depositNo}
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      อ้างอิง:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border rounded-md p-2"
-                      placeholder="เลขบุคกิ้ง"
-                      value={formData.reference || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, reference: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      ชื่อผู้บันทึก:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border rounded-md p-2"
-                      placeholder="ชื่อผู้บันทึก"
-                      value={formData.salesName || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, salesName: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
+                <SaleHeader
+                  formData={formData}
+                  setFormData={setFormData}
+                  section="price"
+                />
               </div>
             </div>
 
             {/* Collapsible Sections */}
             <div className="space-y-6">
               {/* ข้อมูลซัพพลายเออร์ */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">ข้อมูลซัพพลายเออร์</h2>
                 </div>
@@ -182,7 +122,7 @@ const SaleDeposit = () => {
                         ชื่อย่อซัพพลายเออร์
                       </label>
                       <select
-                        className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData.supplier}
                         onChange={(e) => {
                           const selectedCode = e.target.value;
@@ -214,7 +154,7 @@ const SaleDeposit = () => {
                       </label>
                       <input
                         type="text"
-                        className="w-full border rounded-md p-2 bg-gray-100"
+                        className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                         placeholder="ชื่อซัพพลายเออร์"
                         disabled
                         value={formData.supplierName}
@@ -225,7 +165,7 @@ const SaleDeposit = () => {
               </section>
 
               {/* รายละเอียดการจอง */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">รายละเอียดการจอง</h2>
                 </div>
@@ -236,7 +176,7 @@ const SaleDeposit = () => {
                         ประเภทการจอง
                       </label>
                       <select
-                        className="w-full border rounded-md p-2"
+                        className="w-full border border-gray-400 rounded-md p-2"
                         value={formData.bookingType}
                         onChange={(e) =>
                           setFormData({
@@ -258,7 +198,7 @@ const SaleDeposit = () => {
                       </label>
                       <input
                         type="date"
-                        className="w-full border rounded-md p-2"
+                        className="w-full border border-gray-400 rounded-md p-2"
                         value={formData.travelDateStart || ""}
                         onChange={(e) =>
                           setFormData({
@@ -274,7 +214,7 @@ const SaleDeposit = () => {
                       </label>
                       <input
                         type="date"
-                        className="w-full border rounded-md p-2"
+                        className="w-full border border-gray-400 rounded-md p-2"
                         value={formData.travelDateEnd || ""}
                         onChange={(e) =>
                           setFormData({
@@ -289,7 +229,7 @@ const SaleDeposit = () => {
               </section>
 
               {/* รายละเอียดมัดจำ */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">รายละเอียดมัดจำ</h2>
                 </div>
@@ -306,7 +246,7 @@ const SaleDeposit = () => {
                       <div className="col-span-6">
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="รายละเอียดมัดจำ"
                           value={item.description}
                           onChange={(e) => {
@@ -322,7 +262,7 @@ const SaleDeposit = () => {
                       <div className="col-span-3">
                         <input
                           type="number"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                           value={item.amount}
                           onChange={(e) => {
@@ -338,7 +278,7 @@ const SaleDeposit = () => {
                       <div className="col-span-2">
                         <input
                           type="date"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           value={item.dueDate}
                           onChange={(e) => {
                             const updatedItems = [...depositItems];
@@ -374,13 +314,13 @@ const SaleDeposit = () => {
               </section>
 
               {/* ข้อมูลเพิ่มเติม */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">ข้อมูลเพิ่มเติม</h2>
                 </div>
                 <div className="p-4">
                   <textarea
-                    className="w-full border rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-400 rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="ข้อมูลเพิ่มเติมหรือหมายเหตุ"
                     value={formData.additionalInfo || ""}
                     onChange={(e) =>
@@ -396,7 +336,7 @@ const SaleDeposit = () => {
               {/* การชำระเงินและนโยบายขอคืนเงิน */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* การชำระเงิน */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3">
                     <h2 className="font-semibold">การชำระเงิน</h2>
                   </div>
@@ -439,7 +379,7 @@ const SaleDeposit = () => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดบัตร"
                         disabled={formData.paymentMethod !== "creditCard"}
                         value={formData.cardDetails || ""}
@@ -472,7 +412,7 @@ const SaleDeposit = () => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดการโอน"
                         disabled={formData.paymentMethod !== "bankTransfer"}
                         value={formData.bankDetails || ""}
@@ -488,7 +428,7 @@ const SaleDeposit = () => {
                 </section>
 
                 {/* นโยบายขอคืนเงิน */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3">
                     <h2 className="font-semibold">นโยบายการขอคืนเงินมัดจำ</h2>
                   </div>
@@ -511,7 +451,7 @@ const SaleDeposit = () => {
                       </label>
                     </div>
                     <textarea
-                      className="w-full border rounded-md p-2 h-20 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-gray-400 rounded-md p-2 h-20 text-sm focus:ring-blue-500 focus:border-blue-500"
                       placeholder="กรุณาระบุเงื่อนไขการขอคืนเงินมัดจำ"
                       disabled={!formData.refundable}
                       value={formData.refundTerms || ""}

@@ -428,8 +428,8 @@ const SaleTicket = () => {
                       "WEB",
                       "B2B",
                       "GOV",
-                      "OTHER",
                       "GMT",
+                      "OTHER",
                     ].map((type) => (
                       <div key={type} className="flex items-center">
                         <input
@@ -586,13 +586,6 @@ const SaleTicket = () => {
                 </button>
               </div>
 
-              {/* ฟังก์ชันที่จำเป็นต้องเพิ่มในส่วน state */}
-              {/* 
-// เพิ่ม state สำหรับจัดการรายการเพิ่มเติม
-const [extras, setExtras] = useState([
-  { description: '', net: '', sale: '', quantity: 1 }
-]);
-*/}
               {/* การชำระเงิน */}
               <section className="border rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
@@ -755,6 +748,166 @@ const [extras, setExtras] = useState([
                   </div>
                 </div>
               </section>
+
+              {/* ส่วนคำนวณราคาและยอดรวม */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* ส่วนตารางราคา */}
+                <div className="lg:col-span-8">
+                  <div className="mb-4">
+                    <div className="bg-blue-500 text-white p-2 rounded-t-md grid grid-cols-4 text-center font-medium">
+                      <div>Net</div>
+                      <div>Sale</div>
+                      <div>Pax</div>
+                      <div>Total</div>
+                    </div>
+
+                    {/* Adult Row */}
+                    <div className="grid grid-cols-4 gap-2 p-3 border-b border-x items-center bg-white">
+                      <div className="flex items-center">
+                        <span className="w-16 text-right font-medium">
+                          Adult
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full ml-2 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border rounded-md p-2 bg-gray-100"
+                          placeholder="0.00"
+                          disabled
+                        />
+                      </div>
+                    </div>
+
+                    {/* Child Row */}
+                    <div className="grid grid-cols-4 gap-2 p-3 border-b border-x items-center bg-white">
+                      <div className="flex items-center">
+                        <span className="w-16 text-right font-medium">
+                          Child
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full ml-2 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border rounded-md p-2 bg-gray-100"
+                          placeholder="0.00"
+                          disabled
+                        />
+                      </div>
+                    </div>
+
+                    {/* Infant Row */}
+                    <div className="grid grid-cols-4 gap-2 p-3 border-b border-x rounded-b-md items-center bg-white">
+                      <div className="flex items-center">
+                        <span className="w-16 text-right font-medium">
+                          Infant
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full ml-2 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border rounded-md p-2 bg-gray-100"
+                          placeholder="0.00"
+                          disabled
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ส่วนยอดรวม */}
+                <div className="lg:col-span-4">
+                  <div className="bg-blue-50 p-4 rounded-md shadow-sm h-full flex flex-col justify-center">
+                    <div className="flex justify-between mb-3 items-center">
+                      <div className="font-medium">ยอดรวมทั้งหมด</div>
+                      <div className="font-bold text-blue-600 text-xl">
+                        0.00
+                      </div>
+                    </div>
+                    <div className="flex justify-between mb-3 items-center">
+                      <div className="font-medium">ภาษีมูลค่าเพิ่ม 7%</div>
+                      <div className="text-gray-700">0.00</div>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-blue-200 pt-3 mt-2">
+                      <div className="font-semibold">ยอดรวมทั้งสิ้น</div>
+                      <div className="font-bold text-blue-600 text-2xl">
+                        0.00
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* ปุ่มบันทึกและยกเลิก */}

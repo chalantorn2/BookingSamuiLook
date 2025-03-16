@@ -3,7 +3,7 @@ import React from "react";
 const OtherServiceForm = () => {
   return (
     <>
-      <div className="bg-blue-500 text-white p-2 rounded-t-md">
+      <div className="bg-blue-500 text-white p-2 ">
         <div className="text-center font-medium">Other</div>
       </div>
 

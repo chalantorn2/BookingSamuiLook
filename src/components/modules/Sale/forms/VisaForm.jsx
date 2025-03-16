@@ -3,7 +3,7 @@ import React from "react";
 const VisaForm = () => {
   return (
     <>
-      <div className="bg-blue-500 text-white p-2 rounded-t-md">
+      <div className="bg-blue-500 text-white p-2 ">
         <div className="text-center font-medium">Visa Application</div>
       </div>
 

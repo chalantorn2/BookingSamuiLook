@@ -135,9 +135,11 @@ const SaleHeader = ({ formData, setFormData, section }) => {
             </label>
             <input
               type="date"
-              className="w-full border rounded-md p-2 bg-gray-100"
-              disabled
-              value={formData.dueDate || ""}
+              className="w-full border  rounded-md p-2"
+              value={formData.date || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
             />
           </div>
           <div>

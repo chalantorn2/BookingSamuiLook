@@ -393,7 +393,7 @@ const MainLayout = () => {
                     href="#"
                     className="block py-2 px-4 pl-12 hover:bg-blue-800"
                   >
-                    Deposit Slip List
+                    Deposit List
                   </a>
                   <a
                     href="#"

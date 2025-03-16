@@ -210,75 +210,11 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                 <h2 className="text-lg font-semibold border-b pb-2 mb-4">
                   ราคาและวันที่
                 </h2>
-                <div className="bg-blue-50 p-4 rounded-md mb-4">
-                  <div className="text-sm text-gray-600 mb-1">
-                    ยอดรวมทั้งสิ้น
-                  </div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {calculateTotal()}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      วันที่:
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded-md p-2"
-                      value={formData.date || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, date: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      เครดิต (วัน):
-                    </label>
-                    <select
-                      className="w-full border rounded-md p-2"
-                      value={formData.creditDays || "0"}
-                      onChange={(e) =>
-                        setFormData({ ...formData, creditDays: e.target.value })
-                      }
-                    >
-                      <option value="0">0</option>
-                      <option value="7">7</option>
-                      <option value="15">15</option>
-                      <option value="30">30</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      วันครบกำหนด:
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded-md p-2 bg-gray-100"
-                      disabled
-                      value={formData.dueDate || ""}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      ชื่อผู้บันทึก:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border rounded-md p-2"
-                      placeholder="ชื่อผู้บันทึก"
-                      value={formData.salesName || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, salesName: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
+                <SaleHeader
+                  formData={formData}
+                  setFormData={setFormData}
+                  section="price"
+                />
               </div>
             </div>
 
@@ -287,7 +223,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
               {/* แถวสำหรับข้อมูลผู้โดยสารและข้อมูลซัพพลายเออร์ */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* ข้อมูลผู้โดยสาร - ด้านซ้าย */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3 flex justify-between items-center">
                     <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
                   </div>
@@ -303,7 +239,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                       >
                         <input
                           type="text"
-                          className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="ชื่อตามหนังสือเดินทาง"
                           value={passenger.name}
                           onChange={(e) => {
@@ -337,7 +273,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                 </section>
 
                 {/* ข้อมูลซัพพลายเออร์ - ด้านขวา */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3">
                     <h2 className="font-semibold">ข้อมูลซัพพลายเออร์</h2>
                   </div>
@@ -349,7 +285,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="รหัส"
                           value={formData.supplier}
                           onChange={(e) => {
@@ -366,7 +302,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="ชื่อซัพพลายเออร์"
                           value={formData.supplierName}
                           onChange={(e) => {
@@ -383,7 +319,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
               </div>
 
               {/* ประเภทบริการ */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">ประเภทบริการ</h2>
                 </div>
@@ -415,7 +351,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
 
                   {/* แสดงฟอร์มตามประเภทบริการที่เลือก */}
                   <div className="bg-blue-500 text-white p-2">
-                    <div className="text-center font-medium">
+                    <div className="text-center font-medium  text-xl">
                       {formData.serviceType === "insurance" &&
                         "ประกันการเดินทาง"}
                       {formData.serviceType === "hotel" && "โรงแรม"}
@@ -430,23 +366,19 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
               </section>
 
               {/* ยอดรวม */}
-              <div className="flex justify-end mt-6">
-                <div className="w-1/3">
+              <div className="flex justify-end">
+                <div className="w-1/3 bg-blue-50 p-4 rounded-md">
                   <div className="flex justify-between mb-2">
-                    <div>รวมเป็นเงิน</div>
-                    <div className="font-bold text-blue-600">
-                      {calculateTotal()}
-                    </div>
+                    <div>ยอดมัดจำทั้งหมด</div>
+                    <div className="font-bold text-blue-600">0.00</div>
                   </div>
                   <div className="flex justify-between mb-2">
-                    <div>ภาษีมูลค่าเพิ่ม 0%</div>
+                    <div>ภาษีมูลค่าเพิ่ม 7%</div>
                     <div>0.00</div>
                   </div>
                   <div className="flex justify-between border-t pt-2">
                     <div>ยอดรวมทั้งสิ้น</div>
-                    <div className="font-bold text-blue-600 text-xl">
-                      {calculateTotal()}
-                    </div>
+                    <div className="font-bold text-blue-600 text-xl">0.00</div>
                   </div>
                 </div>
               </div>
@@ -454,7 +386,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
               {/* การชำระเงินและนโยบายขอคืนเงิน */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 {/* การชำระเงินของบริษัท */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3">
                     <h2 className="font-semibold">การชำระเงินของบริษัท</h2>
                   </div>
@@ -479,7 +411,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดบัตร"
                         disabled={formData.paymentMethod !== "creditCard"}
                         value={formData.cardDetails || ""}
@@ -512,7 +444,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดการโอน"
                         disabled={formData.paymentMethod !== "bankTransfer"}
                         value={formData.bankDetails || ""}
@@ -528,7 +460,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                 </section>
 
                 {/* การชำระเงินของลูกค้า */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3">
                     <h2 className="font-semibold">การชำระเงินของลูกค้า</h2>
                   </div>
@@ -609,7 +541,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดการโอน"
                         disabled={formData.customerPayment !== "bankTransfer"}
                         value={formData.customerBankDetails || ""}

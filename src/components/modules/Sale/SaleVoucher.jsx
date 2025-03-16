@@ -132,75 +132,11 @@ const SaleVoucher = () => {
                 <h2 className="text-lg font-semibold border-b pb-2 mb-4">
                   ราคาและวันที่
                 </h2>
-                <div className="bg-blue-50 p-4 rounded-md mb-4">
-                  <div className="text-sm text-gray-600 mb-1">
-                    ยอดรวมทั้งสิ้น
-                  </div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {calculateTotal()}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      วันที่:
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded-md p-2"
-                      value={formData.date || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, date: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      เครดิต (วัน):
-                    </label>
-                    <select
-                      className="w-full border rounded-md p-2"
-                      value={formData.creditDays || "0"}
-                      onChange={(e) =>
-                        setFormData({ ...formData, creditDays: e.target.value })
-                      }
-                    >
-                      <option value="0">0</option>
-                      <option value="7">7</option>
-                      <option value="15">15</option>
-                      <option value="30">30</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      วันครบกำหนด:
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border rounded-md p-2 bg-gray-100"
-                      disabled
-                      value={formData.dueDate || ""}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      ชื่อผู้บันทึก:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border rounded-md p-2"
-                      placeholder="ชื่อผู้บันทึก"
-                      value={formData.salesName || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, salesName: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
+                <SaleHeader
+                  formData={formData}
+                  setFormData={setFormData}
+                  section="price"
+                />
               </div>
             </div>
 
@@ -668,22 +604,18 @@ const SaleVoucher = () => {
 
               {/* ยอดรวม */}
               <div className="flex justify-end">
-                <div className="w-1/3">
+                <div className="w-1/3 bg-blue-50 p-4 rounded-md">
                   <div className="flex justify-between mb-2">
-                    <div>รวมเป็นเงิน</div>
-                    <div className="font-bold text-blue-600">
-                      {calculateTotal()}
-                    </div>
+                    <div>ยอดมัดจำทั้งหมด</div>
+                    <div className="font-bold text-blue-600">0.00</div>
                   </div>
                   <div className="flex justify-between mb-2">
-                    <div>ภาษีมูลค่าเพิ่ม 0%</div>
+                    <div>ภาษีมูลค่าเพิ่ม 7%</div>
                     <div>0.00</div>
                   </div>
                   <div className="flex justify-between border-t pt-2">
                     <div>ยอดรวมทั้งสิ้น</div>
-                    <div className="font-bold text-blue-600 text-xl">
-                      {calculateTotal()}
-                    </div>
+                    <div className="font-bold text-blue-600 text-xl">0.00</div>
                   </div>
                 </div>
               </div>

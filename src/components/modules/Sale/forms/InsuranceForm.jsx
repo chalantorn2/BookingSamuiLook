@@ -3,7 +3,7 @@ import React from "react";
 const InsuranceForm = () => {
   return (
     <>
-      <div className="bg-blue-500 text-white p-2 rounded-t-md">
+      <div className="bg-blue-500 text-white pb-1 ">
         <div className="text-center font-medium">Travel Insurance</div>
       </div>
 
