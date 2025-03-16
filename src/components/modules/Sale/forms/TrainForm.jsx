@@ -15,7 +15,7 @@ const TrainForm = () => {
             </label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="Surat - Ratchaburi"
             />
           </div>
@@ -23,13 +23,13 @@ const TrainForm = () => {
             <label className="block text-sm font-medium mb-1">Date</label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="02MAR25"
             />
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Remark</label>
-            <textarea className="w-full border rounded-md p-2 h-24"></textarea>
+            <textarea className="w-full border border-gray-400 rounded-md p-2 h-24"></textarea>
           </div>
         </div>
 
@@ -38,7 +38,7 @@ const TrainForm = () => {
             <label className="block text-sm font-medium mb-1">Reference</label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="32164598"
             />
           </div>
@@ -60,7 +60,7 @@ const TrainForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -69,7 +69,7 @@ const TrainForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -77,14 +77,14 @@ const TrainForm = () => {
                 <input
                   type="number"
                   min="0"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  className="w-full border rounded-md p-2 bg-gray-100"
+                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                   placeholder="0.00"
                   disabled
                 />
@@ -99,7 +99,7 @@ const TrainForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -108,7 +108,7 @@ const TrainForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -116,14 +116,14 @@ const TrainForm = () => {
                 <input
                   type="number"
                   min="0"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  className="w-full border rounded-md p-2 bg-gray-100"
+                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                   placeholder="0.00"
                   disabled
                 />
@@ -138,7 +138,7 @@ const TrainForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -147,7 +147,7 @@ const TrainForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -155,14 +155,14 @@ const TrainForm = () => {
                 <input
                   type="number"
                   min="0"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  className="w-full border rounded-md p-2 bg-gray-100"
+                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                   placeholder="0.00"
                   disabled
                 />

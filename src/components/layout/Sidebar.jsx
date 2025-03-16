@@ -111,7 +111,7 @@ const Sidebar = ({
       submenu: [
         { id: "6.1", title: "Invoice List" },
         { id: "6.2", title: "Receipt List" },
-        { id: "6.3", title: "Deposit Slip List" },
+        { id: "6.3", title: "Deposit List" },
         { id: "6.4", title: "Voucher List" },
       ],
     },

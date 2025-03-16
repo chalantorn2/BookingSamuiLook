@@ -12,7 +12,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
           </label>
           <div className="relative">
             <select
-              className="w-full border rounded-md p-2 pr-10 appearance-none"
+              className="w-full border border-gray-400 rounded-md p-2 pr-10 appearance-none"
               value={formData.customer || ""}
               onChange={(e) =>
                 setFormData({ ...formData, customer: e.target.value })
@@ -50,7 +50,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
             </button>
           </div>
           <textarea
-            className="w-full border rounded-md p-2 h-24"
+            className="w-full border border-gray-400 rounded-md p-2 h-24"
             placeholder="ที่อยู่และข้อมูลติดต่อ"
             value={
               formData.contactDetails ||
@@ -67,7 +67,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
           <div>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="เบอร์โทรศัพท์"
               value={formData.phone || ""}
               onChange={(e) =>
@@ -78,7 +78,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
           <div>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="เลขประจำตัว/พาสปอร์ต"
               value={formData.id || ""}
               onChange={(e) => setFormData({ ...formData, id: e.target.value })}
@@ -102,7 +102,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
             <label className="block text-sm font-medium mb-1">วันที่:</label>
             <input
               type="date"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               value={formData.date || ""}
               onChange={(e) =>
                 setFormData({ ...formData, date: e.target.value })
@@ -114,7 +114,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
               เครดิต (วัน):
             </label>
             <select
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               value={formData.creditDays || "0"}
               onChange={(e) =>
                 setFormData({ ...formData, creditDays: e.target.value })
@@ -135,7 +135,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
             </label>
             <input
               type="date"
-              className="w-full border  rounded-md p-2"
+              className="w-full border border-gray-400  rounded-md p-2"
               value={formData.date || ""}
               onChange={(e) =>
                 setFormData({ ...formData, date: e.target.value })
@@ -148,7 +148,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
             </label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="ชื่อผู้บันทึก"
               value={formData.salesName || "นายชลันธร มานพ"}
               onChange={(e) =>

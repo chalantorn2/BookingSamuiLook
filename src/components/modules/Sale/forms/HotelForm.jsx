@@ -13,7 +13,7 @@ const HotelForm = () => {
             <label className="block text-sm font-medium mb-1">Hotel</label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="Novotel Suvannaphum"
             />
           </div>
@@ -23,13 +23,13 @@ const HotelForm = () => {
             </label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="Twin Room + Triple Room"
             />
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Remark</label>
-            <textarea className="w-full border rounded-md p-2 h-24"></textarea>
+            <textarea className="w-full border border-gray-400 rounded-md p-2 h-24"></textarea>
           </div>
         </div>
 
@@ -38,7 +38,7 @@ const HotelForm = () => {
             <label className="block text-sm font-medium mb-1">Reference</label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="1234567890"
             />
           </div>
@@ -47,7 +47,7 @@ const HotelForm = () => {
               <label className="block text-sm font-medium mb-1">Night</label>
               <input
                 type="number"
-                className="w-full border rounded-md p-2"
+                className="w-full border border-gray-400 rounded-md p-2"
                 placeholder="2"
               />
             </div>
@@ -55,7 +55,7 @@ const HotelForm = () => {
               <label className="block text-sm font-medium mb-1">Check In</label>
               <input
                 type="text"
-                className="w-full border rounded-md p-2"
+                className="w-full border border-gray-400 rounded-md p-2"
                 placeholder="02 MAR 25"
               />
             </div>
@@ -64,7 +64,7 @@ const HotelForm = () => {
             <label className="block text-sm font-medium mb-1">Check Out</label>
             <input
               type="text"
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-400 rounded-md p-2"
               placeholder="04 MAR 25"
             />
           </div>
@@ -85,7 +85,7 @@ const HotelForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -94,7 +94,7 @@ const HotelForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -102,14 +102,14 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  className="w-full border rounded-md p-2 bg-gray-100"
+                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                   placeholder="0.00"
                   disabled
                 />
@@ -124,7 +124,7 @@ const HotelForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -133,7 +133,7 @@ const HotelForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -141,14 +141,14 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  className="w-full border rounded-md p-2 bg-gray-100"
+                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                   placeholder="0.00"
                   disabled
                 />
@@ -163,7 +163,7 @@ const HotelForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -172,7 +172,7 @@ const HotelForm = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
               </div>
@@ -180,14 +180,14 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  className="w-full border rounded-md p-2"
+                  className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  className="w-full border rounded-md p-2 bg-gray-100"
+                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                   placeholder="0.00"
                   disabled
                 />

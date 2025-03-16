@@ -143,7 +143,7 @@ const SaleVoucher = () => {
             {/* Collapsible Sections */}
             <div className="space-y-6">
               {/* ข้อมูลผู้โดยสาร */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3 flex justify-between items-center">
                   <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
                 </div>
@@ -159,7 +159,7 @@ const SaleVoucher = () => {
                     >
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="ชื่อตามหนังสือเดินทาง"
                         value={passenger.name}
                         onChange={(e) => {
@@ -193,7 +193,7 @@ const SaleVoucher = () => {
               </section>
 
               {/* ข้อมูลซัพพลายเออร์ */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">ข้อมูลซัพพลายเออร์</h2>
                 </div>
@@ -205,7 +205,7 @@ const SaleVoucher = () => {
                         <div>
                           <input
                             type="text"
-                            className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="รหัส"
                             value={formData.supplier}
                             onChange={(e) =>
@@ -219,7 +219,7 @@ const SaleVoucher = () => {
                         <div className="col-span-2">
                           <input
                             type="text"
-                            className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="ชื่อซัพพลายเออร์"
                             value={formData.supplierName}
                             onChange={(e) =>
@@ -268,7 +268,7 @@ const SaleVoucher = () => {
               </section>
 
               {/* รายละเอียดบริการ */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">รายละเอียดบริการ</h2>
                 </div>
@@ -281,7 +281,7 @@ const SaleVoucher = () => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="รายละเอียดทริป"
                           value={formData.description}
                           onChange={(e) =>
@@ -298,7 +298,7 @@ const SaleVoucher = () => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="DDMMMYY"
                           value={formData.tripDate}
                           onChange={(e) =>
@@ -315,7 +315,7 @@ const SaleVoucher = () => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="ชื่อโรงแรม"
                           value={formData.hotel}
                           onChange={(e) =>
@@ -329,7 +329,7 @@ const SaleVoucher = () => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="HH:MM - HH:MM"
                           value={formData.pickupTime}
                           onChange={(e) =>
@@ -345,7 +345,7 @@ const SaleVoucher = () => {
                           หมายเหตุ
                         </label>
                         <textarea
-                          className="w-full border rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="หมายเหตุเพิ่มเติม"
                           value={formData.remark}
                           onChange={(e) =>
@@ -362,7 +362,7 @@ const SaleVoucher = () => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="เลขอ้างอิงการจอง"
                           value={formData.reference}
                           onChange={(e) =>
@@ -379,7 +379,7 @@ const SaleVoucher = () => {
                         </label>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="เลขห้องพัก"
                           value={formData.roomNo}
                           onChange={(e) =>
@@ -411,7 +411,7 @@ const SaleVoucher = () => {
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.adult.net || ""}
                                   onChange={(e) =>
@@ -428,7 +428,7 @@ const SaleVoucher = () => {
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.adult.sale || ""}
                                   onChange={(e) =>
@@ -444,7 +444,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0"
                                   value={pricing.adult.pax || ""}
                                   onChange={(e) =>
@@ -459,7 +459,7 @@ const SaleVoucher = () => {
                               <td className="p-2">
                                 <input
                                   type="text"
-                                  className="w-full border rounded-md p-2 bg-gray-100"
+                                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                                   placeholder="0.00"
                                   value={pricing.adult.total || "0.00"}
                                   disabled
@@ -475,7 +475,7 @@ const SaleVoucher = () => {
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.child.net || ""}
                                   onChange={(e) =>
@@ -492,7 +492,7 @@ const SaleVoucher = () => {
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.child.sale || ""}
                                   onChange={(e) =>
@@ -508,7 +508,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0"
                                   value={pricing.child.pax || ""}
                                   onChange={(e) =>
@@ -523,7 +523,7 @@ const SaleVoucher = () => {
                               <td className="p-2">
                                 <input
                                   type="text"
-                                  className="w-full border rounded-md p-2 bg-gray-100"
+                                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                                   placeholder="0.00"
                                   value={pricing.child.total || "0.00"}
                                   disabled
@@ -539,7 +539,7 @@ const SaleVoucher = () => {
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.infant.net || ""}
                                   onChange={(e) =>
@@ -556,7 +556,7 @@ const SaleVoucher = () => {
                                   type="number"
                                   min="0"
                                   step="0.01"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.infant.sale || ""}
                                   onChange={(e) =>
@@ -572,7 +572,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0"
                                   value={pricing.infant.pax || ""}
                                   onChange={(e) =>
@@ -587,7 +587,7 @@ const SaleVoucher = () => {
                               <td className="p-2">
                                 <input
                                   type="text"
-                                  className="w-full border rounded-md p-2 bg-gray-100"
+                                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
                                   placeholder="0.00"
                                   value={pricing.infant.total || "0.00"}
                                   disabled
@@ -623,7 +623,7 @@ const SaleVoucher = () => {
               {/* การชำระเงินและนโยบายขอคืนเงิน */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* การชำระเงินของบริษัท */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3">
                     <h2 className="font-semibold">การชำระเงินของบริษัท</h2>
                   </div>
@@ -648,7 +648,7 @@ const SaleVoucher = () => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดบัตร"
                         disabled={formData.paymentMethod !== "creditCard"}
                         value={formData.cardDetails || ""}
@@ -681,7 +681,7 @@ const SaleVoucher = () => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดการโอน"
                         disabled={formData.paymentMethod !== "bankTransfer"}
                         value={formData.bankDetails || ""}
@@ -697,7 +697,7 @@ const SaleVoucher = () => {
                 </section>
 
                 {/* การชำระเงินของลูกค้า */}
-                <section className="border rounded-lg overflow-hidden">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
                   <div className="bg-blue-500 text-white p-3">
                     <h2 className="font-semibold">การชำระเงินของลูกค้า</h2>
                   </div>
@@ -778,7 +778,7 @@ const SaleVoucher = () => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="รายละเอียดการโอน"
                         disabled={formData.customerPayment !== "bankTransfer"}
                         value={formData.customerBankDetails || ""}

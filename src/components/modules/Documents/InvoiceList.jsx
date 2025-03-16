@@ -15,6 +15,7 @@ import {
   Calendar,
   ChevronsUpDown,
 } from "lucide-react";
+import CreateInvoice from "./CreateInvoice";
 
 const InvoiceList = () => {
   // State สำหรับการจัดการข้อมูลและฟิลเตอร์
@@ -25,6 +26,9 @@ const InvoiceList = () => {
   const [sortField, setSortField] = useState("date");
   const [sortDirection, setSortDirection] = useState("desc");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+  const openCreateInvoice = () => setIsCreateInvoiceOpen(true);
+  const closeCreateInvoice = () => setIsCreateInvoiceOpen(false);
 
   // ข้อมูลจำลองสำหรับตัวอย่าง
   const sampleInvoices = [
@@ -114,6 +118,27 @@ const InvoiceList = () => {
     },
   ];
 
+  const handleSaveInvoice = (invoiceData) => {
+    console.log("บันทึกใบแจ้งหนี้ใหม่:", invoiceData);
+    // ในระบบจริงควรส่งข้อมูลไปยัง API หรือจัดเก็บในฐานข้อมูล
+    // จากนั้นอัพเดต state ของรายการใบแจ้งหนี้
+
+    // ตัวอย่างการเพิ่มใบแจ้งหนี้ใหม่เข้าไปในรายการ (ถ้ามี state เก็บรายการ)
+    // setSampleInvoices([...sampleInvoices, {
+    //   id: invoiceData.invoiceNo,
+    //   date: invoiceData.date,
+    //   dueDate: invoiceData.dueDate,
+    //   customer: invoiceData.customer,
+    //   customerPhone: invoiceData.customerPhone,
+    //   amount: parseFloat(invoiceData.total),
+    //   status: "unpaid",
+    //   paymentDate: "",
+    //   supplier: invoiceData.supplier,
+    //   description: invoiceData.items[0]?.description || "",
+    // }]);
+
+    closeCreateInvoice();
+  };
   // ฟังก์ชันสำหรับการกรองข้อมูล
   const filterInvoices = () => {
     let filtered = [...sampleInvoices];
@@ -236,7 +261,10 @@ const InvoiceList = () => {
               </p>
             </div>
             <div className="mt-4 md:mt-0 flex space-x-2">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center">
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center"
+                onClick={openCreateInvoice} // เพิ่ม onClick handler
+              >
                 <Plus size={16} className="mr-2" />
                 สร้างใบแจ้งหนี้ใหม่
               </button>
@@ -611,6 +639,12 @@ const InvoiceList = () => {
           </div>
         </div>
       </div>
+      {isCreateInvoiceOpen && (
+        <CreateInvoice
+          onClose={closeCreateInvoice}
+          onSave={handleSaveInvoice}
+        />
+      )}
     </div>
   );
 };

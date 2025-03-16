@@ -197,28 +197,28 @@ const SaleTicket = () => {
                       <div className="col-span-5">
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="ชื่อตามหนังสือเดินทาง"
                         />
                       </div>
                       <div className="col-span-2">
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="อายุ"
                         />
                       </div>
                       <div className="col-span-2">
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="รหัส"
                         />
                       </div>
                       <div className="col-span-5">
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="เลขที่ตั๋ว"
                         />
                       </div>
@@ -257,7 +257,7 @@ const SaleTicket = () => {
                         ชื่อย่อสายการบิน
                       </label>
                       <select
-                        className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData.supplier}
                         onChange={(e) => {
                           const selectedCode = e.target.value;
@@ -289,7 +289,7 @@ const SaleTicket = () => {
                       </label>
                       <input
                         type="text"
-                        className="w-full border rounded-md p-2 bg-gray-100"
+                        className="w-full border border-gray-400  rounded-md p-2 bg-gray-100"
                         placeholder="ชื่อสายการบิน"
                         disabled
                         value={formData.supplierName}
@@ -331,7 +331,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="DDMMM"
                           />
                         </div>
@@ -341,7 +341,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="สายการบิน"
                           />
                         </div>
@@ -351,7 +351,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="เที่ยวบิน"
                           />
                         </div>
@@ -362,7 +362,7 @@ const SaleTicket = () => {
                             </label>
                             <input
                               type="text"
-                              className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="HH:MM"
                             />
                           </div>
@@ -372,7 +372,7 @@ const SaleTicket = () => {
                             </label>
                             <input
                               type="text"
-                              className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="HH:MM"
                             />
                           </div>
@@ -386,7 +386,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="สนามบินต้นทาง"
                           />
                         </div>
@@ -396,7 +396,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="สนามบินปลายทาง"
                           />
                         </div>
@@ -415,7 +415,7 @@ const SaleTicket = () => {
               </section>
 
               {/* ประเภทตั๋ว */}
-              <section className="border rounded-lg overflow-hidden">
+              <section className="border  rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
                   <h2 className="font-semibold">ประเภทตั๋ว</h2>
                 </div>
@@ -471,7 +471,7 @@ const SaleTicket = () => {
                     <div>
                       <input
                         type="text"
-                        className="w-full border rounded-md p-2"
+                        className="w-full border border-gray-400  rounded-md p-2"
                         placeholder="รายละเอียด"
                         value={item.description}
                         onChange={(e) => {
@@ -484,7 +484,7 @@ const SaleTicket = () => {
                     <div>
                       <input
                         type="number"
-                        className="w-full border rounded-md p-2"
+                        className="w-full border border-gray-400  rounded-md p-2"
                         placeholder="0.00"
                         value={item.net}
                         onChange={(e) => {
@@ -497,7 +497,7 @@ const SaleTicket = () => {
                     <div>
                       <input
                         type="number"
-                        className="w-full border rounded-md p-2"
+                        className="w-full border border-gray-400  rounded-md p-2"
                         placeholder="0.00"
                         value={item.sale}
                         onChange={(e) => {
@@ -511,7 +511,7 @@ const SaleTicket = () => {
                       <input
                         type="number"
                         min="1"
-                        className="w-full border rounded-md p-2"
+                        className="w-full border border-gray-400  rounded-md p-2"
                         placeholder="1"
                         value={item.quantity}
                         onChange={(e) => {
@@ -524,7 +524,7 @@ const SaleTicket = () => {
                     <div className="flex items-center space-x-2">
                       <input
                         type="number"
-                        className="w-full border rounded-md p-2 bg-gray-100"
+                        className="w-full border border-gray-400  rounded-md p-2 bg-gray-100"
                         placeholder="0.00"
                         disabled
                       />
@@ -617,7 +617,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="รายละเอียดบัตร"
                             disabled={formData.paymentMethod !== "creditCard"}
                           />
@@ -643,7 +643,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="รายละเอียดธนาคาร"
                             disabled={formData.paymentMethod !== "bankTransfer"}
                           />
@@ -736,7 +736,7 @@ const SaleTicket = () => {
                           </label>
                           <input
                             type="text"
-                            className="flex-1 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="รายละเอียดธนาคาร"
                             disabled={
                               formData.customerPayment !== "bankTransfer"
@@ -771,7 +771,7 @@ const SaleTicket = () => {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full ml-2 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full ml-2 border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -780,7 +780,7 @@ const SaleTicket = () => {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -788,14 +788,14 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0"
                         />
                       </div>
                       <div>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 bg-gray-100"
+                          className="w-full border border-gray-400  rounded-md p-2 bg-gray-100"
                           placeholder="0.00"
                           disabled
                         />
@@ -812,7 +812,7 @@ const SaleTicket = () => {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full ml-2 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full ml-2 border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -821,7 +821,7 @@ const SaleTicket = () => {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -829,14 +829,14 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0"
                         />
                       </div>
                       <div>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 bg-gray-100"
+                          className="w-full border border-gray-400  rounded-md p-2 bg-gray-100"
                           placeholder="0.00"
                           disabled
                         />
@@ -853,7 +853,7 @@ const SaleTicket = () => {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full ml-2 border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full ml-2 border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -862,7 +862,7 @@ const SaleTicket = () => {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
                       </div>
@@ -870,14 +870,14 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          className="w-full border rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0"
                         />
                       </div>
                       <div>
                         <input
                           type="text"
-                          className="w-full border rounded-md p-2 bg-gray-100"
+                          className="w-full border border-gray-400  rounded-md p-2 bg-gray-100"
                           placeholder="0.00"
                           disabled
                         />
@@ -888,7 +888,7 @@ const SaleTicket = () => {
 
                 {/* ส่วนยอดรวม */}
                 <div className="lg:col-span-4">
-                  <div className="bg-blue-50 p-4 rounded-md shadow-sm h-full flex flex-col justify-center">
+                  <div className="bg-blue-50 p-4 rounded-md shadow-sm h-auto flex flex-col justify-center">
                     <div className="flex justify-between mb-3 items-center">
                       <div className="font-medium">ยอดรวมทั้งหมด</div>
                       <div className="font-bold text-blue-600 text-xl">
