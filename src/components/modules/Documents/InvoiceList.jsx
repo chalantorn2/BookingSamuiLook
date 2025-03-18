@@ -16,6 +16,9 @@ import {
   ChevronsUpDown,
 } from "lucide-react";
 import CreateInvoice from "./SelectForInvoice";
+import InvoiceDetail from "./InvoiceDetail";
+import EditInvoice from "./EditInvoice";
+import PrintInvoice from "./PrintInvoice";
 
 const InvoiceList = () => {
   // State สำหรับการจัดการข้อมูลและฟิลเตอร์
@@ -27,6 +30,9 @@ const InvoiceList = () => {
   const [sortDirection, setSortDirection] = useState("desc");
   const [filterStatus, setFilterStatus] = useState("all");
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [editingInvoice, setEditingInvoice] = useState(null);
+  const [printingInvoice, setPrintingInvoice] = useState(null);
   const openCreateInvoice = () => setIsCreateInvoiceOpen(true);
   const closeCreateInvoice = () => setIsCreateInvoiceOpen(false);
 
@@ -118,28 +124,41 @@ const InvoiceList = () => {
     },
   ];
 
-  const handleSaveInvoice = (invoiceData) => {
-    console.log("บันทึกใบแจ้งหนี้ใหม่:", invoiceData);
-    // ในระบบจริงควรส่งข้อมูลไปยัง API หรือจัดเก็บในฐานข้อมูล
+  const handleSaveInvoice = (updatedInvoice) => {
+    console.log("บันทึกการแก้ไขใบแจ้งหนี้:", updatedInvoice);
+    // ในระบบจริงควรส่งข้อมูลไปยัง API เพื่ออัพเดตในฐานข้อมูล
     // จากนั้นอัพเดต state ของรายการใบแจ้งหนี้
 
-    // ตัวอย่างการเพิ่มใบแจ้งหนี้ใหม่เข้าไปในรายการ (ถ้ามี state เก็บรายการ)
-    // setSampleInvoices([...sampleInvoices, {
-    //   id: invoiceData.invoiceNo,
-    //   date: invoiceData.date,
-    //   dueDate: invoiceData.dueDate,
-    //   customer: invoiceData.customer,
-    //   customerPhone: invoiceData.customerPhone,
-    //   amount: parseFloat(invoiceData.total),
-    //   status: "unpaid",
-    //   paymentDate: "",
-    //   supplier: invoiceData.supplier,
-    //   description: invoiceData.items[0]?.description || "",
-    // }]);
+    // ตัวอย่างการอัพเดตรายการในหน้าจอ
+    // const updatedInvoices = sampleInvoices.map(invoice =>
+    //   invoice.id === updatedInvoice.id ? {...invoice, ...updatedInvoice} : invoice
+    // );
+    // setSampleInvoices(updatedInvoices);
 
-    closeCreateInvoice();
+    closeEditInvoice();
   };
-  // ฟังก์ชันสำหรับการกรองข้อมูล
+  const openInvoiceDetail = (invoiceId) => {
+    setSelectedInvoice(invoiceId);
+  };
+
+  const closeInvoiceDetail = () => {
+    setSelectedInvoice(null);
+  };
+
+  const openEditInvoice = (invoiceId) => {
+    setEditingInvoice(invoiceId);
+  };
+
+  const closeEditInvoice = () => {
+    setEditingInvoice(null);
+  };
+  const openPrintView = (invoice) => {
+    setPrintingInvoice(invoice);
+  };
+
+  const closePrintView = () => {
+    setPrintingInvoice(null);
+  };
   const filterInvoices = () => {
     let filtered = [...sampleInvoices];
 
@@ -461,16 +480,25 @@ const InvoiceList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button
+                          className="text-blue-600 hover:text-blue-900"
+                          onClick={() => openInvoiceDetail(invoice.id)}
+                        >
                           <Eye size={18} />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button
+                          className="text-gray-600 hover:text-gray-900"
+                          onClick={() => openPrintView(invoice)}
+                        >
                           <Printer size={18} />
                         </button>
                         <button className="text-indigo-600 hover:text-indigo-900">
                           <Mail size={18} />
                         </button>
-                        <button className="text-yellow-600 hover:text-yellow-900">
+                        <button
+                          className="text-yellow-600 hover:text-yellow-900"
+                          onClick={() => openEditInvoice(invoice.id)}
+                        >
                           <Edit2 size={18} />
                         </button>
                         <button className="text-red-600 hover:text-red-900">
@@ -639,11 +667,28 @@ const InvoiceList = () => {
           </div>
         </div>
       </div>
+
       {isCreateInvoiceOpen && (
         <CreateInvoice
           onClose={closeCreateInvoice}
           onSave={handleSaveInvoice}
         />
+      )}
+      {selectedInvoice && (
+        <InvoiceDetail
+          invoiceId={selectedInvoice}
+          onClose={closeInvoiceDetail}
+        />
+      )}
+      {editingInvoice && (
+        <EditInvoice
+          invoiceId={editingInvoice}
+          onClose={closeEditInvoice}
+          onSave={handleSaveInvoice}
+        />
+      )}
+      {printingInvoice && (
+        <PrintInvoice invoiceData={printingInvoice} onClose={closePrintView} />
       )}
     </div>
   );
