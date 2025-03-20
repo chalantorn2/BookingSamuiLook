@@ -13,7 +13,6 @@ const RegisterSuccess = () => {
         <h2 className="text-3xl font-bold text-center mb-4">ลงทะเบียนสำเร็จ</h2>
 
         <p className="text-sm text-gray-600 text-center mb-8">
-          ระบบได้รับข้อมูลของคุณเรียบร้อยแล้ว
           กรุณารอการตรวจสอบและอนุมัติจากแอดมิน <br />
           ติดต่อแอดมิน โทร:063 515 3933
         </p>

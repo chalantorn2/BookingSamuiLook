@@ -12,6 +12,7 @@ import SaleModule from "./components/modules/Sale/SaleModule";
 import DocumentsModule from "./components/modules/Documents/DocumentsModule";
 import ViewModule from "./components/modules/View/ViewModule";
 import Information from "./components/modules/Information/Information";
+import UserManagement from "./components/modules/Settings/UserManagement";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import RegisterSuccess from "./components/auth/RegisterSuccess";
@@ -53,12 +54,20 @@ const App = () => {
           </div>
         );
       case "settings":
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Settings Module</h1>
-            <p>ตั้งค่าระบบต่างๆ</p>
-          </div>
-        );
+        // ตรวจสอบ submenu ของ settings
+        if (activeSubmenu === "7.1") {
+          return <UserManagement />;
+        } else {
+          return (
+            <div className="p-6">
+              <h1 className="text-2xl font-bold mb-4">Settings Module</h1>
+              <p>ตั้งค่าระบบต่างๆ</p>
+              <p className="mt-2 text-gray-500">
+                โปรดเลือกเมนูย่อยจากแถบด้านซ้าย
+              </p>
+            </div>
+          );
+        }
       case "profile":
         return (
           <div className="p-6">
