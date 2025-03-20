@@ -1,24 +1,35 @@
+// ปรับปรุงไฟล์ App.jsx
+
 import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import SaleModule from "./components/modules/Sale/SaleModule";
 import DocumentsModule from "./components/modules/Documents/DocumentsModule";
-import ViewModule from "./components/modules/View/ViewModule"; // นำเข้า ViewModule
+import ViewModule from "./components/modules/View/ViewModule";
 import Information from "./components/modules/Information/Information";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import RegisterSuccess from "./components/auth/RegisterSuccess";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [activeModule, setActiveModule] = useState("sale");
-  const [activeSubmenu, setActiveSubmenu] = useState("1.1"); // เพิ่มส่วนนี้เพื่อติดตามเมนูย่อยที่กำลังใช้งาน
+  const [activeSubmenu, setActiveSubmenu] = useState("1.1");
 
   const renderContent = () => {
     switch (activeModule) {
       case "sale":
         return <SaleModule activeSubmenu={activeSubmenu} />;
-      case "view": // เพิ่ม case สำหรับโมดูล view
+      case "view":
         return <ViewModule activeSubmenu={activeSubmenu} />;
       case "documents":
         return <DocumentsModule activeSubmenu={activeSubmenu} />;
-      case "information": // เพิ่มเงื่อนไขสำหรับ information
+      case "information":
         return <Information />;
       case "search":
         return (
@@ -39,13 +50,6 @@ const App = () => {
           <div className="p-6">
             <h1 className="text-2xl font-bold mb-4">Refund Module</h1>
             <p>จัดการการคืนเงิน</p>
-          </div>
-        );
-      case "information":
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Information Module</h1>
-            <p>ข้อมูล Supplier, Customer, Type</p>
           </div>
         );
       case "settings":
@@ -74,23 +78,35 @@ const App = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-        setActiveModule={setActiveModule}
-        activeModule={activeModule}
-        setActiveSubmenu={setActiveSubmenu}
-        activeSubmenu={activeSubmenu}
-      />
-      <div
-        className={`transition-all duration-300 flex-1 ${
-          collapsed ? "ml-16" : "ml-72"
-        } overflow-auto`}
-      >
-        {renderContent()}
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/register-success" element={<RegisterSuccess />} />
+        <Route
+          path="/*"
+          element={
+            <div className="flex h-screen bg-gray-100">
+              <Sidebar
+                collapsed={collapsed}
+                setCollapsed={setCollapsed}
+                setActiveModule={setActiveModule}
+                activeModule={activeModule}
+                setActiveSubmenu={setActiveSubmenu}
+                activeSubmenu={activeSubmenu}
+              />
+              <div
+                className={`transition-all duration-300 flex-1 ${
+                  collapsed ? "ml-16" : "ml-64"
+                } overflow-auto`}
+              >
+                {renderContent()}
+              </div>
+            </div>
+          }
+        />
+      </Routes>
+    </Router>
   );
 };
 

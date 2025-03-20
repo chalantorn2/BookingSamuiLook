@@ -158,6 +158,11 @@ const Sidebar = ({
     setActiveSubmenu(submenuId);
   };
 
+  const handleLogin = () => {
+    // นำทางไปยังหน้า Login
+    window.location.href = "/login";
+  };
+
   const handleLogout = () => {
     // Logout functionality would go here
     console.log("Logging out...");
@@ -384,6 +389,18 @@ const Sidebar = ({
           </span>
           {!collapsed && (
             <span className="ml-3 text-sm font-medium">Logout</span>
+          )}
+        </div>
+        {/* Login Button */}
+        <div
+          className="flex items-center px-3 py-2 mt-2 cursor-pointer rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ease-in-out hover:scale-102"
+          onClick={handleLogin}
+        >
+          <span className="text-gray-500 transition-transform duration-200 hover:scale-110">
+            <User size={18} />
+          </span>
+          {!collapsed && (
+            <span className="ml-3 text-sm font-medium">Login</span>
           )}
         </div>
       </div>
