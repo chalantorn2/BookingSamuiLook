@@ -14,6 +14,7 @@ import {
   Search,
   BarChart,
   LogOut,
+  Eye,
 } from "lucide-react";
 import logoImage from "../../assets/Logo.png";
 
@@ -31,7 +32,7 @@ const Sidebar = ({
   useEffect(() => {
     if (activeModule === "sale") {
       setActiveMenu(1);
-    } else if (activeModule === "search") {
+    } else if (activeModule === "view") {
       setActiveMenu(2);
     } else if (activeModule === "reports") {
       setActiveMenu(3);
@@ -64,14 +65,19 @@ const Sidebar = ({
     },
     {
       id: 2,
-      title: "Search",
-      icon: <Search size={18} />,
-      module: "search",
+      title: "View",
+      icon: <Eye size={18} />,
+      module: "view",
       submenu: [
-        { id: "2.1", title: "By Sale Date" },
-        { id: "2.2", title: "By Document Number" },
-        { id: "2.3", title: "By Passenger Name" },
-        { id: "2.4", title: "By ID Number" },
+        { id: "2.1", title: "Flight Tickets" },
+        { id: "2.2", title: "Bus" },
+        { id: "2.3", title: "Boat" },
+        { id: "2.4", title: "Tour" },
+        { id: "2.5", title: "Travel Insurance" },
+        { id: "2.6", title: "Hotel" },
+        { id: "2.7", title: "Train" },
+        { id: "2.8", title: "Visa" },
+        { id: "2.9", title: "Other Services" },
       ],
     },
     {
@@ -79,18 +85,15 @@ const Sidebar = ({
       title: "Reports",
       icon: <BarChart size={18} />,
       module: "reports",
-      submenu: [
-        { id: "3.1", title: "Sales Report" },
-        { id: "3.2", title: "Deposit Report" },
-        { id: "3.3", title: "Billing Report" },
-        { id: "3.4", title: "Revenue Report" },
-      ],
+      disabled: true,
+      submenu: [],
     },
     {
       id: 4,
       title: "Refund",
       icon: <RefreshCcw size={18} />,
       module: "refund",
+      disabled: true,
       submenu: [
         { id: "4.1", title: "Create Refund" },
         { id: "4.2", title: "Refund Report" },
@@ -197,11 +200,15 @@ const Sidebar = ({
           <div key={menu.id} className="mb-1 px-3">
             <div
               className={`flex items-center px-3 py-2 cursor-pointer rounded-md transition-all duration-200 group ${
+                menu.disabled ? "opacity-50 cursor-not-allowed" : ""
+              } ${
                 activeMenu === menu.id
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-700 hover:bg-gray-50"
               }`}
-              onClick={() => toggleMenu(menu.id, menu.module)}
+              onClick={() =>
+                menu.disabled ? null : toggleMenu(menu.id, menu.module)
+              }
             >
               <span
                 className={`${
@@ -228,25 +235,28 @@ const Sidebar = ({
                   )}
                 </>
               )}
-              {collapsed && menu.submenu && menu.submenu.length > 0 && (
-                <div className="absolute left-full ml-2 bg-white rounded-md shadow-lg p-2 w-48 z-10 hidden group-hover:block opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                  <div className="text-sm font-medium text-gray-800 mb-2">
-                    {menu.title}
-                  </div>
-                  {menu.submenu.map((submenu) => (
-                    <div
-                      key={submenu.id}
-                      className="py-1 px-2 text-sm cursor-pointer rounded-md hover:bg-gray-50 text-gray-600 transition-colors duration-200"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSubmenuClick(submenu.id);
-                      }}
-                    >
-                      {submenu.title}
+              {collapsed &&
+                menu.submenu &&
+                menu.submenu.length > 0 &&
+                !menu.disabled && (
+                  <div className="absolute left-full ml-2 bg-white rounded-md shadow-lg p-2 w-48 z-10 hidden group-hover:block opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
+                    <div className="text-sm font-medium text-gray-800 mb-2">
+                      {menu.title}
                     </div>
-                  ))}
-                </div>
-              )}
+                    {menu.submenu.map((submenu) => (
+                      <div
+                        key={submenu.id}
+                        className="py-1 px-2 text-sm cursor-pointer rounded-md hover:bg-gray-50 text-gray-600 transition-colors duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSubmenuClick(submenu.id);
+                        }}
+                      >
+                        {submenu.title}
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
 
             {/* Submenu items with animation */}

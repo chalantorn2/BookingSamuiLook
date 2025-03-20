@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Sidebar from "./components/layout/Sidebar";
 import SaleModule from "./components/modules/Sale/SaleModule";
 import DocumentsModule from "./components/modules/Documents/DocumentsModule";
+import ViewModule from "./components/modules/View/ViewModule"; // นำเข้า ViewModule
+import Information from "./components/modules/Information/Information";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -12,8 +14,12 @@ const App = () => {
     switch (activeModule) {
       case "sale":
         return <SaleModule activeSubmenu={activeSubmenu} />;
+      case "view": // เพิ่ม case สำหรับโมดูล view
+        return <ViewModule activeSubmenu={activeSubmenu} />;
       case "documents":
         return <DocumentsModule activeSubmenu={activeSubmenu} />;
+      case "information": // เพิ่มเงื่อนไขสำหรับ information
+        return <Information />;
       case "search":
         return (
           <div className="p-6">
