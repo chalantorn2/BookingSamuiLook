@@ -100,12 +100,6 @@ const SaleVoucher = () => {
             <h1 className="text-xl font-bold">Sale Voucher / บัส/เรือ/ทัวร์</h1>
             <div className="flex space-x-2">
               <button
-                type="button"
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md flex items-center"
-              >
-                <FiX className="mr-1" /> ยกเลิก
-              </button>
-              <button
                 type="submit"
                 className="px-4 py-2 bg-green-500 text-white rounded-md flex items-center"
               >
@@ -410,7 +404,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  step="0.01"
+                                  step="1"
                                   className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.adult.net || ""}
@@ -427,7 +421,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  step="0.01"
+                                  step="1"
                                   className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.adult.sale || ""}
@@ -474,7 +468,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  step="0.01"
+                                  step="1"
                                   className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.child.net || ""}
@@ -491,7 +485,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  step="0.01"
+                                  step="1"
                                   className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.child.sale || ""}
@@ -538,7 +532,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  step="0.01"
+                                  step="1"
                                   className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.infant.net || ""}
@@ -555,7 +549,7 @@ const SaleVoucher = () => {
                                 <input
                                   type="number"
                                   min="0"
-                                  step="0.01"
+                                  step="1"
                                   className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   value={pricing.infant.sale || ""}
@@ -601,24 +595,6 @@ const SaleVoucher = () => {
                   </div>
                 </div>
               </section>
-
-              {/* ยอดรวม */}
-              <div className="flex justify-end">
-                <div className="w-1/3 bg-blue-50 p-4 rounded-md">
-                  <div className="flex justify-between mb-2">
-                    <div>ยอดมัดจำทั้งหมด</div>
-                    <div className="font-bold text-blue-600">0.00</div>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <div>ภาษีมูลค่าเพิ่ม 7%</div>
-                    <div>0.00</div>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <div>ยอดรวมทั้งสิ้น</div>
-                    <div className="font-bold text-blue-600 text-xl">0.00</div>
-                  </div>
-                </div>
-              </div>
 
               {/* การชำระเงินและนโยบายขอคืนเงิน */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -795,9 +771,26 @@ const SaleVoucher = () => {
               </div>
             </div>
 
+            {/* ยอดรวม */}
+            <div className="flex mt-4 justify-end">
+              <div className="w-1/3 bg-blue-50 p-4 rounded-md">
+                <div className="flex justify-between mb-2">
+                  <div>ยอดมัดจำทั้งหมด</div>
+                  <div className="font-bold text-blue-600">0.00</div>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <div>ภาษีมูลค่าเพิ่ม 7%</div>
+                  <div>0.00</div>
+                </div>
+                <div className="flex justify-between border-t pt-2">
+                  <div>ยอดรวมทั้งสิ้น</div>
+                  <div className="font-bold text-blue-600 text-xl">0.00</div>
+                </div>
+              </div>
+            </div>
             {/* ปุ่มบันทึกและยกเลิก */}
             <div className="mt-6 flex justify-center space-x-4">
-              <button
+              {/* <button
                 type="button"
                 className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
               >
@@ -808,7 +801,7 @@ const SaleVoucher = () => {
                 className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200"
               >
                 บันทึก
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

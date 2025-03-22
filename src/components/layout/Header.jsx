@@ -60,14 +60,14 @@ const Header = () => {
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
               <a
                 href="#settings"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 items-center"
               >
                 <Settings size={16} className="mr-3 text-gray-500" />
                 Account Settings
               </a>
               <a
                 href="/login"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 items-center"
               >
                 <LogOut size={16} className="mr-3 text-gray-500" />
                 Sign out

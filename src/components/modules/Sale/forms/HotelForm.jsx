@@ -84,7 +84,7 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
                   className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
@@ -93,7 +93,7 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
                   className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
@@ -123,7 +123,7 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
                   className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
@@ -132,7 +132,7 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
                   className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
@@ -162,7 +162,7 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
                   className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />
@@ -171,7 +171,7 @@ const HotelForm = () => {
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
                   className="w-full border border-gray-400 rounded-md p-2"
                   placeholder="0.00"
                 />

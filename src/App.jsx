@@ -9,6 +9,7 @@ import UserManagement from "./components/modules/Settings/UserManagement";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import RegisterSuccess from "./components/auth/RegisterSuccess";
+import ActivityLog from "./components/modules/Admin/ActivityLog";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -55,6 +56,17 @@ const App = () => {
             <h1 className="text-2xl font-bold mb-4">
               หน้าหลัก SamuiLookBooking
             </h1>
+          </div>
+        );
+      case "admin":
+        // ตรวจสอบ submenu ของ admin
+        if (activeSubmenu === "7.1") {
+          return <ActivityLog />;
+        }
+        return (
+          <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">Admin Module</h1>
+            <p>เลือกเมนูย่อยเพื่อจัดการระบบ</p>
           </div>
         );
     }

@@ -178,12 +178,6 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
             </h1>
             <div className="flex space-x-2">
               <button
-                type="button"
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md flex items-center"
-              >
-                <FiX className="mr-1" /> ยกเลิก
-              </button>
-              <button
                 type="submit"
                 className="px-4 py-2 bg-green-500 text-white rounded-md flex items-center"
               >
@@ -365,24 +359,6 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                 </div>
               </section>
 
-              {/* ยอดรวม */}
-              <div className="flex justify-end">
-                <div className="w-1/3 bg-blue-50 p-4 rounded-md">
-                  <div className="flex justify-between mb-2">
-                    <div>ยอดมัดจำทั้งหมด</div>
-                    <div className="font-bold text-blue-600">0.00</div>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <div>ภาษีมูลค่าเพิ่ม 7%</div>
-                    <div>0.00</div>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <div>ยอดรวมทั้งสิ้น</div>
-                    <div className="font-bold text-blue-600 text-xl">0.00</div>
-                  </div>
-                </div>
-              </div>
-
               {/* การชำระเงินและนโยบายขอคืนเงิน */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 {/* การชำระเงินของบริษัท */}
@@ -556,10 +532,27 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                   </div>
                 </section>
               </div>
+              {/* ยอดรวม */}
+              <div className="flex justify-end">
+                <div className="w-1/3 bg-blue-50 p-4 rounded-md">
+                  <div className="flex justify-between mb-2">
+                    <div>ยอดมัดจำทั้งหมด</div>
+                    <div className="font-bold text-blue-600">0.00</div>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <div>ภาษีมูลค่าเพิ่ม 7%</div>
+                    <div>0.00</div>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <div>ยอดรวมทั้งสิ้น</div>
+                    <div className="font-bold text-blue-600 text-xl">0.00</div>
+                  </div>
+                </div>
+              </div>
 
               {/* ปุ่มบันทึกและยกเลิก */}
               <div className="mt-6 flex justify-center space-x-4">
-                <button
+                {/* <button
                   type="button"
                   className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
                 >
@@ -570,7 +563,7 @@ const SaleOther = ({ initialServiceType = "hotel" }) => {
                   className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200"
                 >
                   บันทึก
-                </button>
+                </button> */}
               </div>
             </div>
           </div>

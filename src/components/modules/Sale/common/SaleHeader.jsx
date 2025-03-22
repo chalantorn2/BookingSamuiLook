@@ -11,32 +11,10 @@ const SaleHeader = ({ formData, setFormData, section }) => {
             Customer Name
           </label>
           <div className="relative">
-            <select
-              className="w-full border border-gray-400 rounded-md p-2 pr-10 appearance-none"
-              value={formData.customer || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, customer: e.target.value })
-              }
-            >
-              <option value="">เลือกลูกค้า</option>
-              <option value="customer1">ลูกค้า 1</option>
-              <option value="customer2">ลูกค้า 2</option>
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg
-                className="w-4 h-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </div>
+            <input
+              type="text"
+              className="w-full border border-gray-400 rounded-md p-2"
+            ></input>
           </div>
         </div>
 

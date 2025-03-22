@@ -14,6 +14,7 @@ import {
   LogOut,
   Eye,
   User,
+  Shield,
 } from "lucide-react";
 import logoImage from "../../assets/Logo.png";
 
@@ -114,6 +115,13 @@ const Sidebar = ({
         { id: "6.3", title: "Deposit List" },
         { id: "6.4", title: "Voucher List" },
       ],
+    },
+    {
+      id: 7,
+      title: "Admin",
+      icon: <Shield size={18} />,
+      module: "admin",
+      submenu: [{ id: "7.1", title: "Activity Log" }],
     },
   ];
 

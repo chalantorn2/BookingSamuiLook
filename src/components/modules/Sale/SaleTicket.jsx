@@ -133,12 +133,6 @@ const SaleTicket = () => {
             </h1>
             <div className="flex space-x-2">
               <button
-                type="button"
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md flex items-center"
-              >
-                <FiX className="mr-1" /> ยกเลิก
-              </button>
-              <button
                 type="submit"
                 className="px-4 py-2 bg-green-500 text-white rounded-md flex items-center"
               >
@@ -770,7 +764,7 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1"
                           className="w-full ml-2 border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
@@ -779,7 +773,7 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1"
                           className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
@@ -811,7 +805,7 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1"
                           className="w-full ml-2 border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
@@ -820,7 +814,7 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1"
                           className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
@@ -852,7 +846,7 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1"
                           className="w-full ml-2 border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
@@ -861,7 +855,7 @@ const SaleTicket = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1"
                           className="w-full border border-gray-400  rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0.00"
                         />
@@ -912,7 +906,7 @@ const SaleTicket = () => {
 
             {/* ปุ่มบันทึกและยกเลิก */}
             <div className="mt-6 flex justify-center space-x-4">
-              <button
+              {/* <button
                 type="button"
                 className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
               >
@@ -923,7 +917,7 @@ const SaleTicket = () => {
                 className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200"
               >
                 บันทึก
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

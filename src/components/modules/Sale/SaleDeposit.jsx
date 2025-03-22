@@ -67,12 +67,12 @@ const SaleDeposit = () => {
           <div className="bg-blue-600 p-4 text-white flex justify-between items-center">
             <h1 className="text-xl font-bold">Sale Deposit / วางมัดจำ</h1>
             <div className="flex space-x-2">
-              <button
+              {/* <button
                 type="button"
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md flex items-center"
               >
                 <FiX className="mr-1" /> ยกเลิก
-              </button>
+              </button> */}
               <button
                 type="submit"
                 className="px-4 py-2 bg-green-500 text-white rounded-md flex items-center"
@@ -487,24 +487,12 @@ const SaleDeposit = () => {
 
             {/* ปุ่มบันทึกและยกเลิก */}
             <div className="mt-6 flex justify-center space-x-4">
-              <button
-                type="button"
-                className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="button"
-                className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
-              >
-                บันทึกร่าง
-              </button>
-              <button
+              {/* <button
                 type="submit"
                 className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200"
               >
-                บันทึกและสร้างใบมัดจำ
-              </button>
+                บันทึก
+              </button> */}
             </div>
           </div>
         </div>

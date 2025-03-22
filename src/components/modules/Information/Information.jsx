@@ -243,7 +243,7 @@ const Information = () => {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
-          <div className="bg-blue-600 p-4 text-white">
+          <div className="bg-white rounded-t-lg shadow-sm p-4 mb-4">
             <h1 className="text-xl font-bold">Information / ข้อมูล</h1>
             <p className="text-sm opacity-80">
               จัดการข้อมูล Supplier, Customer, Type ที่ใช้ในระบบ
