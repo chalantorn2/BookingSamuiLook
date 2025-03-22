@@ -1,12 +1,5 @@
-// ปรับปรุงไฟล์ App.jsx
-
 import React, { useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import SaleModule from "./components/modules/Sale/SaleModule";
 import DocumentsModule from "./components/modules/Documents/DocumentsModule";
@@ -54,27 +47,8 @@ const App = () => {
           </div>
         );
       case "settings":
-        // ตรวจสอบ submenu ของ settings
-        if (activeSubmenu === "7.1") {
-          return <UserManagement />;
-        } else {
-          return (
-            <div className="p-6">
-              <h1 className="text-2xl font-bold mb-4">Settings Module</h1>
-              <p>ตั้งค่าระบบต่างๆ</p>
-              <p className="mt-2 text-gray-500">
-                โปรดเลือกเมนูย่อยจากแถบด้านซ้าย
-              </p>
-            </div>
-          );
-        }
-      case "profile":
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">User Profile</h1>
-            <p>จัดการข้อมูลส่วนตัว</p>
-          </div>
-        );
+        // ตรวจสอบ submenu ของ settings - ในที่นี้มีแค่ User Management
+        return <UserManagement />;
       default:
         return (
           <div className="p-6">

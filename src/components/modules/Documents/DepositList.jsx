@@ -1,22 +1,22 @@
 import React, { useState } from "react";
 import {
   Search,
-  Calendar,
-  Filter,
+  FileText,
+  Printer,
+  Mail,
   Download,
+  Filter,
+  Plus,
   ChevronLeft,
   ChevronRight,
   Eye,
   Edit2,
+  Trash2,
+  Calendar,
   ChevronsUpDown,
-  User,
-  Plane,
-  MapPin,
-  Clock,
 } from "lucide-react";
-import FlightTicketDetail from "./FlightTicketDetail_2";
 
-const FlightTicketsView = () => {
+const DepositList = () => {
   // State สำหรับการจัดการข้อมูลและฟิลเตอร์
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
@@ -25,235 +25,128 @@ const FlightTicketsView = () => {
   const [sortField, setSortField] = useState("date");
   const [sortDirection, setSortDirection] = useState("desc");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [editingTicket, setEditingTicket] = useState(null);
 
-  const openTicketDetail = (ticketId) => {
-    setSelectedTicket(ticketId);
-  };
-
-  const closeTicketDetail = () => {
-    setSelectedTicket(null);
-  };
-
-  const openEditTicket = (ticketId) => {
-    setEditingTicket(ticketId);
-  };
-
-  const closeEditTicket = () => {
-    setEditingTicket(null);
-  };
-
-  // ข้อมูลจำลองสำหรับตัวอย่าง
-  const sampleFlightTickets = [
+  // ข้อมูลจำลองสำหรับตัวอย่าง (ตามรูปที่ส่งมา)
+  const sampleDeposits = [
     {
-      id: "FT-25-1-0001",
-      date: "2025-02-01",
-      bookingDate: "2025-01-15",
-      customer: "นายสมชาย รักเที่ยว",
-      contactNumber: "081-234-5678",
-      airline: "Thai Airways",
-      flightNumber: "TG203",
-      route: "BKK-HKT",
-      departureDate: "2025-02-20",
-      departureTime: "10:00",
-      arrivalTime: "11:30",
-      passengers: 2,
-      passengerNames: ["นายสมชาย รักเที่ยว", "นางสาวสมหญิง รักเที่ยว"],
-      ticketNumbers: ["TG203-ABC123", "TG203-ABC124"],
-      amount: 8500.0,
-      status: "confirmed",
-      paymentStatus: "paid",
-      remarks: "",
+      id: "DP-25-1-0001",
+      date: "14FEB25",
+      customer: "ABC TRAVEL",
+      customerPhone: "077-123456",
+      supplier: "PG",
+      description: "AIR TICKET",
+      amount: 15000.0,
+      status: "paid",
+      paymentDate: "12Mar25",
+      fullPayDate: "12Mar25",
     },
     {
-      id: "FT-25-1-0002",
-      date: "2025-02-03",
-      bookingDate: "2025-01-25",
-      customer: "บริษัท ABC ทัวร์",
-      contactNumber: "02-345-6789",
-      airline: "Bangkok Airways",
-      flightNumber: "PG273",
-      route: "HKT-USM",
-      departureDate: "2025-02-15",
-      departureTime: "14:30",
-      arrivalTime: "15:30",
-      passengers: 4,
-      passengerNames: [
-        "Mr. John Smith",
-        "Mrs. Jane Smith",
-        "Ms. Sarah Smith",
-        "Mr. James Smith",
-      ],
-      ticketNumbers: [
-        "PG273-DEF456",
-        "PG273-DEF457",
-        "PG273-DEF458",
-        "PG273-DEF459",
-      ],
-      amount: 24000.0,
-      status: "confirmed",
-      paymentStatus: "paid",
-      remarks: "VIP customers",
-    },
-    {
-      id: "FT-25-1-0003",
-      date: "2025-02-05",
-      bookingDate: "2025-01-30",
-      customer: "นางสาวนิชา วงศ์ธรรม",
-      contactNumber: "089-876-5432",
-      airline: "Thai AirAsia",
-      flightNumber: "FD3015",
-      route: "DMK-CNX",
-      departureDate: "2025-03-01",
-      departureTime: "08:25",
-      arrivalTime: "09:45",
-      passengers: 1,
-      passengerNames: ["นางสาวนิชา วงศ์ธรรม"],
-      ticketNumbers: ["FD3015-GHI789"],
-      amount: 2250.0,
-      status: "confirmed",
-      paymentStatus: "partially",
-      remarks: "ต้องการที่นั่งริมหน้าต่าง",
-    },
-    {
-      id: "FT-25-1-0004",
-      date: "2025-02-10",
-      bookingDate: "2025-02-01",
-      customer: "คุณประเสริฐ มั่งมี",
-      contactNumber: "062-345-6789",
-      airline: "Thai Airways",
-      flightNumber: "TG679",
-      route: "BKK-HKG",
-      departureDate: "2025-03-15",
-      departureTime: "13:40",
-      arrivalTime: "17:30",
-      passengers: 2,
-      passengerNames: ["คุณประเสริฐ มั่งมี", "คุณสุดา มั่งมี"],
-      ticketNumbers: ["TG679-JKL012", "TG679-JKL013"],
-      amount: 32000.0,
-      status: "pending",
-      paymentStatus: "unpaid",
-      remarks: "",
-    },
-    {
-      id: "FT-25-1-0005",
-      date: "2025-02-12",
-      bookingDate: "2025-02-05",
-      customer: "Mr. Robert Johnson",
-      contactNumber: "+1-234-567-8901",
-      airline: "Thai Airways",
-      flightNumber: "TG930",
-      route: "BKK-LHR",
-      departureDate: "2025-04-10",
-      departureTime: "00:55",
-      arrivalTime: "07:15",
-      passengers: 3,
-      passengerNames: [
-        "Mr. Robert Johnson",
-        "Mrs. Emily Johnson",
-        "Miss Lucy Johnson",
-      ],
-      ticketNumbers: ["TG930-MNO345", "TG930-MNO346", "TG930-MNO347"],
-      amount: 145000.0,
-      status: "confirmed",
-      paymentStatus: "paid",
-      remarks: "Business class",
-    },
-    {
-      id: "FT-25-1-0006",
-      date: "2025-02-15",
-      bookingDate: "2025-02-10",
-      customer: "คุณพิชัย นวลศรี",
-      contactNumber: "099-876-5432",
-      airline: "Thai AirAsia",
-      flightNumber: "FD253",
-      route: "DMK-SIN",
-      departureDate: "2025-03-20",
-      departureTime: "11:10",
-      arrivalTime: "14:40",
-      passengers: 1,
-      passengerNames: ["คุณพิชัย นวลศรี"],
-      ticketNumbers: ["FD253-PQR678"],
-      amount: 4500.0,
-      status: "cancelled",
-      paymentStatus: "refunded",
-      remarks: "ยกเลิกเนื่องจากป่วย",
-    },
-    {
-      id: "FT-25-1-0007",
-      date: "2025-02-18",
-      bookingDate: "2025-02-12",
-      customer: "บริษัท XYZ ทราเวล",
-      contactNumber: "02-987-6543",
-      airline: "Bangkok Airways",
-      flightNumber: "PG711",
-      route: "BKK-REP",
-      departureDate: "2025-03-25",
-      departureTime: "08:00",
-      arrivalTime: "09:10",
-      passengers: 10,
-      passengerNames: ["Group booking - details in remarks"],
-      ticketNumbers: ["PG711-STU901 through PG711-STU910"],
+      id: "DP-25-1-0002",
+      date: "14FEB25",
+      customer: "JJJ TOUR",
+      customerPhone: "081-9876543",
+      supplier: "TG",
+      description: "Tour ญี่ปุ่น โตเกียว โยโกฮาม่า 6 วัน 5 คืน",
       amount: 75000.0,
-      status: "confirmed",
-      paymentStatus: "partially",
-      remarks: "กรุ๊ปทัวร์นักศึกษา มหาวิทยาลัย ABC",
+      status: "pending",
+      paymentDate: "04APR25",
+      fullPayDate: "31MAR25",
+    },
+    {
+      id: "DP-25-1-0003",
+      date: "15FEB25",
+      customer: "ZZZZ TRAVEL",
+      customerPhone: "062-3456789",
+      supplier: "FD",
+      description: "DMK-NRT-DMK",
+      amount: 35000.0,
+      status: "pending",
+      paymentDate: "01MAY25",
+      fullPayDate: "01MAY25",
+    },
+    {
+      id: "DP-25-1-0004",
+      date: "16FEB25",
+      customer: "SAMUI HOLIDAY",
+      customerPhone: "077-654321",
+      supplier: "PG",
+      description: "FLIGHT TICKETS AND HOTEL BOOKING",
+      amount: 28000.0,
+      status: "paid",
+      paymentDate: "20FEB25",
+      fullPayDate: "25FEB25",
+    },
+    {
+      id: "DP-25-1-0005",
+      date: "18FEB25",
+      customer: "PHUKET EXPLORER",
+      customerPhone: "076-543219",
+      supplier: "TG",
+      description: "GROUP TOUR PACKAGE WITH INSURANCE",
+      amount: 42000.0,
+      status: "cancelled",
+      paymentDate: "",
+      fullPayDate: "",
+    },
+    {
+      id: "DP-25-1-0006",
+      date: "20FEB25",
+      customer: "BANGKOK TRAVEL",
+      customerPhone: "02-1234567",
+      supplier: "FD",
+      description: "DOMESTIC FLIGHTS PACKAGE",
+      amount: 18500.0,
+      status: "pending",
+      paymentDate: "15MAR25",
+      fullPayDate: "25MAR25",
+    },
+    {
+      id: "DP-25-1-0007",
+      date: "22FEB25",
+      customer: "CHIANG MAI TOURS",
+      customerPhone: "053-123456",
+      supplier: "PG",
+      description: "NORTHERN THAILAND TOUR",
+      amount: 28000.0,
+      status: "paid",
+      paymentDate: "01MAR25",
+      fullPayDate: "01MAR25",
     },
   ];
 
-  const filterTickets = () => {
-    let filtered = [...sampleFlightTickets];
+  const filterDeposits = () => {
+    let filtered = [...sampleDeposits];
 
     // กรองตามคำค้นหา
     if (searchTerm) {
       filtered = filtered.filter(
-        (ticket) =>
-          ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ticket.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ticket.airline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ticket.flightNumber
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          ticket.route.toLowerCase().includes(searchTerm.toLowerCase())
+        (deposit) =>
+          deposit.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          deposit.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          deposit.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // กรองตามสถานะ
     if (filterStatus !== "all") {
-      filtered = filtered.filter((ticket) => ticket.status === filterStatus);
+      filtered = filtered.filter((deposit) => deposit.status === filterStatus);
     }
 
     // กรองตามช่วงวันที่
     if (dateRange.start && dateRange.end) {
-      const startDate = new Date(dateRange.start);
-      const endDate = new Date(dateRange.end);
-
-      filtered = filtered.filter((ticket) => {
-        const ticketDate = new Date(ticket.date);
-        return ticketDate >= startDate && ticketDate <= endDate;
+      // ในระบบจริงควรใช้ library จัดการวันที่ เช่น date-fns หรือ moment.js
+      filtered = filtered.filter((deposit) => {
+        // โค้ดจัดการกรองตามวันที่จริงๆ จะซับซ้อนกว่านี้
+        return true; // แทนที่ด้วยตรรกะการกรองตามวันที่
       });
     }
 
     // เรียงลำดับข้อมูล
     filtered.sort((a, b) => {
-      let valueA = a[sortField];
-      let valueB = b[sortField];
-
-      // แปลงเป็น Date สำหรับการเรียงลำดับวันที่
-      if (
-        sortField === "date" ||
-        sortField === "departureDate" ||
-        sortField === "bookingDate"
-      ) {
-        valueA = new Date(valueA);
-        valueB = new Date(valueB);
-      }
-
       if (sortDirection === "asc") {
-        return valueA > valueB ? 1 : -1;
+        return a[sortField] > b[sortField] ? 1 : -1;
       } else {
-        return valueA < valueB ? 1 : -1;
+        return a[sortField] < b[sortField] ? 1 : -1;
       }
     });
 
@@ -261,16 +154,16 @@ const FlightTicketsView = () => {
   };
 
   // ข้อมูลที่ผ่านการกรองแล้ว
-  const filteredTickets = filterTickets();
+  const filteredDeposits = filterDeposits();
 
   // คำนวณข้อมูลสำหรับการแสดงผลหน้าปัจจุบัน
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTickets = filteredTickets.slice(
+  const currentDeposits = filteredDeposits.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
-  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredDeposits.length / itemsPerPage);
 
   // ฟังก์ชันเปลี่ยนหน้า
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -288,16 +181,16 @@ const FlightTicketsView = () => {
   // ฟังก์ชันแสดงสถานะด้วยสี
   const getStatusBadge = (status) => {
     switch (status) {
-      case "confirmed":
+      case "paid":
         return (
           <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-            ยืนยันแล้ว
+            วางมัดจำแล้ว
           </span>
         );
       case "pending":
         return (
           <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-            รอดำเนินการ
+            รอชำระมัดจำ
           </span>
         );
       case "cancelled":
@@ -315,40 +208,29 @@ const FlightTicketsView = () => {
     }
   };
 
-  // ฟังก์ชันแสดงสถานะการชำระเงินด้วยสี
-  const getPaymentStatusBadge = (status) => {
-    switch (status) {
-      case "paid":
-        return (
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-            ชำระแล้ว
-          </span>
-        );
-      case "unpaid":
-        return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-            ยังไม่ชำระ
-          </span>
-        );
-      case "partially":
-        return (
-          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-            ชำระบางส่วน
-          </span>
-        );
-      case "refunded":
-        return (
-          <span className="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-xs font-medium">
-            คืนเงินแล้ว
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-            {status}
-          </span>
-        );
-    }
+  // สร้างฟังก์ชัน mock สำหรับการทำงานของปุ่มต่างๆ
+  const openDepositDetail = (id) => {
+    console.log(`ดูรายละเอียดมัดจำ: ${id}`);
+  };
+
+  const openPrintView = (deposit) => {
+    console.log(`พิมพ์ใบมัดจำ: ${deposit.id}`);
+  };
+
+  const openEmailModal = (deposit) => {
+    console.log(`ส่งอีเมลใบมัดจำ: ${deposit.id}`);
+  };
+
+  const openEditDeposit = (id) => {
+    console.log(`แก้ไขข้อมูลมัดจำ: ${id}`);
+  };
+
+  const handleDeleteDeposit = (id) => {
+    console.log(`ลบข้อมูลมัดจำ: ${id}`);
+  };
+
+  const openCreateDeposit = () => {
+    console.log("สร้างใบมัดจำใหม่");
   };
 
   return (
@@ -359,13 +241,20 @@ const FlightTicketsView = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
               <h1 className="text-xl font-bold text-gray-800">
-                รายการตั๋วเครื่องบิน (Flight Tickets)
+                รายการใบมัดจำ (Deposit List)
               </h1>
               <p className="text-sm text-gray-500">
-                จัดการและติดตามรายการตั๋วเครื่องบินทั้งหมด
+                จัดการและติดตามใบมัดจำทั้งหมดของคุณ
               </p>
             </div>
-            <div className="mt-4 md:mt-0">
+            <div className="mt-4 md:mt-0 flex space-x-2">
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center"
+                onClick={openCreateDeposit}
+              >
+                <Plus size={16} className="mr-2" />
+                สร้างใบมัดจำใหม่
+              </button>
               <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium flex items-center">
                 <Download size={16} className="mr-2" />
                 ส่งออก
@@ -373,6 +262,7 @@ const FlightTicketsView = () => {
             </div>
           </div>
         </div>
+
         {/* Filter & Search */}
         <div className="bg-white shadow-sm p-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -383,7 +273,7 @@ const FlightTicketsView = () => {
               <input
                 type="text"
                 className="pl-10 w-full border border-gray-300 rounded-md py-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="ค้นหาเลขที่ตั๋ว, ชื่อลูกค้า, สายการบิน, เส้นทาง..."
+                placeholder="ค้นหาหมายเลขใบมัดจำ, ลูกค้า, คำอธิบาย..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -434,8 +324,8 @@ const FlightTicketsView = () => {
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
                   <option value="all">ทั้งหมด</option>
-                  <option value="confirmed">ยืนยันแล้ว</option>
-                  <option value="pending">รอดำเนินการ</option>
+                  <option value="paid">วางมัดจำแล้ว</option>
+                  <option value="pending">รอชำระมัดจำ</option>
                   <option value="cancelled">ยกเลิก</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -445,7 +335,8 @@ const FlightTicketsView = () => {
             </div>
           </div>
         </div>
-        {/* Ticket Table */}
+
+        {/* Deposit Table */}
         <div className="bg-white shadow-sm rounded-md overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -457,7 +348,7 @@ const FlightTicketsView = () => {
                     onClick={() => handleSort("id")}
                   >
                     <div className="flex items-center">
-                      เลขที่ตั๋ว
+                      หมายเลขใบมัดจำ
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -467,7 +358,7 @@ const FlightTicketsView = () => {
                     onClick={() => handleSort("date")}
                   >
                     <div className="flex items-center">
-                      วันที่บันทึก
+                      วันที่
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -484,30 +375,10 @@ const FlightTicketsView = () => {
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("airline")}
+                    onClick={() => handleSort("description")}
                   >
                     <div className="flex items-center">
-                      สายการบิน
-                      <ChevronsUpDown size={16} className="ml-1" />
-                    </div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("route")}
-                  >
-                    <div className="flex items-center">
-                      เส้นทาง
-                      <ChevronsUpDown size={16} className="ml-1" />
-                    </div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("departureDate")}
-                  >
-                    <div className="flex items-center">
-                      วันที่เดินทาง
+                      รายละเอียด
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -524,20 +395,30 @@ const FlightTicketsView = () => {
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("status")}
+                    onClick={() => handleSort("paymentDate")}
                   >
                     <div className="flex items-center">
-                      สถานะ
+                      วันที่มัดจำ
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("paymentStatus")}
+                    onClick={() => handleSort("fullPayDate")}
                   >
                     <div className="flex items-center">
-                      การชำระเงิน
+                      วันชำระเต็ม
+                      <ChevronsUpDown size={16} className="ml-1" />
+                    </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort("status")}
+                  >
+                    <div className="flex items-center">
+                      สถานะ
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -550,104 +431,94 @@ const FlightTicketsView = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentTickets.map((ticket) => (
+                {currentDeposits.map((deposit) => (
                   <tr
-                    key={ticket.id}
+                    key={deposit.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                      {ticket.id}
+                      {deposit.id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(ticket.date).toLocaleDateString("th-TH")}
+                      {deposit.date}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <User size={16} className="text-gray-400 mr-2" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {ticket.customer}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {ticket.contactNumber}
-                          </div>
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {deposit.customer}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {deposit.customerPhone}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                       <div className="flex items-center">
-                        <Plane size={16} className="text-gray-400 mr-2" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {ticket.airline}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {ticket.flightNumber}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <MapPin size={16} className="text-gray-400 mr-2" />
-                        <span className="text-sm text-gray-900">
-                          {ticket.route}
+                        <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded mr-2">
+                          {deposit.supplier}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Calendar size={16} className="text-gray-400 mr-2" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(ticket.departureDate).toLocaleDateString(
-                              "th-TH"
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500 flex items-center">
-                            <Clock size={12} className="mr-1" />
-                            {ticket.departureTime} - {ticket.arrivalTime}
-                          </div>
-                        </div>
+                        {deposit.description}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ฿{ticket.amount.toLocaleString("th-TH")}
+                      ฿{deposit.amount.toLocaleString("th-TH")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {deposit.paymentDate || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {deposit.fullPayDate || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(ticket.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getPaymentStatusBadge(ticket.paymentStatus)}
+                      {getStatusBadge(deposit.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button
                           className="text-blue-600 hover:text-blue-900"
-                          onClick={() => openTicketDetail(ticket.id)}
+                          onClick={() => openDepositDetail(deposit.id)}
                           title="ดูรายละเอียด"
                         >
                           <Eye size={18} />
                         </button>
                         <button
+                          className="text-gray-600 hover:text-gray-900"
+                          onClick={() => openPrintView(deposit)}
+                          title="พิมพ์"
+                        >
+                          <Printer size={18} />
+                        </button>
+                        <button
+                          className="text-indigo-600 hover:text-indigo-900"
+                          onClick={() => openEmailModal(deposit)}
+                          title="ส่งอีเมล"
+                        >
+                          <Mail size={18} />
+                        </button>
+                        <button
                           className="text-yellow-600 hover:text-yellow-900"
-                          onClick={() => openEditTicket(ticket.id)}
+                          onClick={() => openEditDeposit(deposit.id)}
                           title="แก้ไข"
                         >
                           <Edit2 size={18} />
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDeleteDeposit(deposit.id)}
+                          title="ลบ"
+                        >
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>
                   </tr>
                 ))}
 
-                {currentTickets.length === 0 && (
+                {currentDeposits.length === 0 && (
                   <tr>
                     <td
                       colSpan="9"
                       className="px-6 py-4 text-center text-gray-500"
                     >
-                      ไม่พบข้อมูลตามเงื่อนไขที่กำหนด
+                      ไม่พบข้อมูลใบมัดจำตามเงื่อนไขที่กำหนด
                     </td>
                   </tr>
                 )}
@@ -679,10 +550,10 @@ const FlightTicketsView = () => {
                   แสดง{" "}
                   <span className="font-medium">
                     {indexOfFirstItem + 1} ถึง{" "}
-                    {Math.min(indexOfLastItem, filteredTickets.length)}
+                    {Math.min(indexOfLastItem, filteredDeposits.length)}
                   </span>{" "}
                   จากทั้งหมด{" "}
-                  <span className="font-medium">{filteredTickets.length}</span>{" "}
+                  <span className="font-medium">{filteredDeposits.length}</span>{" "}
                   รายการ
                 </p>
               </div>
@@ -751,89 +622,9 @@ const FlightTicketsView = () => {
             </div>
           </div>
         </div>
-        {/* Summary Info Cards
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
-            <h3 className="text-sm font-medium text-gray-500">ยืนยันแล้ว</h3>
-            <p className="text-2xl font-bold text-gray-800">
-              ฿{" "}
-              {sampleFlightTickets
-                .filter((ticket) => ticket.status === "confirmed")
-                .reduce((sum, ticket) => sum + ticket.amount, 0)
-                .toLocaleString("th-TH")}
-            </p>
-            <p className="text-sm text-gray-500">
-              {
-                sampleFlightTickets.filter(
-                  (ticket) => ticket.status === "confirmed"
-                ).length
-              }{" "}
-              รายการ
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
-            <h3 className="text-sm font-medium text-gray-500">รอดำเนินการ</h3>
-            <p className="text-2xl font-bold text-gray-800">
-              ฿{" "}
-              {sampleFlightTickets
-                .filter((ticket) => ticket.status === "pending")
-                .reduce((sum, ticket) => sum + ticket.amount, 0)
-                .toLocaleString("th-TH")}
-            </p>
-            <p className="text-sm text-gray-500">
-              {
-                sampleFlightTickets.filter(
-                  (ticket) => ticket.status === "pending"
-                ).length
-              }{" "}
-              รายการ
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-500">
-            <h3 className="text-sm font-medium text-gray-500">ยกเลิก</h3>
-            <p className="text-2xl font-bold text-gray-800">
-              ฿{" "}
-              {sampleFlightTickets
-                .filter((ticket) => ticket.status === "cancelled")
-                .reduce((sum, ticket) => sum + ticket.amount, 0)
-                .toLocaleString("th-TH")}
-            </p>
-            <p className="text-sm text-gray-500">
-              {
-                sampleFlightTickets.filter(
-                  (ticket) => ticket.status === "cancelled"
-                ).length
-              }{" "}
-              รายการ
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
-            <h3 className="text-sm font-medium text-gray-500">รวมทั้งหมด</h3>
-            <p className="text-2xl font-bold text-gray-800">
-              ฿{" "}
-              {sampleFlightTickets
-                .reduce((sum, ticket) => sum + ticket.amount, 0)
-                .toLocaleString("th-TH")}
-            </p>
-            <p className="text-sm text-gray-500">
-              {sampleFlightTickets.length} รายการ
-            </p>
-          </div>
-        </div> */}
       </div>
-
-      {/* Modal for Ticket Detail */}
-      {selectedTicket && (
-        <FlightTicketDetail
-          ticketId={selectedTicket}
-          onClose={closeTicketDetail}
-          ticketData={sampleFlightTickets.find(
-            (ticket) => ticket.id === selectedTicket
-          )}
-        />
-      )}
     </div>
   );
 };
 
-export default FlightTicketsView;
+export default DepositList;

@@ -19,6 +19,7 @@ import CreateInvoice from "./SelectForInvoice";
 import InvoiceDetail from "./InvoiceDetail";
 import EditInvoice from "./EditInvoice";
 import PrintInvoice from "./PrintInvoice";
+import SendEmail from "./SendEmail";
 
 const InvoiceList = () => {
   // State สำหรับการจัดการข้อมูลและฟิลเตอร์
@@ -33,6 +34,7 @@ const InvoiceList = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [printingInvoice, setPrintingInvoice] = useState(null);
+  const [emailingInvoice, setEmailingInvoice] = useState(null);
   const openCreateInvoice = () => setIsCreateInvoiceOpen(true);
   const closeCreateInvoice = () => setIsCreateInvoiceOpen(false);
 
@@ -222,8 +224,13 @@ const InvoiceList = () => {
       setSortDirection("asc");
     }
   };
+  const openEmailModal = (invoice) => {
+    setEmailingInvoice(invoice);
+  };
 
-  // ฟังก์ชันแสดงสถานะด้วยสี
+  const closeEmailModal = () => {
+    setEmailingInvoice(null);
+  }; // ฟังก์ชันแสดงสถานะด้วยสี
   const getStatusBadge = (status) => {
     switch (status) {
       case "paid":
@@ -492,7 +499,11 @@ const InvoiceList = () => {
                         >
                           <Printer size={18} />
                         </button>
-                        <button className="text-indigo-600 hover:text-indigo-900">
+                        <button
+                          className="text-indigo-600 hover:text-indigo-900"
+                          onClick={() => openEmailModal(invoice)}
+                          title="ส่งอีเมล"
+                        >
                           <Mail size={18} />
                         </button>
                         <button
@@ -610,7 +621,7 @@ const InvoiceList = () => {
         </div>
 
         {/* Summary Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
           <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
             <h3 className="text-sm font-medium text-gray-500">ชำระแล้ว</h3>
             <p className="text-2xl font-bold text-gray-800">
@@ -665,7 +676,7 @@ const InvoiceList = () => {
               {sampleInvoices.length} รายการ
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {isCreateInvoiceOpen && (
@@ -689,6 +700,9 @@ const InvoiceList = () => {
       )}
       {printingInvoice && (
         <PrintInvoice invoiceData={printingInvoice} onClose={closePrintView} />
+      )}
+      {emailingInvoice && (
+        <SendEmail invoiceData={emailingInvoice} onClose={closeEmailModal} />
       )}
     </div>
   );

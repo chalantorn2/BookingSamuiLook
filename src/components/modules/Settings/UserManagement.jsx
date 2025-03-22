@@ -46,7 +46,7 @@ const UserManagement = () => {
   const roleOptions = [
     {
       id: "admin",
-      name: "Administrator",
+      name: "Admin",
       description: "สามารถทำงานได้ทุกอย่างในระบบ",
     },
     {
@@ -65,7 +65,6 @@ const UserManagement = () => {
     { id: "refund", name: "Refund", description: "โมดูลการคืนเงิน" },
     { id: "information", name: "Information", description: "โมดูลข้อมูล" },
     { id: "documents", name: "Documents", description: "โมดูลเอกสาร" },
-    { id: "settings", name: "Settings", description: "โมดูลตั้งค่า" },
   ];
 
   // ข้อมูลสิทธิ์การทำงานต่างๆ

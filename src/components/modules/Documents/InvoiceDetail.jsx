@@ -126,7 +126,7 @@ const InvoiceDetail = ({ invoiceId, onClose }) => {
           <h1 className="text-xl font-bold">
             รายละเอียดใบแจ้งหนี้ #{invoiceData.id}
           </h1>
-          <div className="flex space-x-2">
+          {/* <div className="flex space-x-2">
             <button
               className="p-2 hover:bg-blue-700 rounded-full"
               title="พิมพ์"
@@ -152,7 +152,7 @@ const InvoiceDetail = ({ invoiceId, onClose }) => {
             >
               <X size={20} />
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Content */}
@@ -492,7 +492,26 @@ const InvoiceDetail = ({ invoiceId, onClose }) => {
                   </span>
                 </div>
                 <button className="text-gray-500 hover:text-blue-600">
-                  <Eye size={18} />
+                  {/* <Eye size={18} /> */}
+                </button>
+              </div>
+              {invoiceData.dateCreate && (
+                <div className="flex items-center mt-2 text-sm text-gray-600">
+                  <span className="mr-2">วันทื่:</span>
+                  <span className="font-medium">{invoiceData.dateCreate}</span>
+                </div>
+              )}
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <FileText size={18} className="text-gray-400 mr-2" />
+                  <span className="text-blue-600 font-medium">
+                    รายการขายตั๋วเครื่องบิน - FT-25-1-0007
+                  </span>
+                </div>
+                <button className="text-gray-500 hover:text-blue-600">
+                  {/* <Eye size={18} /> */}
                 </button>
               </div>
               {invoiceData.dateCreate && (
@@ -506,7 +525,7 @@ const InvoiceDetail = ({ invoiceId, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 p-4 border-t flex justify-between">
+        <div className="bg-gray-50 p-4 border-t flex justify-end">
           <button
             onClick={onClose}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors flex items-center text-sm"
@@ -514,7 +533,7 @@ const InvoiceDetail = ({ invoiceId, onClose }) => {
             <X size={16} className="mr-2" />
             ปิด
           </button>
-
+          {/* 
           <div className="flex space-x-2">
             <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center text-sm">
               <Printer size={16} className="mr-2" />
@@ -524,7 +543,7 @@ const InvoiceDetail = ({ invoiceId, onClose }) => {
               <Mail size={16} className="mr-2" />
               ส่งอีเมล
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

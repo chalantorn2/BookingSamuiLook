@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import InvoiceList from "./InvoiceList";
+import DepositList from "./DepositList";
 // ในอนาคตสามารถนำเข้าคอมโพเนนต์อื่นๆ เมื่อสร้างแล้ว
 // import ReceiptList from "./ReceiptList";
 // import DepositSlipList from "./DepositSlipList";
@@ -33,7 +34,7 @@ const DocumentsModule = ({ activeSubmenu }) => {
         return <ComingSoon title="Receipt List" description="รายการใบเสร็จ" />;
       case "deposit":
         // return <DepositSlipList />;
-        return <ComingSoon title="Deposit List" description="รายการใบมัดจำ" />;
+        return <DepositList />;
       case "voucher":
         // return <VoucherList />;
         return <ComingSoon title="Voucher List" description="รายการวาวเชอร์" />;

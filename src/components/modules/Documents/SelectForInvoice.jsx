@@ -213,7 +213,7 @@ const SelectForInvoice = ({ onClose, onGenerate }) => {
           <h1 className="text-xl font-bold">
             เลือกรายการขายเพื่อสร้างใบแจ้งหนี้
           </h1>
-          <div className="flex space-x-2">
+          {/* <div className="flex space-x-2">
             <button
               type="button"
               onClick={onClose}
@@ -229,7 +229,7 @@ const SelectForInvoice = ({ onClose, onGenerate }) => {
             >
               <FiSave className="mr-1" /> สร้างใบแจ้งหนี้
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Search and Filter */}

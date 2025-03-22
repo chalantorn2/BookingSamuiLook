@@ -6,15 +6,14 @@ import {
   Database,
   File,
   Settings,
-  User,
   ChevronsRight,
   ChevronsLeft,
   ChevronRight,
-  ChevronLeft,
   Search,
   BarChart,
   LogOut,
   Eye,
+  User,
 } from "lucide-react";
 import logoImage from "../../assets/Logo.png";
 
@@ -44,8 +43,6 @@ const Sidebar = ({
       setActiveMenu(6);
     } else if (activeModule === "settings") {
       setActiveMenu(7);
-    } else if (activeModule === "profile") {
-      setActiveMenu(8);
     }
   }, [activeModule]);
 
@@ -118,32 +115,7 @@ const Sidebar = ({
         { id: "6.4", title: "Voucher List" },
       ],
     },
-    {
-      id: 7,
-      title: "Settings",
-      icon: <Settings size={18} />,
-      module: "settings",
-      submenu: [
-        { id: "7.1", title: "User Management" },
-        { id: "7.2", title: "Company Profile" },
-        { id: "7.3", title: "Email Templates" },
-        { id: "7.4", title: "Document Templates" },
-        { id: "7.5", title: "System Settings" },
-      ],
-    },
   ];
-
-  // User profile menu as a separate entity
-  const userProfileMenu = {
-    id: 8,
-    title: "My Profile",
-    icon: <User size={18} />,
-    module: "profile",
-    submenu: [
-      { id: "8.1", title: "My Account" },
-      { id: "8.2", title: "Change Password" },
-    ],
-  };
 
   const toggleMenu = (menuId, module) => {
     if (activeMenu === menuId) {
@@ -158,14 +130,15 @@ const Sidebar = ({
     setActiveSubmenu(submenuId);
   };
 
-  const handleLogin = () => {
-    // นำทางไปยังหน้า Login
-    window.location.href = "/login";
-  };
-
   const handleLogout = () => {
     // Logout functionality would go here
     console.log("Logging out...");
+    window.location.href = "/login";
+  };
+
+  const handleSettings = () => {
+    setActiveModule("settings");
+    setActiveSubmenu("7.1"); // User Management submenu
   };
 
   return (
@@ -303,104 +276,83 @@ const Sidebar = ({
 
       {/* User Profile Section */}
       <div className="px-3 pt-1 pb-3 border-t border-gray-100">
-        {/* User Profile Menu */}
-        <div className="mb-1">
-          <div
-            className={`flex items-center px-3 py-2 cursor-pointer rounded-md transition-colors duration-200 ${
-              activeMenu === userProfileMenu.id
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() =>
-              toggleMenu(userProfileMenu.id, userProfileMenu.module)
-            }
-          >
-            <span
-              className={`${
-                activeMenu === userProfileMenu.id
-                  ? "text-blue-500"
-                  : "text-gray-500"
-              } transition-transform duration-200 ${
-                activeMenu === userProfileMenu.id ? "scale-110" : ""
-              }`}
-            >
-              {userProfileMenu.icon}
-            </span>
-            {!collapsed && (
-              <>
-                <span className="flex-1 ml-3 text-sm font-medium">
-                  {userProfileMenu.title}
-                </span>
-                {userProfileMenu.submenu &&
-                  userProfileMenu.submenu.length > 0 && (
-                    <span
-                      className={`text-gray-400 transition-transform duration-300 ease-in-out ${
-                        activeMenu === userProfileMenu.id ? "rotate-90" : ""
-                      }`}
-                    >
-                      <ChevronRight size={14} />
-                    </span>
-                  )}
-              </>
-            )}
-          </div>
-
-          {/* User Profile Submenu */}
-          {!collapsed &&
-            activeMenu === userProfileMenu.id &&
-            userProfileMenu.submenu.length > 0 && (
-              <div
-                className="pl-9 pr-3 mt-1 mb-2 overflow-hidden transition-all duration-300 ease-in-out"
-                style={{
-                  maxHeight: "500px",
-                  animation: "slideDown 0.3s ease-in-out",
-                }}
-              >
-                {userProfileMenu.submenu.map((submenu, index) => (
-                  <div
-                    key={submenu.id}
-                    className={`py-2 px-2 text-xs cursor-pointer rounded-md transition-all duration-200 ease-in-out ${
-                      activeSubmenu === submenu.id
-                        ? "bg-blue-50 text-blue-600 font-medium"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                    onClick={() => handleSubmenuClick(submenu.id)}
-                    style={{
-                      animationDelay: `${index * 0.05}s`,
-                      animation: "fadeInLeft 0.2s ease-in-out forwards",
-                      opacity: 0,
-                      transform: "translateX(-10px)",
-                    }}
-                  >
-                    {submenu.title}
-                  </div>
-                ))}
+        {/* Current User Info */}
+        {!collapsed ? (
+          <div className="bg-blue-50 rounded-md p-3 mb-3 flex items-center">
+            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mr-2 flex-shrink-0">
+              <span className="text-sm font-medium">ชม</span>
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-blue-700 truncate">
+                นายชลันธร มานพ
               </div>
-            )}
+              <div className="text-xs text-blue-600">Admin</div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center mb-3">
+            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
+              <span className="text-sm font-medium">ชม</span>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Button */}
+        <div
+          className="flex items-center px-3 py-2 mb-2 cursor-pointer rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+          onClick={handleSettings}
+        >
+          <span
+            className={`${
+              activeModule === "settings" ? "text-blue-500" : "text-gray-500"
+            } transition-transform duration-200 ${
+              activeModule === "settings" ? "scale-110" : ""
+            }`}
+          >
+            <Settings size={18} />
+          </span>
+          {!collapsed && (
+            <span className="ml-3 text-sm font-medium">User Management</span>
+          )}
+        </div>
+
+        {/* Login Button */}
+        <div
+          className="flex items-center px-3 py-2 mb-2 cursor-pointer rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ease-in-out"
+          onClick={() => (window.location.href = "/login")}
+        >
+          <span className="text-gray-500 transition-transform duration-200">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+          </span>
+          {!collapsed && (
+            <span className="ml-3 text-sm font-medium">Login</span>
+          )}
         </div>
 
         {/* Logout Button */}
         <div
-          className="flex items-center px-3 py-2 mt-2 cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 ease-in-out hover:scale-102"
+          className="flex items-center px-3 py-2 cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 ease-in-out"
           onClick={handleLogout}
         >
-          <span className="text-gray-500 transition-transform duration-200 hover:scale-110">
+          <span className="text-gray-500 transition-transform duration-200">
             <LogOut size={18} />
           </span>
           {!collapsed && (
             <span className="ml-3 text-sm font-medium">Logout</span>
-          )}
-        </div>
-        {/* Login Button */}
-        <div
-          className="flex items-center px-3 py-2 mt-2 cursor-pointer rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ease-in-out hover:scale-102"
-          onClick={handleLogin}
-        >
-          <span className="text-gray-500 transition-transform duration-200 hover:scale-110">
-            <User size={18} />
-          </span>
-          {!collapsed && (
-            <span className="ml-3 text-sm font-medium">Login</span>
           )}
         </div>
       </div>
