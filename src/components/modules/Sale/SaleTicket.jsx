@@ -346,7 +346,9 @@ const SaleTicket = () => {
                 {/* เส้นทาง */}
                 <section className="border border-gray-400 col-span-8 rounded-lg overflow-hidden">
                   <div className="bg-blue-100 text-blue-600 p-3 flex justify-between items-center">
-                    <h2 className="font-semibold ">เส้นทางการเดินทาง</h2>
+                    <h2 className="font-semibold ">
+                      เส้นทางการเดินทาง (ทั้งหมด {routes.length} เส้นทาง)
+                    </h2>
                   </div>
                   <div className="p-4">
                     {routes.map((route, index) => (
