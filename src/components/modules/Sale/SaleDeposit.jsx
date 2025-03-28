@@ -5,18 +5,18 @@ import SaleHeader from "./common/SaleHeader";
 const SaleDeposit = () => {
   // สร้าง state สำหรับจัดการข้อมูล
   const [formData, setFormData] = useState({
-    customer: "",
-    contactDetails: "",
+    customer: "WYNDHAM/ANDREW JOHN MR",
+    contactDetails: "88 หมู่ 7 ต.ไสไทย อ.เมือง จ.กระบี่ 89111",
     phone: "",
     id: "",
     date: new Date().toISOString().split("T")[0],
     creditDays: "0",
     dueDate: "",
-    salesName: "",
+    salesName: "นายชลันธร มานพ",
     depositNo: "DP-" + new Date().getFullYear() + "001",
     reference: "",
-    supplier: "",
-    supplierName: "",
+    supplier: "PG",
+    supplierName: "BANGKOK AIRWAYS",
     bookingType: "flight",
     paymentMethod: "",
     customerPayment: "",
@@ -24,28 +24,142 @@ const SaleDeposit = () => {
     refundTerms: "",
   });
 
+  // State สำหรับข้อมูลผู้โดยสาร
+  const [passengers, setPassengers] = useState([
+    { id: 1, name: "WYNDHAM/ANDREW JOHN MR", age: "", ticketNo: "2401225695" },
+    { id: 2, name: "WYNDHAM/ANDREW JOHN MR", age: "", ticketNo: "2401225696" },
+    { id: 3, name: "WYNDHAM/ANDREW JOHN MR", age: "9", ticketNo: "2401225697" },
+  ]);
+
+  // State สำหรับข้อมูลเส้นทาง
+  const [routes, setRoutes] = useState([
+    {
+      id: 1,
+      date: "05APR",
+      airline: "PG",
+      flight: "4521",
+      origin: "BKK",
+      destination: "CNX",
+      departure: "0700",
+      arrival: "0800",
+    },
+    {
+      id: 2,
+      date: "05APR",
+      airline: "PG",
+      flight: "4521",
+      origin: "BKK",
+      destination: "CNX",
+      departure: "0700",
+      arrival: "0800",
+    },
+    {
+      id: 3,
+      date: "05APR",
+      airline: "PG",
+      flight: "4521",
+      origin: "BKK",
+      destination: "CNX",
+      departure: "0700",
+      arrival: "0800",
+    },
+    {
+      id: 4,
+      date: "05APR",
+      airline: "PG",
+      flight: "4521",
+      origin: "BKK",
+      destination: "CNX",
+      departure: "0700",
+      arrival: "0800",
+    },
+  ]);
+
+  // State สำหรับรายการเพิ่มเติม
+  const [extras, setExtras] = useState([
+    {
+      id: 1,
+      description: "Book Seat",
+      net: "500",
+      sale: "600",
+      pax: "1",
+      total: "600",
+    },
+    {
+      id: 2,
+      description: "Baggage 10 กิโลกรัม",
+      net: "1500",
+      sale: "1600",
+      pax: "1",
+      total: "1600",
+    },
+  ]);
+
+  // State สำหรับราคา
+  const [pricing, setPricing] = useState({
+    adult: { net: "8,000", sale: "10,000", pax: "20", total: "200,000" },
+    child: { net: "", sale: "", pax: "" },
+    infant: { net: "", sale: "", pax: "" },
+  });
+
   const [depositItems, setDepositItems] = useState([
     { id: 1, description: "", amount: "", dueDate: "" },
   ]);
 
   // ฟังก์ชันสำหรับจัดการการเพิ่ม/ลบรายการ
-  const addDepositItem = () => {
-    setDepositItems([
-      ...depositItems,
-      { id: depositItems.length + 1, description: "", amount: "", dueDate: "" },
+  const addPassenger = () => {
+    setPassengers([
+      ...passengers,
+      { id: passengers.length + 1, name: "", age: "", ticketNo: "" },
     ]);
   };
 
-  const removeDepositItem = (id) => {
-    if (depositItems.length > 1) {
-      setDepositItems(depositItems.filter((item) => item.id !== id));
+  const removePassenger = (id) => {
+    if (passengers.length > 1) {
+      setPassengers(passengers.filter((p) => p.id !== id));
     }
   };
 
-  // ฟังก์ชันคำนวณราคารวม
-  const calculateTotal = () => {
-    // ตัวอย่างการคำนวณอย่างง่าย
-    return "0.00";
+  const addRoute = () => {
+    setRoutes([
+      ...routes,
+      {
+        id: routes.length + 1,
+        date: "",
+        airline: "",
+        flight: "",
+        origin: "",
+        destination: "",
+        departure: "",
+        arrival: "",
+      },
+    ]);
+  };
+
+  const removeRoute = (id) => {
+    if (routes.length > 1) {
+      setRoutes(routes.filter((r) => r.id !== id));
+    }
+  };
+
+  const addExtra = () => {
+    setExtras([
+      ...extras,
+      {
+        id: extras.length + 1,
+        description: "",
+        net: "",
+        sale: "",
+        pax: "1",
+        total: "",
+      },
+    ]);
+  };
+
+  const removeExtra = (id) => {
+    if (extras.length > 1) {
+      setExtras(extras.filter((e) => e.id !== id));
+    }
   };
 
   // ฟังก์ชันจัดการการส่งฟอร์ม
@@ -54,7 +168,10 @@ const SaleDeposit = () => {
     // โค้ดสำหรับการบันทึกข้อมูล
     console.log("Form submitted", {
       formData,
-      depositItems,
+      passengers,
+      routes,
+      extras,
+      pricing,
     });
   };
 
@@ -67,12 +184,6 @@ const SaleDeposit = () => {
           <div className="bg-blue-600 p-4 text-white flex justify-between items-center">
             <h1 className="text-xl font-bold">Sale Deposit / วางมัดจำ</h1>
             <div className="flex space-x-2">
-              {/* <button
-                type="button"
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md flex items-center"
-              >
-                <FiX className="mr-1" /> ยกเลิก
-              </button> */}
               <button
                 type="submit"
                 className="px-4 py-2 bg-green-500 text-white rounded-md flex items-center"
@@ -110,192 +221,69 @@ const SaleDeposit = () => {
 
             {/* Collapsible Sections */}
             <div className="space-y-6">
-              {/* ข้อมูลซัพพลายเออร์ */}
+              {/* ข้อมูลผู้โดยสาร */}
               <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">ข้อมูลซัพพลายเออร์</h2>
+                <div className="bg-blue-500 text-white p-3 flex justify-between items-center">
+                  <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
                 </div>
                 <div className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        ชื่อย่อซัพพลายเออร์
-                      </label>
-                      <select
-                        className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={formData.supplier}
-                        onChange={(e) => {
-                          const selectedCode = e.target.value;
-                          let fullName = "";
-                          // สร้างการ mapping ชื่อย่อกับชื่อเต็ม
-                          const supplierMapping = {
-                            TG: "THAI AIRWAYS INTERNATIONAL",
-                            FD: "THAI AIR ASIA",
-                            PG: "BANGKOK AIRWAYS",
-                            "": "",
-                          };
-                          fullName = supplierMapping[selectedCode] || "";
-                          setFormData({
-                            ...formData,
-                            supplier: selectedCode,
-                            supplierName: fullName,
-                          });
-                        }}
-                      >
-                        <option value="">เลือกซัพพลายเออร์</option>
-                        <option value="TG">TG</option>
-                        <option value="FD">FD</option>
-                        <option value="PG">PG</option>
-                      </select>
-                    </div>
-                    <div className="col-span-3">
-                      <label className="block text-sm font-medium mb-1">
-                        ชื่อซัพพลายเออร์
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
-                        placeholder="ชื่อซัพพลายเออร์"
-                        disabled
-                        value={formData.supplierName}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* รายละเอียดการจอง */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">รายละเอียดการจอง</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        ประเภทการจอง
-                      </label>
-                      <select
-                        className="w-full border border-gray-400 rounded-md p-2"
-                        value={formData.bookingType}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            bookingType: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="flight">Flight</option>
-                        <option value="hotel">Hotel</option>
-                        <option value="tour">Tour Package</option>
-                        <option value="cruise">Cruise</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        วันที่เดินทาง/เช็คอิน
-                      </label>
-                      <input
-                        type="date"
-                        className="w-full border border-gray-400 rounded-md p-2"
-                        value={formData.travelDateStart || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            travelDateStart: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        วันที่กลับ/เช็คเอาท์
-                      </label>
-                      <input
-                        type="date"
-                        className="w-full border border-gray-400 rounded-md p-2"
-                        value={formData.travelDateEnd || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            travelDateEnd: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* รายละเอียดมัดจำ */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">รายละเอียดมัดจำ</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-12 gap-2 font-medium text-sm mb-2 px-2">
-                    <div className="col-span-6">รายละเอียด</div>
-                    <div className="col-span-3">จำนวนเงิน</div>
-                    <div className="col-span-2">วันครบกำหนด</div>
-                    <div className="col-span-1">ลบ</div>
+                  <div className="grid grid-cols-4 gap-2 font-medium text-sm mb-2 px-2">
+                    <div>Passenger Name</div>
+                    <div>Age</div>
+                    <div>Ticket NO</div>
+                    <div></div>
                   </div>
 
-                  {depositItems.map((item) => (
-                    <div key={item.id} className="grid grid-cols-12 gap-2 mb-2">
-                      <div className="col-span-6">
+                  {passengers.map((passenger, index) => (
+                    <div
+                      key={passenger.id}
+                      className="grid grid-cols-4 gap-2 mb-2"
+                    >
+                      <div>
                         <input
                           type="text"
-                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="รายละเอียดมัดจำ"
-                          value={item.description}
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="ชื่อตามหนังสือเดินทาง"
+                          value={passenger.name}
                           onChange={(e) => {
-                            const updatedItems = [...depositItems];
-                            const index = updatedItems.findIndex(
-                              (i) => i.id === item.id
-                            );
-                            updatedItems[index].description = e.target.value;
-                            setDepositItems(updatedItems);
+                            const updatedPassengers = [...passengers];
+                            updatedPassengers[index].name = e.target.value;
+                            setPassengers(updatedPassengers);
                           }}
                         />
                       </div>
-                      <div className="col-span-3">
+                      <div>
                         <input
-                          type="number"
-                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="0.00"
-                          value={item.amount}
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="อายุ"
+                          value={passenger.age}
                           onChange={(e) => {
-                            const updatedItems = [...depositItems];
-                            const index = updatedItems.findIndex(
-                              (i) => i.id === item.id
-                            );
-                            updatedItems[index].amount = e.target.value;
-                            setDepositItems(updatedItems);
+                            const updatedPassengers = [...passengers];
+                            updatedPassengers[index].age = e.target.value;
+                            setPassengers(updatedPassengers);
                           }}
                         />
                       </div>
-                      <div className="col-span-2">
+                      <div>
                         <input
-                          type="date"
-                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={item.dueDate}
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="เลขที่ตั๋ว"
+                          value={passenger.ticketNo}
                           onChange={(e) => {
-                            const updatedItems = [...depositItems];
-                            const index = updatedItems.findIndex(
-                              (i) => i.id === item.id
-                            );
-                            updatedItems[index].dueDate = e.target.value;
-                            setDepositItems(updatedItems);
+                            const updatedPassengers = [...passengers];
+                            updatedPassengers[index].ticketNo = e.target.value;
+                            setPassengers(updatedPassengers);
                           }}
                         />
                       </div>
-                      <div className="col-span-1 flex items-center justify-center">
+                      <div className="flex items-center justify-center">
                         <button
                           type="button"
-                          onClick={() => removeDepositItem(item.id)}
+                          onClick={() => removePassenger(passenger.id)}
                           className="text-red-500 hover:text-red-700"
-                          disabled={depositItems.length === 1}
+                          disabled={passengers.length === 1}
                         >
                           <FiTrash2 size={18} />
                         </button>
@@ -305,90 +293,572 @@ const SaleDeposit = () => {
 
                   <button
                     type="button"
-                    onClick={addDepositItem}
+                    onClick={addPassenger}
                     className="mt-2 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
                   >
-                    <FiPlus className="mr-1" /> เพิ่มรายการ
+                    <FiPlus className="mr-1" /> Add
                   </button>
                 </div>
               </section>
 
-              {/* ข้อมูลเพิ่มเติม */}
+              {/* ข้อมูลซัพพลายเออร์ */}
               <section className="border border-gray-400 rounded-lg overflow-hidden">
                 <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">ข้อมูลเพิ่มเติม</h2>
+                  <h2 className="font-semibold">Supplier</h2>
                 </div>
                 <div className="p-4">
-                  <textarea
-                    className="w-full border border-gray-400 rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="ข้อมูลเพิ่มเติมหรือหมายเหตุ"
-                    value={formData.additionalInfo || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        additionalInfo: e.target.value,
-                      })
-                    }
-                  ></textarea>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="PG"
+                        value={formData.supplier}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            supplier: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="BANGKOK AIRWAYS"
+                        value={formData.supplierName}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            supplierName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-1">
+                      Code
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Code"
+                    />
+                  </div>
                 </div>
               </section>
 
-              {/* การชำระเงินและนโยบายขอคืนเงิน */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* การชำระเงิน */}
-                <section className="border border-gray-400 rounded-lg overflow-hidden">
-                  <div className="bg-blue-500 text-white p-3">
-                    <h2 className="font-semibold">การชำระเงิน</h2>
+              {/* Routing Information */}
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
+                <div className="bg-blue-500 text-white p-3">
+                  <h2 className="font-semibold">Routing Information</h2>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-7 gap-2 font-medium text-sm mb-2 px-2">
+                    <div>Date</div>
+                    <div>Airline</div>
+                    <div>Flight</div>
+                    <div>Origin</div>
+                    <div>Desti</div>
+                    <div>Departure</div>
+                    <div>Arrive</div>
                   </div>
-                  <div className="p-4 space-y-4">
+
+                  {routes.map((route, index) => (
+                    <div key={route.id} className="grid grid-cols-7 gap-2 mb-2">
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={route.date}
+                          onChange={(e) => {
+                            const updatedRoutes = [...routes];
+                            updatedRoutes[index].date = e.target.value;
+                            setRoutes(updatedRoutes);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={route.airline}
+                          onChange={(e) => {
+                            const updatedRoutes = [...routes];
+                            updatedRoutes[index].airline = e.target.value;
+                            setRoutes(updatedRoutes);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={route.flight}
+                          onChange={(e) => {
+                            const updatedRoutes = [...routes];
+                            updatedRoutes[index].flight = e.target.value;
+                            setRoutes(updatedRoutes);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={route.origin}
+                          onChange={(e) => {
+                            const updatedRoutes = [...routes];
+                            updatedRoutes[index].origin = e.target.value;
+                            setRoutes(updatedRoutes);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={route.destination}
+                          onChange={(e) => {
+                            const updatedRoutes = [...routes];
+                            updatedRoutes[index].destination = e.target.value;
+                            setRoutes(updatedRoutes);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={route.departure}
+                          onChange={(e) => {
+                            const updatedRoutes = [...routes];
+                            updatedRoutes[index].departure = e.target.value;
+                            setRoutes(updatedRoutes);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={route.arrival}
+                          onChange={(e) => {
+                            const updatedRoutes = [...routes];
+                            updatedRoutes[index].arrival = e.target.value;
+                            setRoutes(updatedRoutes);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={addRoute}
+                    className="mt-2 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
+                  >
+                    <FiPlus className="mr-1" /> Add
+                  </button>
+                </div>
+              </section>
+
+              {/* Type */}
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
+                <div className="bg-blue-500 text-white p-3">
+                  <h2 className="font-semibold">Type</h2>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-4 gap-4">
                     <div className="flex items-center">
                       <input
                         type="radio"
-                        id="cash"
-                        name="paymentMethod"
-                        value="cash"
-                        checked={formData.paymentMethod === "cash"}
-                        onChange={() =>
-                          setFormData({
-                            ...formData,
-                            paymentMethod: "cash",
-                          })
-                        }
+                        id="bsp"
+                        name="ticketType"
+                        checked={true}
                         className="mr-2 focus:ring-blue-500"
                       />
-                      <label htmlFor="cash">เงินสด</label>
+                      <label htmlFor="bsp">BSP</label>
                     </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="airline"
+                        name="ticketType"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="airline">AIRLINE</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="dom"
+                        name="ticketType"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="dom">DOM</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="web"
+                        name="ticketType"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="web">WEB</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="b2b"
+                        name="ticketType"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="b2b">B2B</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="gov"
+                        name="ticketType"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="gov">GOV</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="other"
+                        name="ticketType"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="other">OTHER</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="gmt"
+                        name="ticketType"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="gmt">GMT</label>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
+              {/* Other */}
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
+                <div className="bg-blue-500 text-white p-3">
+                  <h2 className="font-semibold">Other</h2>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div className="col-span-1 font-medium text-sm">Other</div>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="font-medium text-sm">Net</div>
+                      <div className="font-medium text-sm">Sale</div>
+                      <div className="font-medium text-sm">Pax</div>
+                      <div className="font-medium text-sm">Total</div>
+                    </div>
+                  </div>
+
+                  {extras.map((extra, index) => (
+                    <div key={extra.id} className="grid grid-cols-2 gap-2 mb-2">
+                      <div>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={extra.description}
+                          onChange={(e) => {
+                            const updatedExtras = [...extras];
+                            updatedExtras[index].description = e.target.value;
+                            setExtras(updatedExtras);
+                          }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        <div>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            value={extra.net}
+                            onChange={(e) => {
+                              const updatedExtras = [...extras];
+                              updatedExtras[index].net = e.target.value;
+                              setExtras(updatedExtras);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            value={extra.sale}
+                            onChange={(e) => {
+                              const updatedExtras = [...extras];
+                              updatedExtras[index].sale = e.target.value;
+                              setExtras(updatedExtras);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            value={extra.pax}
+                            onChange={(e) => {
+                              const updatedExtras = [...extras];
+                              updatedExtras[index].pax = e.target.value;
+                              setExtras(updatedExtras);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100"
+                            value={extra.total}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={addExtra}
+                    className="mt-2 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
+                  >
+                    <FiPlus className="mr-1" /> Add
+                  </button>
+                </div>
+              </section>
+
+              {/* ตารางราคา */}
+              <section className="border border-gray-400 rounded-lg overflow-hidden">
+                <div className="p-4">
+                  <div className="grid grid-cols-5 gap-4 mb-4">
+                    <div></div>
+                    <div className="text-center font-medium text-sm">Net</div>
+                    <div className="text-center font-medium text-sm">Sale</div>
+                    <div className="text-center font-medium text-sm">Pax</div>
+                    <div className="text-center font-medium text-sm">Total</div>
+                  </div>
+
+                  {/* Adult */}
+                  <div className="grid grid-cols-5 gap-4 mb-2">
+                    <div className="font-medium text-sm flex items-center">
+                      Adult
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.adult.net}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            adult: {
+                              ...pricing.adult,
+                              net: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.adult.sale}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            adult: {
+                              ...pricing.adult,
+                              sale: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.adult.pax}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            adult: {
+                              ...pricing.adult,
+                              pax: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div className="font-bold">{pricing.adult.total}</div>
+                  </div>
+
+                  {/* Child */}
+                  <div className="grid grid-cols-5 gap-4 mb-2">
+                    <div className="font-medium text-sm flex items-center">
+                      Child
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.child.net}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            child: {
+                              ...pricing.child,
+                              net: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.child.sale}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            child: {
+                              ...pricing.child,
+                              sale: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.child.pax}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            child: {
+                              ...pricing.child,
+                              pax: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div></div>
+                  </div>
+
+                  {/* Infant */}
+                  <div className="grid grid-cols-5 gap-4 mb-4">
+                    <div className="font-medium text-sm flex items-center">
+                      Infant
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.infant.net}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            infant: {
+                              ...pricing.infant,
+                              net: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.infant.sale}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            infant: {
+                              ...pricing.infant,
+                              sale: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={pricing.infant.pax}
+                        onChange={(e) => {
+                          setPricing({
+                            ...pricing,
+                            infant: {
+                              ...pricing.infant,
+                              pax: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                    <div></div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ยอดรวม */}
+              <div className="grid grid-cols-2 gap-6 mt-4">
+                <div className="col-span-1"></div>
+                <div className="col-span-1 bg-blue-50 p-4 rounded-md">
+                  <div className="grid grid-cols-2 gap-4 mb-2">
+                    <div>รวมเป็นเงิน</div>
+                    <div className="text-right font-medium">202,200</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mb-2">
+                    <div>ภาษีมูลค่าเพิ่ม 0%</div>
+                    <div className="text-right"></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 border-t pt-2">
+                    <div className="font-medium">ยอดรวมทั้งสิ้น</div>
+                    <div className="text-right font-bold text-blue-600 text-xl">
+                      202,200
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* การชำระเงินและนโยบายขอคืนเงิน */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                {/* Payment */}
+                <section className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50 p-4">
+                  <h2 className="font-medium mb-3">Payment</h2>
+                  <div className="space-y-4">
                     <div className="flex items-center">
                       <input
                         type="radio"
                         id="creditCard"
                         name="paymentMethod"
-                        value="creditCard"
-                        checked={formData.paymentMethod === "creditCard"}
-                        onChange={() =>
-                          setFormData({
-                            ...formData,
-                            paymentMethod: "creditCard",
-                          })
-                        }
                         className="mr-2 focus:ring-blue-500"
                       />
                       <label htmlFor="creditCard" className="mr-2">
-                        บัตรเครดิต
+                        เครดิตการ์ด
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="รายละเอียดบัตร"
-                        disabled={formData.paymentMethod !== "creditCard"}
-                        value={formData.cardDetails || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            cardDetails: e.target.value,
-                          })
-                        }
+                        className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
 
@@ -397,14 +867,6 @@ const SaleDeposit = () => {
                         type="radio"
                         id="bankTransfer"
                         name="paymentMethod"
-                        value="bankTransfer"
-                        checked={formData.paymentMethod === "bankTransfer"}
-                        onChange={() =>
-                          setFormData({
-                            ...formData,
-                            paymentMethod: "bankTransfer",
-                          })
-                        }
                         className="mr-2 focus:ring-blue-500"
                       />
                       <label htmlFor="bankTransfer" className="mr-2">
@@ -412,87 +874,67 @@ const SaleDeposit = () => {
                       </label>
                       <input
                         type="text"
-                        className="flex-1 border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="รายละเอียดการโอน"
-                        disabled={formData.paymentMethod !== "bankTransfer"}
-                        value={formData.bankDetails || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            bankDetails: e.target.value,
-                          })
-                        }
+                        className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                   </div>
                 </section>
 
-                {/* นโยบายขอคืนเงิน */}
-                <section className="border border-gray-400 rounded-lg overflow-hidden">
-                  <div className="bg-blue-500 text-white p-3">
-                    <h2 className="font-semibold">นโยบายการขอคืนเงินมัดจำ</h2>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start">
+                {/* ลูกค้าชำระเงิน */}
+                <section className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50 p-4">
+                  <h2 className="font-medium mb-3">ลูกค้าชำระเงิน</h2>
+                  <div className="space-y-3">
+                    <div className="flex items-center">
                       <input
-                        type="checkbox"
-                        id="refundable"
-                        className="mt-1 mr-2"
-                        checked={formData.refundable}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            refundable: e.target.checked,
-                          })
-                        }
+                        type="radio"
+                        id="cash"
+                        name="customerPayment"
+                        className="mr-2 focus:ring-blue-500"
+                        checked={true}
                       />
-                      <label htmlFor="refundable" className="text-sm">
-                        เงินมัดจำสามารถขอคืนได้ (มีเงื่อนไข)
+                      <label htmlFor="cash">เงินสด</label>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="credit"
+                        name="customerPayment"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="credit">เครดิต</label>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="creditCardCustomer"
+                        name="customerPayment"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="creditCardCustomer">
+                        เครดิตการ์ด VISA / MSTR / AMEX / JCB
                       </label>
                     </div>
-                    <textarea
-                      className="w-full border border-gray-400 rounded-md p-2 h-20 text-sm focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="กรุณาระบุเงื่อนไขการขอคืนเงินมัดจำ"
-                      disabled={!formData.refundable}
-                      value={formData.refundTerms || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          refundTerms: e.target.value,
-                        })
-                      }
-                    ></textarea>
+
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="bankTransferCustomer"
+                        name="customerPayment"
+                        className="mr-2 focus:ring-blue-500"
+                      />
+                      <label htmlFor="bankTransferCustomer" className="mr-2">
+                        โอนเงินผ่านธนาคาร
+                      </label>
+                      <input
+                        type="text"
+                        className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
                   </div>
                 </section>
               </div>
-
-              {/* ยอดรวม */}
-              <div className="flex justify-end">
-                <div className="w-1/3 bg-blue-50 p-4 rounded-md">
-                  <div className="flex justify-between mb-2">
-                    <div>ยอดมัดจำทั้งหมด</div>
-                    <div className="font-bold text-blue-600">0.00</div>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <div>ภาษีมูลค่าเพิ่ม 7%</div>
-                    <div>0.00</div>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <div>ยอดรวมทั้งสิ้น</div>
-                    <div className="font-bold text-blue-600 text-xl">0.00</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ปุ่มบันทึกและยกเลิก */}
-            <div className="mt-6 flex justify-center space-x-4">
-              {/* <button
-                type="submit"
-                className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200"
-              >
-                บันทึก
-              </button> */}
             </div>
           </div>
         </div>

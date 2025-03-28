@@ -595,7 +595,23 @@ const SaleVoucher = () => {
                   </div>
                 </div>
               </section>
-
+              {/* ยอดรวม */}
+              <div className="flex mt-4 justify-end">
+                <div className="w-1/3 bg-blue-50 p-4 rounded-md">
+                  <div className="flex justify-between mb-2">
+                    <div>รวมเป็นเงินทั้งหมด</div>
+                    <div className="font-bold text-blue-600">0.00</div>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <div>ภาษีมูลค่าเพิ่ม 7%</div>
+                    <div>0.00</div>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <div>ยอดรวมทั้งสิ้น</div>
+                    <div className="font-bold text-blue-600 text-xl">0.00</div>
+                  </div>
+                </div>
+              </div>
               {/* การชำระเงินและนโยบายขอคืนเงิน */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* การชำระเงินของบริษัท */}
@@ -771,23 +787,6 @@ const SaleVoucher = () => {
               </div>
             </div>
 
-            {/* ยอดรวม */}
-            <div className="flex mt-4 justify-end">
-              <div className="w-1/3 bg-blue-50 p-4 rounded-md">
-                <div className="flex justify-between mb-2">
-                  <div>ยอดมัดจำทั้งหมด</div>
-                  <div className="font-bold text-blue-600">0.00</div>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <div>ภาษีมูลค่าเพิ่ม 7%</div>
-                  <div>0.00</div>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <div>ยอดรวมทั้งสิ้น</div>
-                  <div className="font-bold text-blue-600 text-xl">0.00</div>
-                </div>
-              </div>
-            </div>
             {/* ปุ่มบันทึกและยกเลิก */}
             <div className="mt-6 flex justify-center space-x-4">
               {/* <button

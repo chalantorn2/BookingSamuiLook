@@ -6,7 +6,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
   if (section === "customer") {
     return (
       <>
-        <div className="mb-4">
+        <div className="mb-2">
           <label className="block text-sm font-medium mb-1">
             Customer Name
           </label>
@@ -18,7 +18,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
           </div>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-2">
           <div className="flex justify-between items-center">
             <label className="block text-sm font-medium mb-1">
               Contact Details
@@ -41,7 +41,7 @@ const SaleHeader = ({ formData, setFormData, section }) => {
           ></textarea>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           <div>
             <input
               type="text"
@@ -70,9 +70,9 @@ const SaleHeader = ({ formData, setFormData, section }) => {
   if (section === "price") {
     return (
       <>
-        <div className="bg-blue-50 p-4 rounded-md mb-4">
+        <div className="bg-blue-50 p-4 rounded-md mb-2">
           <div className="text-sm text-gray-600 mb-1">ราคารวมทั้งสิ้น</div>
-          <div className="text-2xl font-bold text-blue-600">0.00</div>
+          <div className="text-2xl font-bold mb-1 text-blue-600">0.00</div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
