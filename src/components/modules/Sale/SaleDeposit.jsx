@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { FiEdit, FiPlus, FiTrash2, FiSave, FiX } from "react-icons/fi";
 import SaleHeader from "./common/SaleHeader";
+import PaymentMethodSection from "./common/PaymentMethodSection";
+import PricingTable from "./common/PricingTable";
+import TotalSummary from "./common/TotalSummary";
+import usePricing from "../../../hooks/usePricing";
 
 const SaleDeposit = () => {
   // สร้าง state สำหรับจัดการข้อมูล
@@ -23,6 +27,16 @@ const SaleDeposit = () => {
     refundable: false,
     refundTerms: "",
   });
+
+  const {
+    pricing,
+    vatPercent,
+    setVatPercent,
+    updatePricing,
+    calculateSubtotal,
+    calculateVat,
+    calculateTotal,
+  } = usePricing();
 
   // State สำหรับข้อมูลผู้โดยสาร
   const [passengers, setPassengers] = useState([
@@ -94,13 +108,6 @@ const SaleDeposit = () => {
       total: "1600",
     },
   ]);
-
-  // State สำหรับราคา
-  const [pricing, setPricing] = useState({
-    adult: { net: "8,000", sale: "10,000", pax: "20", total: "200,000" },
-    child: { net: "", sale: "", pax: "" },
-    infant: { net: "", sale: "", pax: "" },
-  });
 
   const [depositItems, setDepositItems] = useState([
     { id: 1, description: "", amount: "", dueDate: "" },
@@ -175,6 +182,20 @@ const SaleDeposit = () => {
     });
   };
 
+  const [isOtherSelected, setIsOtherSelected] = useState(
+    formData.bookingType === "other"
+  );
+  const handleRadioChange = (e) => {
+    const value = e.target.value;
+    setIsOtherSelected(value === "other");
+    setFormData({
+      ...formData,
+      bookingType: value,
+      // รีเซ็ต otherBookingType เฉพาะเมื่อเปลี่ยนจาก other ไปตัวอื่น
+      otherBookingType: value !== "other" ? "" : formData.otherBookingType,
+    });
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       <form onSubmit={handleSubmit} className="max-w-7xl mx-auto">
@@ -221,715 +242,411 @@ const SaleDeposit = () => {
 
             {/* Collapsible Sections */}
             <div className="space-y-6">
-              {/* ข้อมูลผู้โดยสาร */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3 flex justify-between items-center">
-                  <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-4 gap-2 font-medium text-sm mb-2 px-2">
-                    <div>Passenger Name</div>
-                    <div>Age</div>
-                    <div>Ticket NO</div>
-                    <div></div>
-                  </div>
-
-                  {passengers.map((passenger, index) => (
-                    <div
-                      key={passenger.id}
-                      className="grid grid-cols-4 gap-2 mb-2"
+              {/* ส่วนซัพพลายเออร์และผู้โดยสาร */}
+              <div className="space-y-2 mt-6">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-1 rounded-lg shadow-md">
+                  <h2 className="text-white font-bold px-3 py-2 flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
                     >
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="ชื่อตามหนังสือเดินทาง"
-                          value={passenger.name}
-                          onChange={(e) => {
-                            const updatedPassengers = [...passengers];
-                            updatedPassengers[index].name = e.target.value;
-                            setPassengers(updatedPassengers);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="อายุ"
-                          value={passenger.age}
-                          onChange={(e) => {
-                            const updatedPassengers = [...passengers];
-                            updatedPassengers[index].age = e.target.value;
-                            setPassengers(updatedPassengers);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="เลขที่ตั๋ว"
-                          value={passenger.ticketNo}
-                          onChange={(e) => {
-                            const updatedPassengers = [...passengers];
-                            updatedPassengers[index].ticketNo = e.target.value;
-                            setPassengers(updatedPassengers);
-                          }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => removePassenger(passenger.id)}
-                          className="text-red-500 hover:text-red-700"
-                          disabled={passengers.length === 1}
-                        >
-                          <FiTrash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={addPassenger}
-                    className="mt-2 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
-                  >
-                    <FiPlus className="mr-1" /> Add
-                  </button>
+                      <path
+                        fillRule="evenodd"
+                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    ข้อมูลผู้โดยสารและซัพพลายเออร์
+                  </h2>
                 </div>
-              </section>
 
-              {/* ข้อมูลซัพพลายเออร์ */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">Supplier</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="PG"
-                        value={formData.supplier}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            supplier: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="BANGKOK AIRWAYS"
-                        value={formData.supplierName}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            supplierName: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium mb-1">
-                      Code
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Code"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              {/* Routing Information */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">Routing Information</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-7 gap-2 font-medium text-sm mb-2 px-2">
-                    <div>Date</div>
-                    <div>Airline</div>
-                    <div>Flight</div>
-                    <div>Origin</div>
-                    <div>Desti</div>
-                    <div>Departure</div>
-                    <div>Arrive</div>
-                  </div>
-
-                  {routes.map((route, index) => (
-                    <div key={route.id} className="grid grid-cols-7 gap-2 mb-2">
-                      <div>
+                <div className="grid grid-cols-1 lg:grid-cols-15 gap-2">
+                  {/* ข้อมูลผู้โดยสาร */}
+                  <div className="col-span-10">
+                    <section className="border border-gray-400 rounded-lg overflow-hidden h-full">
+                      <div className="bg-blue-100 text-blue-600 p-3 flex justify-between items-center">
+                        <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
+                      </div>
+                      <div className="p-2">
                         <input
                           type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={route.date}
-                          onChange={(e) => {
-                            const updatedRoutes = [...routes];
-                            updatedRoutes[index].date = e.target.value;
-                            setRoutes(updatedRoutes);
-                          }}
+                          className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={route.airline}
-                          onChange={(e) => {
-                            const updatedRoutes = [...routes];
-                            updatedRoutes[index].airline = e.target.value;
-                            setRoutes(updatedRoutes);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={route.flight}
-                          onChange={(e) => {
-                            const updatedRoutes = [...routes];
-                            updatedRoutes[index].flight = e.target.value;
-                            setRoutes(updatedRoutes);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={route.origin}
-                          onChange={(e) => {
-                            const updatedRoutes = [...routes];
-                            updatedRoutes[index].origin = e.target.value;
-                            setRoutes(updatedRoutes);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={route.destination}
-                          onChange={(e) => {
-                            const updatedRoutes = [...routes];
-                            updatedRoutes[index].destination = e.target.value;
-                            setRoutes(updatedRoutes);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={route.departure}
-                          onChange={(e) => {
-                            const updatedRoutes = [...routes];
-                            updatedRoutes[index].departure = e.target.value;
-                            setRoutes(updatedRoutes);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={route.arrival}
-                          onChange={(e) => {
-                            const updatedRoutes = [...routes];
-                            updatedRoutes[index].arrival = e.target.value;
-                            setRoutes(updatedRoutes);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={addRoute}
-                    className="mt-2 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
-                  >
-                    <FiPlus className="mr-1" /> Add
-                  </button>
-                </div>
-              </section>
-
-              {/* Type */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">Type</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="bsp"
-                        name="ticketType"
-                        checked={true}
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="bsp">BSP</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="airline"
-                        name="ticketType"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="airline">AIRLINE</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="dom"
-                        name="ticketType"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="dom">DOM</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="web"
-                        name="ticketType"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="web">WEB</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="b2b"
-                        name="ticketType"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="b2b">B2B</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="gov"
-                        name="ticketType"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="gov">GOV</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="other"
-                        name="ticketType"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="other">OTHER</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="gmt"
-                        name="ticketType"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="gmt">GMT</label>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Other */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="bg-blue-500 text-white p-3">
-                  <h2 className="font-semibold">Other</h2>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div className="col-span-1 font-medium text-sm">Other</div>
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="font-medium text-sm">Net</div>
-                      <div className="font-medium text-sm">Sale</div>
-                      <div className="font-medium text-sm">Pax</div>
-                      <div className="font-medium text-sm">Total</div>
-                    </div>
-                  </div>
-
-                  {extras.map((extra, index) => (
-                    <div key={extra.id} className="grid grid-cols-2 gap-2 mb-2">
-                      <div>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={extra.description}
-                          onChange={(e) => {
-                            const updatedExtras = [...extras];
-                            updatedExtras[index].description = e.target.value;
-                            setExtras(updatedExtras);
-                          }}
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <div>
+                      {/* ส่วนย่อยของประเภท */}
+                      <div className="flex justify-center space-x-8 mt-2 relative">
+                        <div className="flex items-center">
                           <input
-                            type="text"
-                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={extra.net}
-                            onChange={(e) => {
-                              const updatedExtras = [...extras];
-                              updatedExtras[index].net = e.target.value;
-                              setExtras(updatedExtras);
-                            }}
+                            type="radio"
+                            id="airTicket"
+                            name="bookingType"
+                            value="airTicket"
+                            checked={formData.bookingType === "airTicket"}
+                            onChange={handleRadioChange}
+                            className="mr-2"
                           />
+                          <label htmlFor="airTicket">AIR TICKET</label>
                         </div>
-                        <div>
+                        <div className="flex items-center">
                           <input
-                            type="text"
-                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={extra.sale}
-                            onChange={(e) => {
-                              const updatedExtras = [...extras];
-                              updatedExtras[index].sale = e.target.value;
-                              setExtras(updatedExtras);
-                            }}
+                            type="radio"
+                            id="package"
+                            name="bookingType"
+                            value="package"
+                            checked={formData.bookingType === "package"}
+                            onChange={handleRadioChange}
+                            className="mr-2"
                           />
+                          <label htmlFor="package">PACKAGE</label>
                         </div>
-                        <div>
+                        <div className="flex items-center">
                           <input
-                            type="text"
-                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={extra.pax}
-                            onChange={(e) => {
-                              const updatedExtras = [...extras];
-                              updatedExtras[index].pax = e.target.value;
-                              setExtras(updatedExtras);
-                            }}
+                            type="radio"
+                            id="land"
+                            name="bookingType"
+                            value="land"
+                            checked={formData.bookingType === "land"}
+                            onChange={handleRadioChange}
+                            className="mr-2"
                           />
+                          <label htmlFor="land">LAND</label>
                         </div>
-                        <div>
+                        <div className="flex items-center relative">
                           <input
-                            type="text"
-                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100"
-                            value={extra.total}
-                            readOnly
+                            type="radio"
+                            id="other"
+                            name="bookingType"
+                            value="other"
+                            checked={formData.bookingType === "other"}
+                            onChange={handleRadioChange}
+                            className="mr-2"
                           />
+                          <label htmlFor="other">OTHER</label>
+                          {isOtherSelected && (
+                            <input
+                              type="text"
+                              placeholder=""
+                              className="absolute left-full ml-2 border border-gray-400 rounded px-2 py-1 w-40"
+                              value={formData.otherBookingType || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  otherBookingType: e.target.value,
+                                })
+                              }
+                            />
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={addExtra}
-                    className="mt-2 flex items-center text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-sm"
-                  >
-                    <FiPlus className="mr-1" /> Add
-                  </button>
-                </div>
-              </section>
-
-              {/* ตารางราคา */}
-              <section className="border border-gray-400 rounded-lg overflow-hidden">
-                <div className="p-4">
-                  <div className="grid grid-cols-5 gap-4 mb-4">
-                    <div></div>
-                    <div className="text-center font-medium text-sm">Net</div>
-                    <div className="text-center font-medium text-sm">Sale</div>
-                    <div className="text-center font-medium text-sm">Pax</div>
-                    <div className="text-center font-medium text-sm">Total</div>
+                    </section>
                   </div>
 
-                  {/* Adult */}
-                  <div className="grid grid-cols-5 gap-4 mb-2">
-                    <div className="font-medium text-sm flex items-center">
-                      Adult
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.adult.net}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            adult: {
-                              ...pricing.adult,
-                              net: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.adult.sale}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            adult: {
-                              ...pricing.adult,
-                              sale: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.adult.pax}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            adult: {
-                              ...pricing.adult,
-                              pax: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div className="font-bold">{pricing.adult.total}</div>
-                  </div>
-
-                  {/* Child */}
-                  <div className="grid grid-cols-5 gap-4 mb-2">
-                    <div className="font-medium text-sm flex items-center">
-                      Child
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.child.net}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            child: {
-                              ...pricing.child,
-                              net: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.child.sale}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            child: {
-                              ...pricing.child,
-                              sale: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.child.pax}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            child: {
-                              ...pricing.child,
-                              pax: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div></div>
-                  </div>
-
-                  {/* Infant */}
-                  <div className="grid grid-cols-5 gap-4 mb-4">
-                    <div className="font-medium text-sm flex items-center">
-                      Infant
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.infant.net}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            infant: {
-                              ...pricing.infant,
-                              net: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.infant.sale}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            infant: {
-                              ...pricing.infant,
-                              sale: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={pricing.infant.pax}
-                        onChange={(e) => {
-                          setPricing({
-                            ...pricing,
-                            infant: {
-                              ...pricing.infant,
-                              pax: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    </div>
-                    <div></div>
-                  </div>
-                </div>
-              </section>
-
-              {/* ยอดรวม */}
-              <div className="grid grid-cols-2 gap-6 mt-4">
-                <div className="col-span-1"></div>
-                <div className="col-span-1 bg-blue-50 p-4 rounded-md">
-                  <div className="grid grid-cols-2 gap-4 mb-2">
-                    <div>รวมเป็นเงิน</div>
-                    <div className="text-right font-medium">202,200</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 mb-2">
-                    <div>ภาษีมูลค่าเพิ่ม 0%</div>
-                    <div className="text-right"></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 border-t pt-2">
-                    <div className="font-medium">ยอดรวมทั้งสิ้น</div>
-                    <div className="text-right font-bold text-blue-600 text-xl">
-                      202,200
-                    </div>
+                  {/* ข้อมูลซัพพลายเออร์ */}
+                  <div className="col-span-5 self-start">
+                    <section className="border border-gray-400 rounded-lg overflow-hidden">
+                      <div className="bg-blue-100 text-blue-600 p-3">
+                        <h2 className="font-semibold">ข้อมูลซัพพลายเออร์</h2>
+                      </div>
+                      <div className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">
+                              สายการบิน
+                            </label>
+                            <select
+                              className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                              value={formData.supplier}
+                              onChange={(e) => {
+                                const selectedCode = e.target.value;
+                                let fullName = "";
+                                // สร้างการ mapping ชื่อย่อกับชื่อเต็ม
+                                const airlineMapping = {
+                                  TG: "THAI AIRWAYS",
+                                  FD: "AIR ASIA",
+                                  PG: "BANGKOK AIRWAYS",
+                                  "": "",
+                                };
+                                fullName = airlineMapping[selectedCode] || "";
+                                setFormData({
+                                  ...formData,
+                                  supplier: selectedCode,
+                                  supplierName: fullName,
+                                });
+                              }}
+                            >
+                              <option value="">เลือก</option>
+                              <option value="TG">TG</option>
+                              <option value="FD">FD</option>
+                              <option value="PG">PG</option>
+                            </select>
+                          </div>
+                          <div className="col-span-3">
+                            <label className="block text-sm font-medium mb-1">
+                              ชื่อเต็มสายการบิน
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
+                              placeholder="ชื่อสายการบิน"
+                              disabled
+                              value={formData.supplierName}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </section>
                   </div>
                 </div>
               </div>
 
-              {/* การชำระเงินและนโยบายขอคืนเงิน */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                {/* Payment */}
-                <section className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50 p-4">
-                  <h2 className="font-medium mb-3">Payment</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="creditCard"
-                        name="paymentMethod"
-                        className="mr-2 focus:ring-blue-500"
+              {/* ส่วนรายการและราคา */}
+              <div className="space-y-2 mt-6">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-1 rounded-lg shadow-md">
+                  <h2 className="text-white font-bold px-3 py-2 flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                        clipRule="evenodd"
                       />
-                      <label htmlFor="creditCard" className="mr-2">
-                        เครดิตการ์ด
-                      </label>
-                      <input
-                        type="text"
-                        className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                      <path d="M9 12a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" />
+                    </svg>
+                    รายการและราคา
+                  </h2>
+                </div>
+                <div className="grid grid-cols-15 gap-2">
+                  {/* ส่วนรายการ */}
+                  <section className="col-span-6 border border-gray-400 h-full rounded-lg self-start overflow-hidden">
+                    <div className="bg-blue-100 text-blue-600 p-3">
+                      <h2 className="font-semibold">รายละเอียดรายการ</h2>
                     </div>
+                    <div className="p-4">
+                      <textarea
+                        className="w-full border border-gray-400 rounded-md p-2 h-full focus:ring-blue-500 focus:border-blue-500"
+                        // placeholder="รายละเอียดการจองและการเดินทาง..."
+                      ></textarea>
+                    </div>
+                  </section>
 
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="bankTransfer"
-                        name="paymentMethod"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="bankTransfer" className="mr-2">
-                        โอนเงินผ่านธนาคาร
-                      </label>
-                      <input
-                        type="text"
-                        className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                  {/* ส่วนตารางราคา */}
+                  <section className="col-span-9 rounded-lg self-start overflow-hidden">
+                    <PricingTable
+                      pricing={pricing}
+                      updatePricing={updatePricing}
+                      // title="ตารางราคา"
+                    />
+                  </section>
+                </div>
+                <div className="grid grid-cols-15 gap-2">
+                  {/* ส่วนซ้าย - ตารางข้อมูล Deposit */}
+                  <section className="col-span-6 h-full border border-gray-400 rounded-lg self-start overflow-hidden">
+                    <div className="p-4">
+                      <div className="space-y-2 ">
+                        <div className="flex items-center pb-2 ">
+                          <input
+                            type="radio"
+                            id="deposit"
+                            // checked
+                            className="mr-2"
+                          />
+                          <label
+                            htmlFor="deposit"
+                            className="font-medium text-lg"
+                          >
+                            Deposit
+                          </label>
+                        </div>
+                        <div className="items-center grid grid-cols-5">
+                          <div className="col-span-2  text-red-500">
+                            ชำระเงินมัดจำภายในวันที่
+                          </div>
+                          <div className="col-span-3">
+                            <input
+                              type="text"
+                              className="w-full border border-gray-300 rounded-md p-2 "
+                            />
+                          </div>
+                        </div>
+
+                        <div className="items-center grid grid-cols-5">
+                          <div className="col-span-2  text-red-500">
+                            แจ้งชื่อผู้โดยสารก่อนวันที่
+                          </div>
+                          <div className="col-span-3">
+                            <input
+                              type="text"
+                              className="w-full border border-gray-300 rounded-md p-2"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="items-center grid grid-cols-5">
+                          <div className="col-span-2  text-red-500">
+                            ชำระทั้งหมดภายในวันที่
+                          </div>
+                          <div className="col-span-3">
+                            <input
+                              type="text"
+                              className="w-full border border-gray-300 rounded-md p-2"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  </section>
+
+                  {/* ส่วนขวา - รายละเอียด Deposit และยอดรวม */}
+                  <section className="col-span-9 border border-gray-400 rounded-lg self-start overflow-hidden">
+                    <div className="pt-2">
+                      <div className="grid grid-cols-12 gap-2 p-1 pl-3 items-center  bg-white">
+                        <div className="col-span-1 gap-2">
+                          <span className="col-span-1 font-medium  ">
+                            Deposit
+                          </span>
+                        </div>
+                        <div className="col-span-3"></div>
+                        <div className="col-span-3">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            className="w-full border border-gray-400 text-right rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <input
+                            type="number"
+                            min="0"
+                            className="w-full border border-gray-400 text-center rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="col-span-4">
+                          <input
+                            type="text"
+                            className="w-full border border-gray-400 text-right rounded-md p-2 bg-gray-100"
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid p-1 gap-6 ">
+                        <div className="col-span-1"></div>
+                        <div className="col-span-1 bg-blue-50 p-4 rounded-md">
+                          <div className="grid grid-cols-2 gap-4 mb-2">
+                            <div>รวมเป็นเงิน</div>
+                            <div className="text-right font-medium">0</div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 mb-2">
+                            <div>ภาษีมูลค่าเพิ่ม 0%</div>
+                            <div className="text-right"></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 border-t pt-2">
+                            <div className="font-medium">ยอดรวมทั้งสิ้น</div>
+                            <div className="text-right font-bold text-blue-600 text-xl">
+                              0
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
+              {/* ส่วนการชำระเงิน */}
+              <div className="space-y-2 mt-6">
+                <section className="border border-gray-400 rounded-lg overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-1 shadow-md">
+                    <h2 className="text-white font-bold px-3 py-2 flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                        <path
+                          fillRule="evenodd"
+                          d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      การชำระเงิน
+                    </h2>
                   </div>
-                </section>
-
-                {/* ลูกค้าชำระเงิน */}
-                <section className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50 p-4">
-                  <h2 className="font-medium mb-3">ลูกค้าชำระเงิน</h2>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="cash"
-                        name="customerPayment"
-                        className="mr-2 focus:ring-blue-500"
-                        checked={true}
+                  <div className="p-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <PaymentMethodSection
+                        title="การชำระเงินของบริษัท"
+                        sectionType="company"
+                        fieldName="paymentMethod"
+                        detailsFieldName="paymentDetails"
+                        options={[
+                          {
+                            id: "creditCardCompany",
+                            value: "creditCard",
+                            label: "เครดิตการ์ด",
+                          },
+                          {
+                            id: "bankTransferCompany",
+                            value: "bankTransfer",
+                            label: "โอนเงินผ่านธนาคาร",
+                          },
+                          {
+                            id: "cashCompany",
+                            value: "cash",
+                            label: "เงินสด",
+                          },
+                          {
+                            id: "otherCompany",
+                            value: "other",
+                            label: "อื่น ๆ",
+                          },
+                        ]}
+                        formData={formData}
+                        setFormData={setFormData}
+                        detailPlaceholder="รายละเอียดการชำระเงิน"
                       />
-                      <label htmlFor="cash">เงินสด</label>
-                    </div>
 
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="credit"
-                        name="customerPayment"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="credit">เครดิต</label>
-                    </div>
-
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="creditCardCustomer"
-                        name="customerPayment"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="creditCardCustomer">
-                        เครดิตการ์ด VISA / MSTR / AMEX / JCB
-                      </label>
-                    </div>
-
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="bankTransferCustomer"
-                        name="customerPayment"
-                        className="mr-2 focus:ring-blue-500"
-                      />
-                      <label htmlFor="bankTransferCustomer" className="mr-2">
-                        โอนเงินผ่านธนาคาร
-                      </label>
-                      <input
-                        type="text"
-                        className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                      <PaymentMethodSection
+                        title="การชำระเงินของลูกค้า"
+                        sectionType="customer"
+                        fieldName="customerPayment"
+                        detailsFieldName="customerPaymentDetails"
+                        options={[
+                          {
+                            id: "creditCardCustomer",
+                            value: "creditCard",
+                            label: "เครดิตการ์ด VISA / MSTR / AMEX / JCB",
+                          },
+                          {
+                            id: "bankTransferCustomer",
+                            value: "bankTransfer",
+                            label: "โอนเงินผ่านธนาคาร",
+                          },
+                          {
+                            id: "cashCustomer",
+                            value: "cash",
+                            label: "เงินสด",
+                          },
+                          {
+                            id: "creditCustomer",
+                            value: "credit",
+                            label: "เครดิต",
+                          },
+                        ]}
+                        formData={formData}
+                        setFormData={setFormData}
+                        detailPlaceholder="รายละเอียดการชำระเงิน"
                       />
                     </div>
                   </div>

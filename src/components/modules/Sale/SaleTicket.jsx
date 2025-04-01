@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { FiEdit, FiPlus, FiTrash2, FiSave, FiX } from "react-icons/fi";
 import SaleHeader from "./common/SaleHeader";
 import FormattedNumberInput from "../../common/FormattedNumberInput";
+import PaymentMethodSection from "./common/PaymentMethodSection";
+import PricingTable from "./common/PricingTable";
+import TotalSummary from "./common/TotalSummary";
+import usePricing from "../../../hooks/usePricing";
+
 const SaleTicket = () => {
   // สร้าง state สำหรับจัดการข้อมูล
   const [formData, setFormData] = useState({
@@ -17,8 +22,19 @@ const SaleTicket = () => {
     supplierName: "",
     ticketType: "bsp",
     paymentMethod: "",
+    companyPaymentDetails: "",
     customerPayment: "",
+    customerPaymentDetails: "",
   });
+  const {
+    pricing,
+    vatPercent,
+    setVatPercent,
+    updatePricing,
+    calculateSubtotal,
+    calculateVat,
+    calculateTotal,
+  } = usePricing();
 
   const [passengers, setPassengers] = useState([
     { id: 1, name: "", age: "", ticketNo: "" },
@@ -40,12 +56,6 @@ const SaleTicket = () => {
   const [extras, setExtras] = useState([
     { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
   ]);
-
-  const [pricing, setPricing] = useState({
-    adult: { net: "", sale: "", pax: 1 },
-    child: { net: "", sale: "", pax: 0 },
-    infant: { net: "", sale: "", pax: 0 },
-  });
 
   // ฟังก์ชันสำหรับจัดการการเพิ่ม/ลบรายการ
   const addPassenger = () => {
@@ -101,12 +111,6 @@ const SaleTicket = () => {
     if (extras.length > 1) {
       setExtras(extras.filter((e) => e.id !== id));
     }
-  };
-
-  // ฟังก์ชันคำนวณราคารวม
-  const calculateTotal = () => {
-    // ตัวอย่างการคำนวณอย่างง่าย
-    return "0";
   };
 
   // ฟังก์ชันจัดการการส่งฟอร์ม
@@ -681,62 +685,11 @@ const SaleTicket = () => {
               <div className="grid grid-cols-15 gap-2">
                 {/* ส่วนตารางราคา */}
                 <section className="col-span-10 border border-gray-400 rounded-lg self-start overflow-hidden">
-                  <div className="mb-2">
-                    <div className="bg-blue-100 text-blue-600 p-2 rounded-t-md grid grid-cols-12  text-center font-medium">
-                      <div className="col-span-1"></div>
-                      <div className="col-span-3">Net</div>
-                      <div className="col-span-3">Sale</div>
-                      <div className="col-span-1">Pax</div>
-                      <div className="col-span-4">Total</div>
-                    </div>
-
-                    {["Adult", "Child", "Infant"].map((type, index) => (
-                      <div
-                        key={type}
-                        className="grid grid-cols-12 gap-2 p-1 pl-3 items-center bg-white "
-                      >
-                        <div className=" col-span-1 ">
-                          <span className="text-right col-span-1 font-medium">
-                            {type}
-                          </span>
-                        </div>
-                        <div className=" col-span-3">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            className="w-full border text-right border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="0"
-                          />
-                        </div>
-                        <div className="col-span-3">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            className="w-full border border-gray-400 text-right rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="0"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            min="0"
-                            className="w-full border border-gray-400 text-center rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="0"
-                          />
-                        </div>
-                        <div className="col-span-4">
-                          <input
-                            type="text"
-                            className="w-full border border-gray-400 text-right rounded-md p-2 bg-gray-100"
-                            placeholder="0"
-                            disabled
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <PricingTable
+                    pricing={pricing}
+                    updatePricing={updatePricing}
+                    // title="ตารางราคา"
+                  />
                 </section>
 
                 {/* ส่วนยอดรวม */}
@@ -782,9 +735,11 @@ const SaleTicket = () => {
                 </div>
                 <div className="p-4">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <PaymentSection
+                    <PaymentMethodSection
                       title="การชำระเงินของบริษัท"
-                      name="paymentMethod"
+                      sectionType="company"
+                      fieldName="paymentMethod"
+                      detailsFieldName="paymentDetails"
                       options={[
                         {
                           id: "creditCardCompany",
@@ -796,39 +751,48 @@ const SaleTicket = () => {
                           value: "bankTransfer",
                           label: "โอนเงินผ่านธนาคาร",
                         },
-                        { id: "cashCompany", value: "cash", label: "เงินสด" },
+                        {
+                          id: "cashCompany",
+                          value: "cash",
+                          label: "เงินสด",
+                        },
                         { id: "otherCompany", value: "other", label: "อื่น ๆ" },
                       ]}
                       formData={formData}
                       setFormData={setFormData}
+                      detailPlaceholder="รายละเอียดการชำระเงิน"
                     />
-                    <PaymentSection
+
+                    <PaymentMethodSection
                       title="การชำระเงินของลูกค้า"
-                      name="customerPayment"
+                      sectionType="customer"
+                      fieldName="customerPayment"
+                      detailsFieldName="customerPaymentDetails"
                       options={[
-                        {
-                          id: "cashCustomer",
-                          value: "cash",
-                          label: " เครดิตการ์ด VISA / MSTR / AMEX / JCB",
-                        },
-                        {
-                          id: "creditCustomer",
-                          value: "credit",
-                          label: " โอนเงินผ่านธนาคาร",
-                        },
                         {
                           id: "creditCardCustomer",
                           value: "creditCard",
-                          label: "เงินสด",
+                          label: "เครดิตการ์ด VISA / MSTR / AMEX / JCB",
                         },
                         {
                           id: "bankTransferCustomer",
                           value: "bankTransfer",
+                          label: "โอนเงินผ่านธนาคาร",
+                        },
+                        {
+                          id: "cashCustomer",
+                          value: "cash",
+                          label: "เงินสด",
+                        },
+                        {
+                          id: "creditCustomer",
+                          value: "credit",
                           label: "เครดิต",
                         },
                       ]}
                       formData={formData}
                       setFormData={setFormData}
+                      detailPlaceholder="รายละเอียดการชำระเงิน"
                     />
                   </div>
                 </div>
@@ -840,40 +804,5 @@ const SaleTicket = () => {
     </div>
   );
 };
-const PaymentSection = ({ title, name, options, formData, setFormData }) => {
-  const selectedValue = formData[name];
 
-  return (
-    <div className="bg-gray-50 p-4 rounded-md">
-      <h3 className="font-semibold mb-3 text-blue-600 text-xl">{title}</h3>
-      <div className="space-y-2">
-        {options.map(({ id, value, label }) => (
-          <div key={id} className="flex items-center  justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="radio"
-                id={id}
-                name={name}
-                value={value}
-                checked={selectedValue === value}
-                onChange={() => setFormData({ ...formData, [name]: value })}
-                className="focus:ring-blue-500"
-              />
-              <label htmlFor={id} className="text-md text-nowrap">
-                {label}
-              </label>
-            </div>
-            {selectedValue === value && (
-              <input
-                type="text"
-                className="flex-1 border  border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 text-md"
-                placeholder="ข้อมูลเพิ่มเติม"
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 export default SaleTicket;
