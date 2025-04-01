@@ -684,7 +684,7 @@ const SaleTicket = () => {
               </div>
               <div className="grid grid-cols-15 gap-2">
                 {/* ส่วนตารางราคา */}
-                <section className="col-span-10 border border-gray-400 rounded-lg self-start overflow-hidden">
+                <section className="col-span-10 rounded-lg self-start overflow-hidden">
                   <PricingTable
                     pricing={pricing}
                     updatePricing={updatePricing}
