@@ -258,7 +258,7 @@ const SaleDeposit = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    ข้อมูลผู้โดยสารและซัพพลายเออร์
+                    ข้อมูลกรุ๊ปและซัพพลายเออร์
                   </h2>
                 </div>
 
@@ -267,7 +267,7 @@ const SaleDeposit = () => {
                   <div className="col-span-10">
                     <section className="border border-gray-400 rounded-lg overflow-hidden h-full">
                       <div className="bg-blue-100 text-blue-600 p-3 flex justify-between items-center">
-                        <h2 className="font-semibold">ข้อมูลผู้โดยสาร</h2>
+                        <h2 className="font-semibold">ชื่อกรุ๊ป</h2>
                       </div>
                       <div className="p-2">
                         <input
