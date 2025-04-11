@@ -13,12 +13,12 @@ import {
 const Information = () => {
   // ประเภทข้อมูล
   const [categories, setCategories] = useState([
-    { id: "supplier", label: "Supplier" },
-    { id: "customer", label: "Customer" },
-    { id: "type", label: "Type" },
+    { id: "airline", label: "Airline" },
+    { id: "supplier-voucher", label: "Supplier Voucher" },
+    { id: "supplier-other", label: "Supplier Other" },
   ]);
 
-  const [selectedCategory, setSelectedCategory] = useState("supplier");
+  const [selectedCategory, setSelectedCategory] = useState("airline");
   const [informationData, setInformationData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,7 +35,7 @@ const Information = () => {
 
   // ข้อมูลตัวอย่าง
   const mockData = {
-    supplier: [
+    airline: [
       {
         id: 1,
         code: "TG",
@@ -58,54 +58,53 @@ const Information = () => {
         active: true,
       },
     ],
-    customer: [
+    "supplier-voucher": [
       {
         id: 1,
-        code: "ABC",
-        name: "ABC TRAVEL",
-        description: "บริษัทนำเที่ยว",
+        code: "ST",
+        name: "SUN TRAVEL",
+        description: "บริษัทนำเที่ยว Sun Travel",
         active: true,
       },
       {
         id: 2,
-        code: "XYZ",
-        name: "XYZ TOURS",
-        description: "บริษัทนำเที่ยวต่างประเทศ",
+        code: "BB",
+        name: "BLUE BOAT CO.",
+        description: "บริษัทเรือ Blue Boat",
         active: true,
       },
       {
         id: 3,
-        code: "SL",
-        name: "SAMUI LOOK",
-        description: "บริษัทนำเที่ยวเกาะสมุย",
+        code: "GT",
+        name: "GREEN TOURS",
+        description: "บริษัททัวร์ Green Tours",
         active: true,
       },
     ],
-    type: [
+    "supplier-other": [
       {
         id: 1,
-        code: "BUS",
-        name: "BUS TICKET",
-        description: "ตั๋วรถโดยสาร",
+        code: "SM",
+        name: "SMILE MARINE",
+        description: "บริษัท Smile Marine",
         active: true,
       },
       {
         id: 2,
-        code: "BOAT",
-        name: "BOAT TICKET",
-        description: "ตั๋วเรือ",
+        code: "OC",
+        name: "OCEANIC CRUISE",
+        description: "บริษัท Oceanic Cruise",
         active: true,
       },
       {
         id: 3,
-        code: "TOUR",
-        name: "TOUR PACKAGE",
-        description: "แพ็คเกจทัวร์",
+        code: "TW",
+        name: "TROPICAL WAVE TRAVEL",
+        description: "บริษัท Tropical Wave Travel",
         active: true,
       },
     ],
   };
-
   // โหลดข้อมูลเมื่อเริ่มต้นหรือเมื่อประเภทข้อมูลเปลี่ยน
   useEffect(() => {
     loadInformationData();
