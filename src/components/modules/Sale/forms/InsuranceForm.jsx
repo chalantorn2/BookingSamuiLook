@@ -1,13 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
+import PricingTable from "../common/PricingTable";
 
-const InsuranceForm = () => {
+const InsuranceForm = ({ formData, setFormData, pricing, updatePricing }) => {
+  const [insuranceData, setInsuranceData] = useState({
+    description: "",
+    date: "",
+    reference: "",
+    remark: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setInsuranceData({
+      ...insuranceData,
+      [name]: value,
+    });
+  };
+
   return (
-    <>
-      <div className="bg-blue-500 text-white pb-1 ">
-        <div className="text-center font-medium">Travel Insurance</div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">
@@ -15,21 +27,33 @@ const InsuranceForm = () => {
             </label>
             <input
               type="text"
-              className="w-full border border-gray-400 rounded-md p-2"
+              name="description"
+              className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Travel Sabai 9 Days"
+              value={insuranceData.description}
+              onChange={handleChange}
             />
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Date</label>
             <input
               type="text"
-              className="w-full border border-gray-400 rounded-md p-2"
+              name="date"
+              className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="02MAR25 - 08MAR25"
+              value={insuranceData.date}
+              onChange={handleChange}
             />
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Remark</label>
-            <textarea className="w-full border border-gray-400 rounded-md p-2 h-24"></textarea>
+            <textarea
+              name="remark"
+              className="w-full border border-gray-400 rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="รายละเอียดเพิ่มเติม"
+              value={insuranceData.remark}
+              onChange={handleChange}
+            ></textarea>
           </div>
         </div>
 
@@ -38,140 +62,30 @@ const InsuranceForm = () => {
             <label className="block text-sm font-medium mb-1">Reference</label>
             <input
               type="text"
-              className="w-full border border-gray-400 rounded-md p-2"
+              name="reference"
+              className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="HU0012"
+              value={insuranceData.reference}
+              onChange={handleChange}
             />
           </div>
 
           {/* Price Calculation */}
-          <div className="mt-8">
-            <div className="grid grid-cols-4 bg-blue-500 text-white p-2 rounded-t-md text-center">
-              <div>Net</div>
-              <div>Sale</div>
-              <div>Pax</div>
-              <div>Total</div>
-            </div>
-
-            {/* Adult Row */}
-            <div className="grid grid-cols-4 gap-2 p-2 border-b items-center">
-              <div className="flex items-center space-x-2">
-                <span className="w-12 text-right">Adult</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
-                  placeholder="0.00"
-                  disabled
-                />
-              </div>
-            </div>
-
-            {/* Child Row */}
-            <div className="grid grid-cols-4 gap-2 p-2 border-b items-center">
-              <div className="flex items-center space-x-2">
-                <span className="w-12 text-right">Child</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
-                  placeholder="0.00"
-                  disabled
-                />
-              </div>
-            </div>
-
-            {/* Infant Row */}
-            <div className="grid grid-cols-4 gap-2 p-2 border-b items-center">
-              <div className="flex items-center space-x-2">
-                <span className="w-12 text-right">Infant</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full border border-gray-400 rounded-md p-2"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  className="w-full border border-gray-400 rounded-md p-2 bg-gray-100"
-                  placeholder="0.00"
-                  disabled
-                />
-              </div>
-            </div>
+          <div className="mt-6">
+            <PricingTable
+              pricing={pricing}
+              updatePricing={updatePricing}
+              config={{
+                showHeaders: true,
+                showBorder: true,
+                showTotal: true,
+                enableEdit: true,
+              }}
+            />
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

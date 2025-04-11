@@ -113,7 +113,7 @@ const SaleVoucher = () => {
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
           <div className="bg-blue-600 p-4 text-white flex justify-between items-center">
-            <h1 className="text-xl font-bold">Sale Voucher / บัส/เรือ/ทัวร์</h1>
+            <h1 className="text-xl font-bold">Sale Voucher</h1>
             <div className="flex space-x-2">
               <button
                 type="submit"
