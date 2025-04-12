@@ -15,6 +15,7 @@ import {
   Eye,
   User,
   Shield,
+  Activity,
 } from "lucide-react";
 import logoImage from "../../assets/Logo.png";
 
@@ -30,7 +31,9 @@ const Sidebar = ({
 
   // Update active menu when active module changes
   useEffect(() => {
-    if (activeModule === "sale") {
+    if (activeModule === "overview") {
+      setActiveMenu(0);
+    } else if (activeModule === "sale") {
       setActiveMenu(1);
     } else if (activeModule === "view") {
       setActiveMenu(2);
@@ -49,6 +52,13 @@ const Sidebar = ({
 
   // Reorganized menu structure with improved UX
   const menuData = [
+    {
+      id: 0,
+      title: "Overview",
+      icon: <Activity size={18} />,
+      module: "overview",
+      submenu: [],
+    },
     {
       id: 1,
       title: "Sales",

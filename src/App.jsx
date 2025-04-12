@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
+import Overview from "./components/modules/Overview";
 import SaleModule from "./components/modules/Sale/SaleModule";
 import DocumentsModule from "./components/modules/Documents/DocumentsModule";
 import ViewModule from "./components/modules/View/ViewModule";
@@ -13,11 +14,13 @@ import ActivityLog from "./components/modules/Admin/ActivityLog";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeModule, setActiveModule] = useState("sale");
-  const [activeSubmenu, setActiveSubmenu] = useState("1.1");
+  const [activeModule, setActiveModule] = useState("overview");
+  const [activeSubmenu, setActiveSubmenu] = useState("0");
 
   const renderContent = () => {
     switch (activeModule) {
+      case "overview":
+        return <Overview />;
       case "sale":
         return <SaleModule activeSubmenu={activeSubmenu} />;
       case "view":

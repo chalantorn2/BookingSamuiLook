@@ -48,32 +48,6 @@ const VisaForm = ({ formData, setFormData, pricing, updatePricing }) => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Country</label>
-            <input
-              type="text"
-              name="country"
-              className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Vietnam"
-              value={visaData.country}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Visa Type</label>
-            <select
-              name="visaType"
-              className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-              value={visaData.visaType}
-              onChange={handleChange}
-            >
-              <option value="">Select visa type</option>
-              <option value="tourist">Tourist</option>
-              <option value="business">Business</option>
-              <option value="transit">Transit</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Remark</label>
             <textarea
               name="remark"

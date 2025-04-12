@@ -50,19 +50,7 @@ const OtherServiceForm = ({
               onChange={handleChange}
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Service Type
-            </label>
-            <input
-              type="text"
-              name="serviceType"
-              className="w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="ประเภทบริการ"
-              value={otherData.serviceType}
-              onChange={handleChange}
-            />
-          </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Remark</label>
             <textarea
