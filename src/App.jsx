@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
-import Overview from "./components/modules/Overview";
-import SaleModule from "./components/modules/Sale/SaleModule";
-import DocumentsModule from "./components/modules/Documents/DocumentsModule";
-import ViewModule from "./components/modules/View/ViewModule";
-import Information from "./components/modules/Information/Information";
-import UserManagement from "./components/modules/Settings/UserManagement";
+import Overview from "./pages/Overview";
+import SaleModule from "./pages/Sales";
+import DocumentsModule from "./pages/Documents";
+import ViewModule from "./pages/View";
+import Information from "./pages/Information";
+import UserManagement from "./pages/UserManagement";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import RegisterSuccess from "./components/auth/RegisterSuccess";
-import ActivityLog from "./components/modules/Admin/ActivityLog";
+import ActivityLog from "./pages/Admin/ActivityLog";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
