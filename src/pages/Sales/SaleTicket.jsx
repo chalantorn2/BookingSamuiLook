@@ -8,8 +8,8 @@ import RouteSection from "./ticket/RouteSection";
 import TicketTypeSection from "./ticket/TicketTypeSection";
 import ExtrasSection from "./ticket/ExtrasSection";
 import PricingSummarySection from "./ticket/PricingSummarySection";
-import SaleStyles, { combineClasses } from "./common/SaleStyles";
 import usePricing from "../../hooks/usePricing";
+import SaleStyles, { combineClasses } from "./common/SaleStyles";
 
 const SaleTicket = () => {
   const [formData, setFormData] = useState({
@@ -186,7 +186,7 @@ const SaleTicket = () => {
               <section className={SaleStyles.subsection.container}>
                 <div className={SaleStyles.section.headerWrapper2}>
                   <h2 className={SaleStyles.section.headerTitle}>
-                    <svgD
+                    <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5 mr-2"
                       viewBox="0 0 20 20"
@@ -198,7 +198,7 @@ const SaleTicket = () => {
                         d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
                         clipRule="evenodd"
                       />
-                    </svgD>
+                    </svg>
                     การชำระเงิน
                   </h2>
                 </div>

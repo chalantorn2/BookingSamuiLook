@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import PricingTable from "../components/PricingTable";
+import PricingTable from "../../common/PricingTable";
 
 const HotelForm = ({ formData, setFormData, pricing, updatePricing }) => {
   const [hotelData, setHotelData] = useState({

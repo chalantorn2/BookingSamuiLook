@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { FiEdit, FiPlus, FiTrash2, FiSave, FiX } from "react-icons/fi";
-import SaleHeader from "./components/SaleHeader";
-import PaymentMethodSection from "./components/PaymentMethodSection";
-import PricingTable from "./components/PricingTable";
-import TotalSummary from "./components/TotalSummary";
+import SaleHeader from "./common/SaleHeader";
+import PaymentMethodSection from "./common/PaymentMethodSection";
+import PricingTable from "./common/PricingTable";
+import TotalSummary from "./common/TotalSummary";
 import usePricing from "../../hooks/usePricing";
 
 const SaleDeposit = () => {

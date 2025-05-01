@@ -1,6 +1,6 @@
 import React from "react";
-import PricingTable from "./PricingTable";
-import TotalSummary from "./TotalSummary";
+import PricingTable from "../common/PricingTable";
+import TotalSummary from "../common/TotalSummary";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
 const PricingSummarySection = ({ pricing, updatePricing, vatPercent }) => {
