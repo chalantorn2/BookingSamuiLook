@@ -14,66 +14,6 @@ import ActivityLog from "./pages/Admin/ActivityLog";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeModule, setActiveModule] = useState("overview");
-  const [activeSubmenu, setActiveSubmenu] = useState("0");
-
-  const renderContent = () => {
-    switch (activeModule) {
-      case "overview":
-        return <Overview />;
-      case "sale":
-        return <SaleModule activeSubmenu={activeSubmenu} />;
-      case "view":
-        return <ViewModule activeSubmenu={activeSubmenu} />;
-      case "documents":
-        return <DocumentsModule activeSubmenu={activeSubmenu} />;
-      case "information":
-        return <Information />;
-      case "search":
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Search Module</h1>
-            <p>ค้นหาข้อมูลตามเงื่อนไขต่างๆ</p>
-          </div>
-        );
-      case "reports":
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Reports Module</h1>
-            <p>รายงานต่างๆ ของระบบ</p>
-          </div>
-        );
-      case "refund":
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Refund Module</h1>
-            <p>จัดการการคืนเงิน</p>
-          </div>
-        );
-      case "settings":
-        // ตรวจสอบ submenu ของ settings - ในที่นี้มีแค่ User Management
-        return <UserManagement />;
-      default:
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">
-              หน้าหลัก SamuiLookBooking
-            </h1>
-          </div>
-        );
-      case "admin":
-        // ตรวจสอบ submenu ของ admin
-        if (activeSubmenu === "7.1") {
-          return <ActivityLog />;
-        }
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Admin Module</h1>
-            <p>เลือกเมนูย่อยเพื่อจัดการระบบ</p>
-          </div>
-        );
-    }
-  };
 
   return (
     <Router>
@@ -82,23 +22,123 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/register-success" element={<RegisterSuccess />} />
         <Route
-          path="/*"
+          path="*"
           element={
             <div className="flex h-screen bg-gray-100">
-              <Sidebar
-                collapsed={collapsed}
-                setCollapsed={setCollapsed}
-                setActiveModule={setActiveModule}
-                activeModule={activeModule}
-                setActiveSubmenu={setActiveSubmenu}
-                activeSubmenu={activeSubmenu}
-              />
+              <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
               <div
                 className={`transition-all duration-300 flex-1 ${
                   collapsed ? "ml-16" : "ml-64"
                 } overflow-auto`}
               >
-                {renderContent()}
+                <Routes>
+                  <Route path="/" element={<Overview />} />
+                  <Route path="/overview" element={<Overview />} />
+                  <Route
+                    path="/sale/ticket"
+                    element={<SaleModule activeSubmenu="1.1" />}
+                  />
+                  <Route
+                    path="/sale/deposit"
+                    element={<SaleModule activeSubmenu="1.2" />}
+                  />
+                  <Route
+                    path="/sale/voucher"
+                    element={<SaleModule activeSubmenu="1.3" />}
+                  />
+                  <Route
+                    path="/sale/other"
+                    element={<SaleModule activeSubmenu="1.4" />}
+                  />
+                  <Route
+                    path="/view/flight-tickets"
+                    element={<ViewModule activeSubmenu="2.1" />}
+                  />
+                  <Route
+                    path="/view/bus"
+                    element={<ViewModule activeSubmenu="2.2" />}
+                  />
+                  <Route
+                    path="/view/boat"
+                    element={<ViewModule activeSubmenu="2.3" />}
+                  />
+                  <Route
+                    path="/view/tour"
+                    element={<ViewModule activeSubmenu="2.4" />}
+                  />
+                  <Route
+                    path="/view/travel-insurance"
+                    element={<ViewModule activeSubmenu="2.5" />}
+                  />
+                  <Route
+                    path="/view/hotel"
+                    element={<ViewModule activeSubmenu="2.6" />}
+                  />
+                  <Route
+                    path="/view/train"
+                    element={<ViewModule activeSubmenu="2.7" />}
+                  />
+                  <Route
+                    path="/view/visa"
+                    element={<ViewModule activeSubmenu="2.8" />}
+                  />
+                  <Route
+                    path="/view/other-services"
+                    element={<ViewModule activeSubmenu="2.9" />}
+                  />
+                  <Route
+                    path="/documents/invoice-list"
+                    element={<DocumentsModule activeSubmenu="6.1" />}
+                  />
+                  <Route
+                    path="/documents/receipt-list"
+                    element={<DocumentsModule activeSubmenu="6.2" />}
+                  />
+                  <Route
+                    path="/documents/deposit-list"
+                    element={<DocumentsModule activeSubmenu="6.3" />}
+                  />
+                  <Route
+                    path="/documents/voucher-list"
+                    element={<DocumentsModule activeSubmenu="6.4" />}
+                  />
+                  <Route path="/information" element={<Information />} />
+                  <Route path="/user-management" element={<UserManagement />} />
+                  <Route path="/admin/activity-log" element={<ActivityLog />} />
+                  <Route
+                    path="/search"
+                    element={
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold mb-4">
+                          Search Module
+                        </h1>
+                        <p>ค้นหาข้อมูลตามเงื่อนไขต่างๆ</p>
+                      </div>
+                    }
+                  />
+                  <Route
+                    path="/reports"
+                    element={
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold mb-4">
+                          Reports Module
+                        </h1>
+                        <p>รายงานต่างๆ ของระบบ</p>
+                      </div>
+                    }
+                  />
+                  <Route
+                    path="/refund"
+                    element={
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold mb-4">
+                          Refund Module
+                        </h1>
+                        <p>จัดการการคืนเงิน</p>
+                      </div>
+                    }
+                  />
+                </Routes>
               </div>
             </div>
           }

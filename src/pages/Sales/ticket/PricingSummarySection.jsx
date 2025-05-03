@@ -3,7 +3,12 @@ import PricingTable from "../common/PricingTable";
 import TotalSummary from "../common/TotalSummary";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
-const PricingSummarySection = ({ pricing, updatePricing, vatPercent }) => {
+const PricingSummarySection = ({
+  pricing,
+  updatePricing,
+  vatPercent,
+  extras,
+}) => {
   return (
     <div className={SaleStyles.section.container}>
       <div className={SaleStyles.section.headerWrapper}>
@@ -35,11 +40,19 @@ const PricingSummarySection = ({ pricing, updatePricing, vatPercent }) => {
         </section>
         <section className="col-span-5">
           <TotalSummary
-            subtotal={Object.values(pricing).reduce(
-              (sum, item) => sum + parseFloat(item.total || 0),
-              0
-            )}
+            subtotal={
+              Object.values(pricing).reduce(
+                (sum, item) => sum + parseFloat(item.total || 0),
+                0
+              ) +
+              extras.reduce(
+                (sum, item) => sum + parseFloat(item.total_amount || 0),
+                0
+              )
+            }
             vatPercent={vatPercent}
+            pricing={pricing}
+            extras={extras}
           />
         </section>
       </div>

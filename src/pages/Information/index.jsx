@@ -9,10 +9,11 @@ import {
   Filter,
   ChevronsUpDown,
 } from "lucide-react";
+import { supabase } from "../../services/supabase";
 
 const Information = () => {
   // ประเภทข้อมูล
-  const [categories, setCategories] = useState([
+  const [categories] = useState([
     { id: "airline", label: "Airline" },
     { id: "supplier-voucher", label: "Supplier Voucher" },
     { id: "supplier-other", label: "Supplier Other" },
@@ -33,92 +34,29 @@ const Information = () => {
   const [sortField, setSortField] = useState("code");
   const [sortDirection, setSortDirection] = useState("asc");
 
-  // ข้อมูลตัวอย่าง
-  const mockData = {
-    airline: [
-      {
-        id: 1,
-        code: "TG",
-        name: "THAI AIRWAYS INTERNATIONAL",
-        description: "สายการบินไทย",
-        active: true,
-      },
-      {
-        id: 2,
-        code: "FD",
-        name: "THAI AIR ASIA",
-        description: "สายการบินไทยแอร์เอเชีย",
-        active: true,
-      },
-      {
-        id: 3,
-        code: "PG",
-        name: "BANGKOK AIRWAYS",
-        description: "สายการบินบางกอกแอร์เวย์",
-        active: true,
-      },
-    ],
-    "supplier-voucher": [
-      {
-        id: 1,
-        code: "ST",
-        name: "SUN TRAVEL",
-        description: "บริษัทนำเที่ยว Sun Travel",
-        active: true,
-      },
-      {
-        id: 2,
-        code: "BB",
-        name: "BLUE BOAT CO.",
-        description: "บริษัทเรือ Blue Boat",
-        active: true,
-      },
-      {
-        id: 3,
-        code: "GT",
-        name: "GREEN TOURS",
-        description: "บริษัททัวร์ Green Tours",
-        active: true,
-      },
-    ],
-    "supplier-other": [
-      {
-        id: 1,
-        code: "SM",
-        name: "SMILE MARINE",
-        description: "บริษัท Smile Marine",
-        active: true,
-      },
-      {
-        id: 2,
-        code: "OC",
-        name: "OCEANIC CRUISE",
-        description: "บริษัท Oceanic Cruise",
-        active: true,
-      },
-      {
-        id: 3,
-        code: "TW",
-        name: "TROPICAL WAVE TRAVEL",
-        description: "บริษัท Tropical Wave Travel",
-        active: true,
-      },
-    ],
-  };
   // โหลดข้อมูลเมื่อเริ่มต้นหรือเมื่อประเภทข้อมูลเปลี่ยน
   useEffect(() => {
     loadInformationData();
   }, [selectedCategory]);
 
-  const loadInformationData = () => {
+  const loadInformationData = async () => {
     setLoading(true);
     setError(null);
 
-    // จำลองการเรียกข้อมูลจาก API
-    setTimeout(() => {
-      setInformationData(mockData[selectedCategory] || []);
+    try {
+      const { data, error } = await supabase
+        .from("information")
+        .select("*")
+        .eq("category", selectedCategory)
+        .eq("active", true);
+
+      if (error) throw error;
+      setInformationData(data || []);
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err.message);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const handleCategoryChange = (categoryId) => {
@@ -147,19 +85,28 @@ const Information = () => {
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingItem.code.trim() || !editingItem.name.trim()) {
       alert("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
-    // จำลองการอัพเดตข้อมูล
-    const updatedData = informationData.map((item) =>
-      item.id === editingItem.id ? editingItem : item
-    );
+    try {
+      const { error } = await supabase
+        .from("information")
+        .update({
+          code: editingItem.code,
+          name: editingItem.name,
+          description: editingItem.description,
+        })
+        .eq("id", editingItem.id);
 
-    setInformationData(updatedData);
-    setEditingItem(null);
+      if (error) throw error;
+      await loadInformationData();
+      setEditingItem(null);
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+    }
   };
 
   const handleAddNew = () => {
@@ -172,39 +119,48 @@ const Information = () => {
     setAddingNew(false);
   };
 
-  const handleSaveNew = () => {
+  const handleSaveNew = async () => {
     if (!newItem.code.trim() || !newItem.name.trim()) {
       alert("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
-    // จำลองการเพิ่มข้อมูลใหม่
-    const newId = Math.max(...informationData.map((item) => item.id), 0) + 1;
-    const newItemWithId = {
-      ...newItem,
-      id: newId,
-      active: true,
-    };
+    try {
+      const { error } = await supabase.from("information").insert({
+        category: selectedCategory,
+        code: newItem.code,
+        name: newItem.name,
+        description: newItem.description || null,
+        active: true,
+      });
 
-    setInformationData([...informationData, newItemWithId]);
-    setAddingNew(false);
-    setNewItem({ code: "", name: "", description: "" });
+      if (error) throw error;
+      await loadInformationData();
+      setAddingNew(false);
+      setNewItem({ code: "", name: "", description: "" });
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการเพิ่มข้อมูล: " + err.message);
+    }
   };
 
-  const handleDeactivate = (id) => {
+  const handleDeactivate = async (id) => {
     if (window.confirm("คุณต้องการยกเลิกการใช้งานข้อมูลนี้ใช่หรือไม่?")) {
-      // จำลองการยกเลิกการใช้งาน
-      const updatedData = informationData.map((item) =>
-        item.id === id ? { ...item, active: false } : item
-      );
+      try {
+        const { error } = await supabase
+          .from("information")
+          .update({ active: false })
+          .eq("id", id);
 
-      setInformationData(updatedData.filter((item) => item.active));
+        if (error) throw error;
+        await loadInformationData();
+      } catch (err) {
+        setError("เกิดข้อผิดพลาดในการลบ: " + err.message);
+      }
     }
   };
 
   // ฟังก์ชันค้นหาและเรียงลำดับข้อมูล
   const getFilteredAndSortedData = () => {
-    // กรองตามคำค้นหา
     let filteredData = informationData;
     if (searchTerm) {
       filteredData = informationData.filter(
@@ -216,7 +172,6 @@ const Information = () => {
       );
     }
 
-    // เรียงลำดับข้อมูล
     return filteredData.sort((a, b) => {
       const aValue = a[sortField] || "";
       const bValue = b[sortField] || "";
@@ -241,7 +196,6 @@ const Information = () => {
     <div className="bg-gray-100 min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header */}
           <div className="bg-white rounded-t-lg shadow-sm p-4 mb-4">
             <h1 className="text-xl font-bold">Information / ข้อมูล</h1>
             <p className="text-sm opacity-80">
@@ -250,7 +204,6 @@ const Information = () => {
           </div>
 
           <div className="flex flex-col md:flex-row">
-            {/* Sidebar Categories */}
             <div className="w-full md:w-1/4 bg-gray-50 p-4 border-r border-gray-200">
               <h2 className="text-lg font-semibold mb-4">ประเภทข้อมูล</h2>
               <ul className="space-y-2">
@@ -271,7 +224,6 @@ const Information = () => {
               </ul>
             </div>
 
-            {/* Content */}
             <div className="w-full md:w-3/4 p-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                 <h2 className="text-xl font-semibold">
@@ -314,7 +266,6 @@ const Information = () => {
                 </div>
               ) : (
                 <>
-                  {/* Form for adding new item */}
                   {addingNew && (
                     <div className="mb-6 bg-blue-50 p-4 rounded-md">
                       <h3 className="font-semibold mb-2">เพิ่มข้อมูลใหม่</h3>
@@ -373,7 +324,6 @@ const Information = () => {
                     </div>
                   )}
 
-                  {/* Information list */}
                   <div className="border rounded-md overflow-hidden">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">

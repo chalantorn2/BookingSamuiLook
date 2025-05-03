@@ -9,10 +9,10 @@ const ExtrasSection = ({ extras, setExtras }) => {
       {
         id: extras.length + 1,
         description: "",
-        net: "",
-        sale: "",
-        pax: 1,
-        total: "",
+        net_price: "", // เปลี่ยนจาก net เป็น net_price
+        sale_price: "", // เปลี่ยนจาก sale เป็น sale_price
+        quantity: 1, // เปลี่ยนจาก pax เป็น quantity
+        total_amount: "", // เปลี่ยนจาก total เป็น total_amount
       },
     ]);
   };
@@ -79,7 +79,16 @@ const ExtrasSection = ({ extras, setExtras }) => {
                 >
                   <span className="font-medium">{index + 1}</span>
                 </div>
-                <input type="text" className={SaleStyles.form.input} />
+                <input
+                  type="text"
+                  className={SaleStyles.form.input}
+                  value={item.description || ""}
+                  onChange={(e) => {
+                    const updatedExtras = [...extras];
+                    updatedExtras[index].description = e.target.value;
+                    setExtras(updatedExtras);
+                  }}
+                />
               </div>
               <div className="col-span-3">
                 <input
@@ -89,6 +98,12 @@ const ExtrasSection = ({ extras, setExtras }) => {
                     "text-end appearance-none"
                   )}
                   placeholder="0"
+                  value={item.net_price || ""} // เปลี่ยนจาก net เป็น net_price
+                  onChange={(e) => {
+                    const updatedExtras = [...extras];
+                    updatedExtras[index].net_price = e.target.value; // เปลี่ยนจาก net เป็น net_price
+                    setExtras(updatedExtras);
+                  }}
                 />
               </div>
               <div className="col-span-3">
@@ -96,6 +111,21 @@ const ExtrasSection = ({ extras, setExtras }) => {
                   type="number"
                   className={combineClasses(SaleStyles.form.input, "text-end")}
                   placeholder="0"
+                  value={item.sale_price || ""} // เปลี่ยนจาก sale เป็น sale_price
+                  onChange={(e) => {
+                    const updatedExtras = [...extras];
+                    updatedExtras[index].sale_price = e.target.value; // เปลี่ยนจาก sale เป็น sale_price
+
+                    // คำนวณยอดรวมใหม่
+                    const salePrice = parseFloat(e.target.value) || 0;
+                    const quantity =
+                      parseFloat(updatedExtras[index].quantity) || 1; // เปลี่ยนจาก pax เป็น quantity
+                    updatedExtras[index].total_amount = (
+                      salePrice * quantity
+                    ).toFixed(2); // เปลี่ยนจาก total เป็น total_amount
+
+                    setExtras(updatedExtras);
+                  }}
                 />
               </div>
               <div className="col-span-1">
@@ -107,16 +137,32 @@ const ExtrasSection = ({ extras, setExtras }) => {
                     "text-center"
                   )}
                   placeholder="1"
+                  value={item.quantity || 1} // เปลี่ยนจาก pax เป็น quantity
+                  onChange={(e) => {
+                    const updatedExtras = [...extras];
+                    updatedExtras[index].quantity = e.target.value; // เปลี่ยนจาก pax เป็น quantity
+
+                    // คำนวณยอดรวมใหม่
+                    const salePrice =
+                      parseFloat(updatedExtras[index].sale_price) || 0; // เปลี่ยนจาก sale เป็น sale_price
+                    const quantity = parseFloat(e.target.value) || 1; // เปลี่ยนจาก pax เป็น quantity
+                    updatedExtras[index].total_amount = (
+                      salePrice * quantity
+                    ).toFixed(2); // เปลี่ยนจาก total เป็น total_amount
+
+                    setExtras(updatedExtras);
+                  }}
                 />
               </div>
               <div className="col-span-4 flex items-center">
                 <input
-                  type="number"
+                  type="text"
                   className={combineClasses(
                     SaleStyles.form.inputDisabled,
                     "text-end"
                   )}
                   placeholder="0"
+                  value={item.total_amount || "0.00"} // เปลี่ยนจาก total เป็น total_amount
                   disabled
                 />
               </div>

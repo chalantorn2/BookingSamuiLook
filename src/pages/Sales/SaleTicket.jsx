@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiSave } from "react-icons/fi";
 import SaleHeader from "./common/SaleHeader";
 import PaymentMethodSection from "./common/PaymentMethodSection";
@@ -11,7 +11,19 @@ import PricingSummarySection from "./ticket/PricingSummarySection";
 import usePricing from "../../hooks/usePricing";
 import SaleStyles, { combineClasses } from "./common/SaleStyles";
 
+import { createFlightTicket } from "../../services/ticketService";
+import { getSuppliers } from "../../services/supplierService";
+import { getCustomers, createCustomer } from "../../services/customerService";
+import { validateFlightTicket } from "../../utils/validation";
+import { supabase } from "../../services/supabase";
+
 const SaleTicket = () => {
+  const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [suppliers, setSuppliers] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
   const [formData, setFormData] = useState({
     customer: "",
     contactDetails: "",
@@ -29,6 +41,18 @@ const SaleTicket = () => {
     customerPayment: "",
     customerPaymentDetails: "",
   });
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const airlinesData = await getSuppliers("airline");
+      setSuppliers(airlinesData);
+
+      const customersData = await getCustomers();
+      setCustomers(customersData);
+    };
+
+    loadInitialData();
+  }, []);
 
   const {
     pricing,
@@ -61,16 +85,201 @@ const SaleTicket = () => {
     { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
   ]);
 
-  const handleSubmit = (e) => {
+  // แก้ไขเฉพาะในฟังก์ชัน handleSubmit ของ SaleTicket.jsx
+  // ส่วนที่ต้องแก้ไขในฟังก์ชัน handleSubmit ของ SaleTicket.jsx
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted", {
-      formData,
+    setLoading(true);
+    setValidationErrors({});
+
+    console.log("Form submitted", { formData, passengers, routes, pricing });
+
+    const { isValid, errors } = validateFlightTicket({
+      customer: formData.customer,
+      supplier: formData.supplier,
       passengers,
       routes,
-      extras,
       pricing,
+      ticketType: formData.ticketType,
+      b2bDetails: formData.b2bDetails,
+      otherDetails: formData.otherDetails,
+      paymentMethod: formData.paymentMethod,
+      customerPayment: formData.customerPayment,
     });
+
+    if (!isValid) {
+      console.log("Validation failed", errors);
+      setValidationErrors(errors);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const userData = await supabase.auth.getUser();
+      const userId = userData.data?.user?.id;
+
+      // ตรวจสอบว่ามีลูกค้าที่เลือกหรือไม่
+      let customerId = selectedCustomer?.id;
+
+      // ถ้าไม่มี customerId แต่มีชื่อลูกค้า ให้สร้างลูกค้าใหม่
+      if (!customerId && formData.customer) {
+        console.log("Creating new customer from form submission");
+        const newCustomerResult = await createCustomer({
+          name: formData.customer,
+          address: formData.contactDetails || "",
+          id_number: formData.id || "",
+          phone: formData.phone || "",
+        });
+
+        if (newCustomerResult.success) {
+          customerId = newCustomerResult.customerId;
+          console.log("New customer created with ID:", customerId);
+        } else {
+          console.error("Failed to create customer:", newCustomerResult.error);
+          alert(`ไม่สามารถสร้างลูกค้าใหม่ได้: ${newCustomerResult.error}`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      console.log("Form Payment Details:", {
+        companyMethod: formData.paymentMethod,
+        companyDetails: formData.company_payment_details,
+        customerMethod: formData.customerPayment,
+        customerDetails: formData.customer_payment_details,
+      });
+
+      const subtotalAmount = calculateSubtotal();
+      const vatAmount = calculateVat();
+      const totalAmount = calculateTotal();
+
+      // จัดรูปแบบข้อมูลเพื่อส่งไปยัง API ตามโครงสร้างฐานข้อมูลใหม่
+      const ticketData = {
+        // ข้อมูลหลัก
+        customerId: customerId, // ใช้ customerId ที่ได้จากการสร้างลูกค้าใหม่หรือที่มีอยู่แล้ว
+        supplierId: formData.supplierId || null,
+        code: formData.code || "",
+        bookingDate: formData.date,
+        status: "pending",
+        paymentStatus: "unpaid",
+        creditDays: formData.creditDays,
+        dueDate: formData.dueDate,
+        salesName: formData.salesName,
+
+        // ข้อมูล ticket_type ใน ticket_additional_info
+        ticketType: formData.ticketType,
+        ticketTypeDetails:
+          formData.ticketType === "b2b"
+            ? formData.b2bDetails
+            : formData.ticketType === "other"
+            ? formData.otherDetails
+            : null,
+
+        // ข้อมูลการชำระเงินใน ticket_additional_info
+        companyPaymentMethod: formData.paymentMethod,
+        companyPaymentDetails: formData.company_payment_details || "",
+        customerPaymentMethod: formData.customerPayment,
+        customerPaymentDetails: formData.customer_payment_details || "",
+
+        // ข้อมูลราคา
+        subtotalAmount,
+        vatPercent,
+        vatAmount,
+        totalAmount,
+        pricing,
+
+        // ข้อมูลอื่นๆ
+        passengers: passengers.filter((p) => p.name.trim()),
+        routes: routes.filter((r) => r.origin || r.destination),
+        extras: extras.filter((e) => e.description),
+
+        // ข้อมูลผู้สร้าง
+        createdBy: userId,
+        remarks: formData.remarks || "",
+      };
+
+      console.log("Sending data to createFlightTicket:", ticketData);
+      const result = await createFlightTicket(ticketData);
+
+      if (result.success) {
+        alert(`บันทึกข้อมูลสำเร็จ เลขที่อ้างอิง: ${result.referenceNumber}`);
+        resetForm();
+      } else {
+        alert(`เกิดข้อผิดพลาด: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error saving ticket:", error);
+      alert(`เกิดข้อผิดพลาด: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const data = await getSuppliers("airline");
+      setSuppliers(data);
+    };
+
+    fetchSuppliers();
+  }, []);
+
+  // สร้างฟังก์ชันสำหรับรีเซ็ตฟอร์ม
+  const resetForm = () => {
+    setFormData({
+      customer: "",
+      contactDetails: "",
+      phone: "",
+      id: "",
+      date: new Date().toISOString().split("T")[0],
+      creditDays: "0",
+      dueDate: "",
+      salesName: "",
+      supplier: "",
+      supplierName: "",
+      ticketType: "bsp",
+      paymentMethod: "",
+      companyPaymentDetails: "",
+      customerPayment: "",
+      customerPaymentDetails: "",
+    });
+
+    updatePricing("adult", "net", "", 0);
+    updatePricing("adult", "sale", "", 0);
+    updatePricing("adult", "pax", 0, 0);
+    updatePricing("child", "net", "", 0);
+    updatePricing("child", "sale", "", 0);
+    updatePricing("child", "pax", 0, 0);
+    updatePricing("infant", "net", "", 0);
+    updatePricing("infant", "sale", "", 0);
+    updatePricing("infant", "pax", 0, 0);
+
+    setPassengers([{ id: 1, name: "", age: "", ticketNo: "" }]);
+    setRoutes([
+      {
+        id: 1,
+        date: "",
+        airline: "",
+        flight: "",
+        origin: "",
+        destination: "",
+        departure: "",
+        arrival: "",
+      },
+    ]);
+    setExtras([
+      { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
+    ]);
+    setSelectedCustomer(null);
+    setValidationErrors({});
+  };
+
+  const calculatedSubtotal =
+    calculateSubtotal() +
+    extras.reduce((sum, item) => sum + parseFloat(item.total_amount || 0), 0);
+  const calculatedVatAmount = (calculatedSubtotal * vatPercent) / 100;
+  const calculatedTotal = calculatedSubtotal + calculatedVatAmount;
 
   return (
     <div className={SaleStyles.mainContainer}>
@@ -81,8 +290,18 @@ const SaleTicket = () => {
               Sale Ticket / ขายตั๋วเครื่องบิน
             </h1>
             <div className={SaleStyles.header.buttonContainer}>
-              <button type="submit" className={SaleStyles.button.primary}>
-                <FiSave className={SaleStyles.button.icon} /> บันทึก
+              <button
+                type="submit"
+                className={SaleStyles.button.primary}
+                disabled={loading}
+              >
+                {loading ? (
+                  <span>กำลังบันทึก...</span>
+                ) : (
+                  <>
+                    <FiSave className={SaleStyles.button.icon} /> บันทึก
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -102,6 +321,8 @@ const SaleTicket = () => {
                   formData={formData}
                   setFormData={setFormData}
                   section="customer"
+                  selectedCustomer={selectedCustomer}
+                  setSelectedCustomer={setSelectedCustomer}
                 />
               </div>
               <div>
@@ -117,6 +338,10 @@ const SaleTicket = () => {
                   formData={formData}
                   setFormData={setFormData}
                   section="price"
+                  totalAmount={calculatedTotal}
+                  vatPercent={vatPercent}
+                  subtotalAmount={calculatedSubtotal}
+                  vatAmount={calculatedVatAmount}
                 />
               </div>
             </div>
@@ -175,11 +400,11 @@ const SaleTicket = () => {
             </div>
 
             <ExtrasSection extras={extras} setExtras={setExtras} />
-
             <PricingSummarySection
               pricing={pricing}
               updatePricing={updatePricing}
               vatPercent={vatPercent}
+              extras={extras} // ส่ง props extras ไปยัง PricingSummarySection
             />
 
             <div className={SaleStyles.section.container}>

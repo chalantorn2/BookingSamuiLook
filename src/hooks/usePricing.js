@@ -7,9 +7,10 @@ import { useState } from "react";
  * @param {number} initialVatPercent - เปอร์เซ็นต์ภาษีเริ่มต้น
  * @returns {Object} - ข้อมูลและฟังก์ชันที่เกี่ยวข้องกับราคา
  */
+// แก้ไขเฉพาะจุดในฟังก์ชัน resetPricing เพื่อแก้บั๊กที่มีอยู่
 const usePricing = (
   initialPricing = {
-    adult: { net: "", sale: "", pax: 0, total: "0" },
+    adult: { net: "", sale: "", pax: 1, total: "0" },
     child: { net: "", sale: "", pax: 0, total: "0" },
     infant: { net: "", sale: "", pax: 0, total: "0" },
   },
@@ -49,15 +50,26 @@ const usePricing = (
     return calculateSubtotal() + calculateVat();
   };
 
+  // แก้ไขฟังก์ชัน resetPricing ที่มีบั๊ก
+  const resetPricing = () => {
+    setPricing({
+      adult: { net: "", sale: "", pax: 1, total: "0" },
+      child: { net: "", sale: "", pax: 0, total: "0" },
+      infant: { net: "", sale: "", pax: 0, total: "0" },
+    });
+    setVatPercent(7); // เปลี่ยนจาก 0 เป็น 7 (ค่าเริ่มต้น)
+  };
+
+  // ส่งกลับฟังก์ชันและค่าต่างๆ
   return {
     pricing,
-    setPricing,
     vatPercent,
     setVatPercent,
     updatePricing,
     calculateSubtotal,
     calculateVat,
     calculateTotal,
+    resetPricing,
   };
 };
 

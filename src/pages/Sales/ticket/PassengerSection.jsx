@@ -6,7 +6,7 @@ const PassengerSection = ({ passengers, setPassengers }) => {
   const addPassenger = () => {
     setPassengers([
       ...passengers,
-      { id: passengers.length + 1, name: "", age: "", ticketNo: "" },
+      { id: passengers.length + 1, name: "", age: "", ticketNumber: "" }, // เปลี่ยนจาก ticketNo เป็น ticketNumber
     ]);
   };
 
@@ -57,7 +57,16 @@ const PassengerSection = ({ passengers, setPassengers }) => {
                 >
                   <span className="font-medium">{index + 1}</span>
                 </div>
-                <input type="text" className={SaleStyles.form.input} />
+                <input
+                  type="text"
+                  className={SaleStyles.form.input}
+                  value={passenger.name || ""}
+                  onChange={(e) => {
+                    const updatedPassengers = [...passengers];
+                    updatedPassengers[index].name = e.target.value;
+                    setPassengers(updatedPassengers);
+                  }}
+                />
               </div>
               <div className="col-span-2">
                 <input
@@ -66,6 +75,12 @@ const PassengerSection = ({ passengers, setPassengers }) => {
                     SaleStyles.form.input,
                     "text-center"
                   )}
+                  value={passenger.age || ""}
+                  onChange={(e) => {
+                    const updatedPassengers = [...passengers];
+                    updatedPassengers[index].age = e.target.value;
+                    setPassengers(updatedPassengers);
+                  }}
                 />
               </div>
               <div className="col-span-3">
@@ -75,10 +90,25 @@ const PassengerSection = ({ passengers, setPassengers }) => {
                     SaleStyles.form.input,
                     "text-center"
                   )}
+                  value={passenger.ticketNumber || ""} // เปลี่ยนจาก ticketNo เป็น ticketNumber
+                  onChange={(e) => {
+                    const updatedPassengers = [...passengers];
+                    updatedPassengers[index].ticketNumber = e.target.value; // เปลี่ยนจาก ticketNo เป็น ticketNumber
+                    setPassengers(updatedPassengers);
+                  }}
                 />
               </div>
               <div className="col-span-6">
-                <input type="text" className={SaleStyles.form.input} />
+                <input
+                  type="text"
+                  className={SaleStyles.form.input}
+                  value={passenger.additionalInfo || ""}
+                  onChange={(e) => {
+                    const updatedPassengers = [...passengers];
+                    updatedPassengers[index].additionalInfo = e.target.value;
+                    setPassengers(updatedPassengers);
+                  }}
+                />
               </div>
               <div className="col-span-1 flex items-center justify-center">
                 <button

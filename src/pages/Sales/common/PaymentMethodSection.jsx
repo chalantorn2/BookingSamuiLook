@@ -30,16 +30,14 @@ const PaymentMethodSection = ({
 
   // สร้างชื่อฟิลด์สำหรับเก็บรายละเอียด ถ้ามี sectionType ให้เพิ่มไปด้วย
   const detailsField = sectionType
-    ? `${sectionType}${
-        detailsFieldName.charAt(0).toUpperCase() + detailsFieldName.slice(1)
-      }`
+    ? `${sectionType}_payment_details` // เปลี่ยนเป็นรูปแบบ company_payment_details หรือ customer_payment_details
     : detailsFieldName;
 
-  // จัดการเมื่อเลือกวิธีการชำระเงิน
+  // และแก้ไขส่วนการจัดการเมื่อเลือกวิธีการชำระเงิน
   const handlePaymentMethodChange = (method) => {
     setFormData({
       ...formData,
-      [fieldName]: method,
+      [fieldName]: method, // ใช้ company_payment_method หรือ customer_payment_method
     });
   };
 

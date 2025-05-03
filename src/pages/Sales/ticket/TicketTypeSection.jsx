@@ -26,6 +26,9 @@ const TicketTypeSection = ({ formData, setFormData }) => {
                   setFormData({
                     ...formData,
                     ticketType: type.toLowerCase(),
+                    // รีเซ็ตฟิลด์เพิ่มเติมเมื่อเปลี่ยนประเภทตั๋ว
+                    b2bDetails: "",
+                    otherDetails: "",
                   })
                 }
                 className={SaleStyles.form.radio}
@@ -49,6 +52,8 @@ const TicketTypeSection = ({ formData, setFormData }) => {
                 setFormData({
                   ...formData,
                   ticketType: "b2b",
+                  // รีเซ็ตฟิลด์ otherDetails เมื่อเลือก b2b
+                  otherDetails: "",
                 })
               }
               className={SaleStyles.form.radio}
@@ -85,6 +90,8 @@ const TicketTypeSection = ({ formData, setFormData }) => {
                 setFormData({
                   ...formData,
                   ticketType: "other",
+                  // รีเซ็ตฟิลด์ b2bDetails เมื่อเลือก other
+                  b2bDetails: "",
                 })
               }
               className={SaleStyles.form.radio}

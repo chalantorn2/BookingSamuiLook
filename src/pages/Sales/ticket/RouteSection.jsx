@@ -11,6 +11,7 @@ const RouteSection = ({ routes, setRoutes }) => {
         date: "",
         airline: "",
         flight: "",
+        rbd: "",
         origin: "",
         destination: "",
         departure: "",
@@ -23,6 +24,13 @@ const RouteSection = ({ routes, setRoutes }) => {
     if (routes.length > 1) {
       setRoutes(routes.filter((r) => r.id !== id));
     }
+  };
+
+  const formatTime = (value) => {
+    // Allow complete deletion
+    if (!value) return "";
+    // Allow only digits, colon, and dot
+    return value.replace(/[^0-9:.]/g, "");
   };
 
   return (
@@ -71,11 +79,41 @@ const RouteSection = ({ routes, setRoutes }) => {
               ].map((field) => (
                 <div key={field.key} className="col-span-1">
                   <label
-                    className={combineClasses(SaleStyles.form.label, "text-xs")}
+                    className={combineClasses(
+                      SaleStyles.form.label,
+                      "text-xs text-center block"
+                    )}
                   >
                     {field.label}
                   </label>
-                  <input type="text" className={SaleStyles.form.input} />
+                  <input
+                    type="text"
+                    className={combineClasses(
+                      SaleStyles.form.input,
+                      "text-center"
+                    )}
+                    value={route[field.key] || ""}
+                    onChange={(e) => {
+                      const updatedRoutes = [...routes];
+                      if (
+                        field.key === "departure" ||
+                        field.key === "arrival"
+                      ) {
+                        updatedRoutes[index][field.key] = formatTime(
+                          e.target.value
+                        );
+                      } else {
+                        updatedRoutes[index][field.key] =
+                          e.target.value.toUpperCase();
+                      }
+                      setRoutes(updatedRoutes);
+                    }}
+                    pattern={
+                      field.key === "departure" || field.key === "arrival"
+                        ? "^([0-1]?[0-9]|2[0-3])[:.][0-5][0-9]$"
+                        : undefined
+                    }
+                  />
                 </div>
               ))}
             </div>

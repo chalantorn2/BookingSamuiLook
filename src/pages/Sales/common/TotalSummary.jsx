@@ -24,12 +24,17 @@ const TotalSummary = ({
     size: "md",
     align: "right",
   },
+  extras = [],
+  pricing = {},
 }) => {
-  // คำนวณภาษีและยอดรวมถ้าไม่ได้กำหนดมา
+  const calculatedSubtotal = subtotal; // ใช้ subtotal ที่ส่งเข้ามาโดยตรง (ซึ่งรวม extras แล้วจาก SaleHeader)
+
   const calculatedVatAmount =
-    vatAmount !== undefined ? vatAmount : (subtotal * vatPercent) / 100;
+    vatAmount !== undefined
+      ? vatAmount
+      : (calculatedSubtotal * vatPercent) / 100;
   const calculatedTotal =
-    total !== undefined ? total : subtotal + calculatedVatAmount;
+    total !== undefined ? total : calculatedSubtotal + calculatedVatAmount;
 
   // กำหนดขนาดตาม config
   const widthClass =
@@ -64,7 +69,8 @@ const TotalSummary = ({
       <div className="flex justify-between mb-2">
         <div className="font-medium">ยอดรวมเป็นเงิน</div>
         <div className="font-bold text-gray-700">
-          {formatCurrency(subtotal)}
+          {formatCurrency(calculatedSubtotal)}{" "}
+          {/* ใช้ calculatedSubtotal ที่รวม extras แล้ว */}
         </div>
       </div>
       <div className="flex justify-between mb-2">
