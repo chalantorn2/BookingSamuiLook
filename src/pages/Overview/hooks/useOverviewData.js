@@ -30,10 +30,8 @@ export const paymentStatusMap = {
 };
 
 export const useOverviewData = ({
-  dateRange,
-  selectedDate,
-  selectedMonth,
-  selectedYear,
+  startDate,
+  endDate,
   serviceTypeFilter,
   sortField,
   sortDirection,
@@ -64,118 +62,24 @@ export const useOverviewData = ({
     other: 0,
   });
 
-  // ฟังก์ชันสำหรับคำนวณช่วงเวลาที่เลือก
-  const getDateRange = () => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    if (dateRange === "day") {
-      // ถ้าเลือกวันที่เฉพาะเจาะจง
-      if (selectedDate) {
-        const selectedDateObj = new Date(selectedDate);
-        const startOfDay = new Date(selectedDateObj);
-        startOfDay.setHours(0, 0, 0, 0);
-
-        const endOfDay = new Date(selectedDateObj);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        return { start: startOfDay.toISOString(), end: endOfDay.toISOString() };
-      }
-
-      // ถ้าไม่ได้เลือก ใช้วันนี้เป็นค่าเริ่มต้น
-      const startOfToday = new Date(today);
-      startOfToday.setHours(0, 0, 0, 0);
-
-      const endOfToday = new Date(today);
-      endOfToday.setHours(23, 59, 59, 999);
-
-      return {
-        start: startOfToday.toISOString(),
-        end: endOfToday.toISOString(),
-      };
-    }
-
-    if (dateRange === "week") {
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay()); // เริ่มจากวันอาทิตย์
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6); // จบที่วันเสาร์
-      endOfWeek.setHours(23, 59, 59, 999);
-
-      return { start: startOfWeek.toISOString(), end: endOfWeek.toISOString() };
-    }
-
-    if (dateRange === "month") {
-      // ถ้าเลือกเดือนเฉพาะเจาะจง
-      if (selectedMonth && selectedYear) {
-        const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
-        startOfMonth.setHours(0, 0, 0, 0);
-
-        const endOfMonth = new Date(selectedYear, selectedMonth, 0);
-        endOfMonth.setHours(23, 59, 59, 999);
-
-        return {
-          start: startOfMonth.toISOString(),
-          end: endOfMonth.toISOString(),
-        };
-      }
-
-      // ค่าเริ่มต้นเป็นเดือนปัจจุบัน
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      endOfMonth.setHours(23, 59, 59, 999);
-
-      return {
-        start: startOfMonth.toISOString(),
-        end: endOfMonth.toISOString(),
-      };
-    }
-
-    if (dateRange === "year") {
-      // ถ้าเลือกปีเฉพาะเจาะจง
-      if (selectedYear) {
-        const startOfYear = new Date(selectedYear, 0, 1);
-        startOfYear.setHours(0, 0, 0, 0);
-
-        const endOfYear = new Date(selectedYear, 11, 31);
-        endOfYear.setHours(23, 59, 59, 999);
-
-        return {
-          start: startOfYear.toISOString(),
-          end: endOfYear.toISOString(),
-        };
-      }
-
-      // ค่าเริ่มต้นเป็นปีปัจจุบัน
-      const startOfYear = new Date(today.getFullYear(), 0, 1);
-      startOfYear.setHours(0, 0, 0, 0);
-
-      const endOfYear = new Date(today.getFullYear(), 11, 31);
-      endOfYear.setHours(23, 59, 59, 999);
-
-      return { start: startOfYear.toISOString(), end: endOfYear.toISOString() };
-    }
-
-    // ค่าเริ่มต้น ใช้วันนี้
-    return {
-      start: new Date(today.setHours(0, 0, 0, 0)).toISOString(),
-      end: new Date(today.setHours(23, 59, 59, 999)).toISOString(),
-    };
-  };
-
   // ฟังก์ชันดึงข้อมูลจากฐานข้อมูล
   const fetchData = async () => {
     setLoading(true);
 
     try {
-      const dateRangeValues = getDateRange();
+      // ใช้ startDate และ endDate ที่ส่งเข้ามาโดยตรง
+      // แปลงวันที่ให้อยู่ในรูปแบบที่เหมาะสมสำหรับ query
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
 
-      // ตรวจสอบและแสดงช่วงเวลาที่ใช้ในการค้นหา
-      console.log("Date range for search:", dateRangeValues);
+      console.log("Using date range:", {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        startFormatted: start.toLocaleDateString(),
+        endFormatted: end.toLocaleDateString(),
+      });
 
       // ดึงข้อมูลตั๋วเครื่องบิน - ปรับปรุงตามโครงสร้างฐานข้อมูลจริง
       let query = supabase
@@ -193,8 +97,8 @@ export const useOverviewData = ({
           ticket_additional_info:ticket_additional_info_id(*)
         `
         )
-        .gte("created_at", dateRangeValues.start)
-        .lte("created_at", dateRangeValues.end);
+        .gte("created_at", start.toISOString())
+        .lte("created_at", end.toISOString());
 
       // แสดง query เพื่อตรวจสอบ
       console.log("Executing query:", query);
@@ -396,204 +300,6 @@ export const useOverviewData = ({
     return result;
   };
 
-  // ฟังก์ชันพิมพ์รายงาน
-  const handlePrint = () => {
-    const summaryData = summary;
-
-    // สร้างหน้าต่างใหม่สำหรับการพิมพ์
-    const printWindow = window.open("", "_blank");
-
-    // สร้างเนื้อหาสำหรับการพิมพ์
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>รายงานภาพรวม SamuiLookBooking</title>
-          <meta charset="UTF-8">
-          <style>
-            @page {
-              size: A4;
-              margin: 1cm;
-            }
-            body {
-              font-family: "Prompt", sans-serif;
-              color: #333;
-              line-height: 1.5;
-              margin: 0;
-              padding: 20px;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 20px;
-              padding-bottom: 10px;
-              border-bottom: 2px solid #3b82f6;
-            }
-            h1 {
-              font-size: 24px;
-              margin: 0 0 10px 0;
-            }
-            h2 {
-              font-size: 18px;
-              margin: 30px 0 15px 0;
-              color: #333;
-            }
-            .summary-cards {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 20px;
-              flex-wrap: wrap;
-            }
-            .card {
-              width: 18%;
-              padding: 10px;
-              margin-bottom: 10px;
-              border-left: 3px solid #3b82f6;
-              background-color: #f8fafc;
-            }
-            .card-title {
-              font-size: 14px;
-              color: #666;
-              margin: 0;
-            }
-            .card-value {
-              font-size: 18px;
-              font-weight: bold;
-              margin: 5px 0 0 0;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-              page-break-inside: auto;
-            }
-            tr {
-              page-break-inside: avoid;
-              page-break-after: auto;
-            }
-            th, td {
-              padding: 8px;
-              text-align: left;
-              border-bottom: 1px solid #ddd;
-              font-size: 12px;
-            }
-            th {
-              background-color: #f8fafc;
-              font-weight: 600;
-            }
-            .footer {
-              text-align: center;
-              font-size: 12px;
-              color: #666;
-              margin-top: 30px;
-              position: fixed;
-              bottom: 0;
-              width: 100%;
-            }
-            .status-confirmed { color: #166534; }
-            .status-pending { color: #92400E; }
-            .status-cancelled { color: #B91C1C; }
-            .payment-paid { color: #1E40AF; }
-            .payment-unpaid { color: #4B5563; }
-            .payment-partially { color: #7E22CE; }
-            .payment-refunded { color: #BE185D; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>รายงานภาพรวม SamuiLookBooking</h1>
-            <p>ช่วงเวลา: ${
-              dateRange === "day"
-                ? "ประจำวัน"
-                : dateRange === "week"
-                ? "ประจำสัปดาห์"
-                : dateRange === "month"
-                ? "ประจำเดือน"
-                : "ประจำปี"
-            } ${new Date().toLocaleDateString("th-TH")}</p>
-          </div>
-          
-          <div class="summary-cards">
-            <div class="card">
-              <p class="card-title">จำนวนรายการทั้งหมด</p>
-              <p class="card-value">${summaryData.total} รายการ</p>
-            </div>
-            <div class="card">
-              <p class="card-title">ยอดเงินรวม</p>
-              <p class="card-value">฿${summaryData.totalAmount.toLocaleString(
-                "th-TH",
-                { minimumFractionDigits: 2 }
-              )}</p>
-            </div>
-            <div class="card">
-              <p class="card-title">ยืนยันแล้ว</p>
-              <p class="card-value">${summaryData.confirmed} รายการ</p>
-            </div>
-            <div class="card">
-              <p class="card-title">รอดำเนินการ</p>
-              <p class="card-value">${summaryData.pending} รายการ</p>
-            </div>
-            <div class="card">
-              <p class="card-title">ชำระแล้ว</p>
-              <p class="card-value">${summaryData.paid} รายการ</p>
-            </div>
-          </div>
-          
-          <h2>รายการทั้งหมด</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>วันที่</th>
-                <th>ลูกค้า</th>
-                <th>ประเภท</th>
-                <th>จำนวนเงิน</th>
-                <th>สถานะ</th>
-                <th>การชำระ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredData
-                .map(
-                  (item) => `
-                <tr>
-                  <td>${item.referenceNumber}</td>
-                  <td>${new Date(item.date).toLocaleDateString("th-TH")}</td>
-                  <td>${item.customer}</td>
-                  <td>${getServiceName(item.serviceType)}</td>
-                  <td>฿${item.amount.toLocaleString("th-TH", {
-                    minimumFractionDigits: 2,
-                  })}</td>
-                  <td class="status-${item.status}">${
-                    statusMap[item.status]?.label || item.status
-                  }</td>
-                  <td class="payment-${item.paymentStatus}">${
-                    paymentStatusMap[item.paymentStatus]?.label ||
-                    item.paymentStatus
-                  }</td>
-                </tr>
-              `
-                )
-                .join("")}
-            </tbody>
-          </table>
-          
-          <div class="footer">
-            <p>วันที่พิมพ์: ${new Date().toLocaleString("th-TH")}</p>
-          </div>
-        </body>
-      </html>
-    `;
-
-    // เขียนเนื้อหาลงในหน้าต่างใหม่
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-
-    // สั่งพิมพ์เมื่อโหลดเนื้อหาเสร็จ
-    printWindow.onload = function () {
-      printWindow.print();
-    };
-  };
-
   // Helper function สำหรับแปลงประเภทบริการเป็นข้อความ
   const getServiceName = (type) => {
     const service = serviceTypes.find((s) => s.id === type);
@@ -604,15 +310,7 @@ export const useOverviewData = ({
   useEffect(() => {
     console.log("Parameters changed, fetching data...");
     fetchData();
-  }, [
-    dateRange,
-    selectedDate,
-    selectedMonth,
-    selectedYear,
-    serviceTypeFilter,
-    sortField,
-    sortDirection,
-  ]);
+  }, [startDate, endDate, serviceTypeFilter, sortField, sortDirection]);
 
   // อัปเดตข้อมูลกรองเมื่อมีการค้นหาหรือเมื่อกิจกรรมเปลี่ยน
   useEffect(() => {
@@ -632,9 +330,7 @@ export const useOverviewData = ({
     filteredData,
     summary,
     fetchData,
-    getDateRange,
     getFilteredData,
     calculateSummary,
-    handlePrint,
   };
 };

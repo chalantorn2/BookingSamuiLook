@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Printer, Filter } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Filter } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import DateRangeSelector from "./components/DateRangeSelector";
 import ServiceTypeFilter from "./components/ServiceTypeFilter";
 import SummaryCards from "./components/SummaryCards";
@@ -8,13 +9,41 @@ import TransactionsTable from "./components/TransactionsTable";
 import { useOverviewData } from "./hooks/useOverviewData";
 
 const Overview = () => {
-  // สถานะหลักของหน้า Overview
-  const [dateRange, setDateRange] = useState("day");
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const getCurrentMonthRange = () => {
+    const now = new Date(); // 5/4/2025
+    const firstDay = startOfMonth(now); // 2025-05-01
+    const lastDay = endOfMonth(now); // 2025-05-31
+
+    return {
+      start: format(firstDay, "yyyy-MM-dd"), // '2025-05-01'
+      end: format(lastDay, "yyyy-MM-dd"), // '2025-05-31'
+    };
+  };
+
+  const dateRange = getCurrentMonthRange();
+
+  const [startDate, setStartDate] = useState(dateRange.start); // '2025-05-01'
+  const [endDate, setEndDate] = useState(dateRange.end); // '2025-05-31'
+
+  // ดีบักเพื่อดูค่า startDate และ endDate
+  useEffect(() => {
+    console.log("Initial startDate:", startDate); // ควรเป็น '2025-05-01'
+    console.log("Initial endDate:", endDate); // ควรเป็น '2025-05-31'
+
+    const range = getCurrentMonthRange();
+    setStartDate(range.start);
+    setEndDate(range.end);
+
+    console.log("After set startDate:", range.start); // ควรเป็น '2025-05-01'
+    console.log("After set endDate:", range.end); // ควรเป็น '2025-05-31'
+  }, []); // ทำงานครั้งเดียวเมื่อโหลดหน้า
+
+  // ดีบักเมื่อ startDate หรือ endDate เปลี่ยนแปลง
+  useEffect(() => {
+    console.log("Updated startDate:", startDate);
+    console.log("Updated endDate:", endDate);
+  }, [startDate, endDate]);
+
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("created_at");
@@ -23,20 +52,16 @@ const Overview = () => {
   const [itemsPerPage] = useState(10);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  // ใช้ custom hook สำหรับดึงและจัดการข้อมูล
   const {
     loading,
     filteredData,
     summary,
     fetchData,
-    getDateRange,
     getFilteredData,
-    handlePrint,
+    calculateSummary,
   } = useOverviewData({
-    dateRange,
-    selectedDate,
-    selectedMonth,
-    selectedYear,
+    startDate,
+    endDate,
     serviceTypeFilter,
     sortField,
     sortDirection,
@@ -45,23 +70,20 @@ const Overview = () => {
     itemsPerPage,
   });
 
-  // ฟังก์ชันสำหรับการเปลี่ยนช่วงเวลา
-  const handleDateRangeChange = (range) => {
-    setDateRange(range);
-    setCurrentPage(1); // รีเซ็ตกลับไปหน้าแรกเมื่อเปลี่ยนช่วงเวลา
-  };
-
-  // คำนวณค่าต่างๆ สำหรับการแบ่งหน้า
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchData();
+  }, [startDate, endDate]);
+
   return (
     <div className="bg-gray-100 min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header */}
           <div className="bg-white rounded-t-lg shadow-sm p-4 mb-2">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
               <div>
@@ -73,13 +95,6 @@ const Overview = () => {
               <div className="mt-4 md:mt-0 flex space-x-2">
                 <button
                   className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium flex items-center"
-                  onClick={handlePrint}
-                >
-                  <Printer size={16} className="mr-2" />
-                  พิมพ์
-                </button>
-                <button
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium flex items-center"
                   onClick={() => setIsFilterVisible(!isFilterVisible)}
                 >
                   <Filter size={16} className="mr-2" />
@@ -89,21 +104,15 @@ const Overview = () => {
             </div>
           </div>
 
-          {/* Date Range Selector */}
           <DateRangeSelector
-            dateRange={dateRange}
-            selectedDate={selectedDate}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            setSelectedDate={setSelectedDate}
-            setSelectedMonth={setSelectedMonth}
-            setSelectedYear={setSelectedYear}
-            handleDateRangeChange={handleDateRangeChange}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
           />
 
-          {/* Service Type Filter */}
           {isFilterVisible && (
             <ServiceTypeFilter
               serviceTypeFilter={serviceTypeFilter}
@@ -111,19 +120,16 @@ const Overview = () => {
             />
           )}
 
-          {/* Summary Cards */}
           <SummaryCards summary={summary} />
 
-          {/* Service Type Distribution */}
           {serviceTypeFilter === "all" && summary.total > 0 && (
             <ServiceDistribution summary={summary} />
           )}
 
-          {/* Transactions Table */}
           <TransactionsTable
             loading={loading}
             currentItems={currentItems}
-            dateRange={dateRange}
+            dateRange={{ startDate, endDate }}
             sortField={sortField}
             sortDirection={sortDirection}
             setSortField={setSortField}
