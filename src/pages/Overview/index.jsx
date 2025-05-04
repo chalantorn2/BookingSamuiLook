@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Filter } from "lucide-react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns"; // ใช้ date-fns เพื่อคำนวณวันที่
 import DateRangeSelector from "./components/DateRangeSelector";
 import ServiceTypeFilter from "./components/ServiceTypeFilter";
-import SummaryCards from "./components/SummaryCards";
-import ServiceDistribution from "./components/ServiceDistribution";
 import TransactionsTable from "./components/TransactionsTable";
 import { useOverviewData } from "./hooks/useOverviewData";
 
 const Overview = () => {
   const getCurrentMonthRange = () => {
-    const now = new Date(); // 5/4/2025
+    const now = new Date("2025-05-04T00:00:00Z"); // บังคับวันที่เป็น 4 พ.ค. 2025 ใน UTC เพื่อป้องกันปัญหา timezone
     const firstDay = startOfMonth(now); // 2025-05-01
     const lastDay = endOfMonth(now); // 2025-05-31
 
@@ -25,24 +23,24 @@ const Overview = () => {
   const [startDate, setStartDate] = useState(dateRange.start); // '2025-05-01'
   const [endDate, setEndDate] = useState(dateRange.end); // '2025-05-31'
 
-  // ดีบักเพื่อดูค่า startDate และ endDate
+  // บังคับวันที่เมื่อโหลดหน้า
   useEffect(() => {
-    console.log("Initial startDate:", startDate); // ควรเป็น '2025-05-01'
-    console.log("Initial endDate:", endDate); // ควรเป็น '2025-05-31'
-
     const range = getCurrentMonthRange();
+    console.log("Initial date range:", range);
+
+    // ตั้งค่าวันที่เริ่มต้นและสิ้นสุด
     setStartDate(range.start);
     setEndDate(range.end);
 
-    console.log("After set startDate:", range.start); // ควรเป็น '2025-05-01'
-    console.log("After set endDate:", range.end); // ควรเป็น '2025-05-31'
-  }, []); // ทำงานครั้งเดียวเมื่อโหลดหน้า
-
-  // ดีบักเมื่อ startDate หรือ endDate เปลี่ยนแปลง
-  useEffect(() => {
-    console.log("Updated startDate:", startDate);
-    console.log("Updated endDate:", endDate);
-  }, [startDate, endDate]);
+    // ใช้ setTimeout เพื่อให้แน่ใจว่าค่าวันที่ถูกตั้งแล้วก่อนเรียก fetchData (ตามโค้ดที่คุณปรับไว้)
+    setTimeout(() => {
+      console.log("Calling fetchData with date range:", {
+        start: range.start,
+        end: range.end,
+      });
+      fetchData();
+    }, 100);
+  }, []);
 
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,14 +50,7 @@ const Overview = () => {
   const [itemsPerPage] = useState(10);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  const {
-    loading,
-    filteredData,
-    summary,
-    fetchData,
-    getFilteredData,
-    calculateSummary,
-  } = useOverviewData({
+  const { loading, filteredData, summary, fetchData } = useOverviewData({
     startDate,
     endDate,
     serviceTypeFilter,
@@ -74,11 +65,6 @@ const Overview = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  useEffect(() => {
-    setCurrentPage(1);
-    fetchData();
-  }, [startDate, endDate]);
 
   return (
     <div className="bg-gray-100 min-h-screen p-6">
@@ -118,12 +104,6 @@ const Overview = () => {
               serviceTypeFilter={serviceTypeFilter}
               setServiceTypeFilter={setServiceTypeFilter}
             />
-          )}
-
-          <SummaryCards summary={summary} />
-
-          {serviceTypeFilter === "all" && summary.total > 0 && (
-            <ServiceDistribution summary={summary} />
           )}
 
           <TransactionsTable

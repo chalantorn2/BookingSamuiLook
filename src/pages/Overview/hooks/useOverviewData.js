@@ -62,17 +62,16 @@ export const useOverviewData = ({
     other: 0,
   });
 
-  // ฟังก์ชันดึงข้อมูลจากฐานข้อมูล
+  // แก้ไขฟังก์ชัน fetchData
   const fetchData = async () => {
     setLoading(true);
 
     try {
-      // ใช้ startDate และ endDate ที่ส่งเข้ามาโดยตรง
       // แปลงวันที่ให้อยู่ในรูปแบบที่เหมาะสมสำหรับ query
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+      end.setHours(23, 59, 59, 999); // ตั้งเวลาเป็น 23:59:59.999 ของวันที่เลือก
 
       console.log("Using date range:", {
         start: start.toISOString(),
@@ -81,27 +80,26 @@ export const useOverviewData = ({
         endFormatted: end.toLocaleDateString(),
       });
 
-      // ดึงข้อมูลตั๋วเครื่องบิน - ปรับปรุงตามโครงสร้างฐานข้อมูลจริง
+      // ดึงข้อมูลจาก tickets_detail และ join กับ bookings_ticket ผ่าน booking_id
       let query = supabase
-        .from("bookings_ticket")
+        .from("tickets_detail")
         .select(
           `
           id,
-          reference_number,
-          status,
-          payment_status,
-          created_at,
-          customer:customer_id(*),
-          detail:tickets_detail_id(*),
-          tickets_pricing:tickets_pricing_id(*),
-          ticket_additional_info:ticket_additional_info_id(*)
+          issue_date,
+          booking:booking_id (
+            id,
+            reference_number,
+            status,
+            created_at,
+            created_by,
+            customer:customer_id(*),
+            supplier:information_id(*)
+          )
         `
         )
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString());
-
-      // แสดง query เพื่อตรวจสอบ
-      console.log("Executing query:", query);
+        .gte("issue_date", start.toISOString())
+        .lte("issue_date", end.toISOString());
 
       // ดำเนินการ query
       const { data, error } = await query;
@@ -115,7 +113,7 @@ export const useOverviewData = ({
         setActivities([]);
         setFilteredData([]);
         setLoading(false);
-        return; // ไม่ทำงานต่อเมื่อเกิด error
+        return;
       }
 
       // ตรวจสอบว่ามีข้อมูลที่ได้รับหรือไม่
@@ -124,54 +122,38 @@ export const useOverviewData = ({
         setActivities([]);
         setFilteredData([]);
         setLoading(false);
-        return; // ไม่ทำงานต่อเมื่อไม่มีข้อมูล
+        return;
       }
 
       // แปลงและจัดรูปแบบข้อมูล
-      const processedData = data.map((item) => {
-        console.log("Processing item:", item);
+      const processedData = data
+        .map((item) => {
+          console.log("Processing item:", item);
 
-        // กำหนดประเภทบริการตาม ticket_type ที่อยู่ในฐานข้อมูล
-        let serviceType = "flight"; // ค่าเริ่มต้น
+          // ดึงข้อมูลจาก booking (ข้อมูลจาก bookings_ticket)
+          const booking = item.booking;
 
-        if (
-          item.ticket_additional_info &&
-          item.ticket_additional_info.ticket_type
-        ) {
-          // ให้ตรงกับค่าที่เป็นไปได้จาก enum ในฐานข้อมูล: bsp, airline, dom, web, b2b, other
-          const ticketType = item.ticket_additional_info.ticket_type;
-          switch (ticketType) {
-            case "bsp":
-            case "airline":
-            case "dom":
-            case "web":
-              serviceType = "flight"; // ทั้งหมดนี้เป็นประเภทเครื่องบิน
-              break;
-            case "b2b":
-              serviceType = "tour"; // สมมติว่า b2b เป็นทัวร์
-              break;
-            case "other":
-              serviceType = "other";
-              break;
-            default:
-              serviceType = "flight";
+          // ถ้าไม่มี booking (เช่น booking_id เป็น null) ให้ข้ามหรือตั้งค่าเริ่มต้น
+          if (!booking) {
+            return null;
           }
-        }
 
-        // แปลงข้อมูลให้อยู่ในรูปแบบที่ต้องการ
-        return {
-          id: item.id,
-          referenceNumber: item.reference_number,
-          date: item.created_at,
-          customer: item.customer?.name || "N/A",
-          customerId: item.customer?.id,
-          amount:
-            item.tickets_pricing?.total_amount || item.detail?.total_price || 0,
-          status: item.status || "pending",
-          paymentStatus: item.payment_status || "unpaid",
-          serviceType: serviceType, // ใช้ค่าที่กำหนดจากการตรวจสอบ ticket_type
-        };
-      });
+          // กำหนดประเภทบริการตาม ticket_type ที่อยู่ในฐานข้อมูล
+          let serviceType = "flight"; // ค่าเริ่มต้น
+
+          return {
+            id: booking.id,
+            referenceNumber: booking.reference_number,
+            date: item.issue_date, // ใช้ issue_date จาก tickets_detail สำหรับคอลัมน์ date
+            customer: booking.customer?.name || "N/A",
+            supplier: booking.supplier?.name || "N/A",
+            status: booking.status || "pending",
+            createdBy: booking.created_by || "System",
+            timestamp: booking.created_at, // ใช้ created_at จาก bookings_ticket สำหรับ Timestamp
+            serviceType: serviceType,
+          };
+        })
+        .filter((item) => item !== null); // กรองข้อมูลที่ไม่มี booking ออก
 
       console.log("Processed data:", processedData);
 

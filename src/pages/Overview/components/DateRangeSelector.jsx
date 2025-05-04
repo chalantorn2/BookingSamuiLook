@@ -1,5 +1,6 @@
 import React from "react";
 import { Calendar, Search } from "lucide-react";
+import { format, parse } from "date-fns"; // เพิ่ม date-fns เพื่อจัดการรูปแบบวันที่
 
 /**
  * คอมโพเนนต์สำหรับเลือกช่วงวันที่และค้นหา
@@ -19,6 +20,30 @@ const DateRangeSelector = ({
   searchTerm,
   setSearchTerm,
 }) => {
+  // แปลงวันที่ให้อยู่ในรูปแบบ DD/MM/YYYY สำหรับการแสดงผล
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = parse(dateString, "yyyy-MM-dd", new Date());
+      return format(date, "dd/MM/yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  // แปลงวันที่จาก DD/MM/YYYY กลับไปเป็น YYYY-MM-DD เมื่อผู้ใช้เลือกวันที่
+  const parseInputDate = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = parse(dateString, "yyyy-MM-dd", new Date());
+      return format(date, "yyyy-MM-dd");
+    } catch (error) {
+      console.error("Error parsing date:", error);
+      return dateString;
+    }
+  };
+
   return (
     <div className="bg-white shadow-sm p-4 mb-4">
       <div className="flex flex-wrap gap-4 items-center">
@@ -32,7 +57,7 @@ const DateRangeSelector = ({
               type="date"
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => setStartDate(parseInputDate(e.target.value))}
               placeholder="ตั้งแต่วันที่"
             />
           </div>
@@ -45,7 +70,7 @@ const DateRangeSelector = ({
               type="date"
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => setEndDate(parseInputDate(e.target.value))}
               placeholder="ถึงวันที่"
             />
           </div>

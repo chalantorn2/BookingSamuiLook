@@ -1,29 +1,8 @@
 import React from "react";
-import { Activity, Clock, User } from "lucide-react";
-import {
-  StatusBadge,
-  PaymentStatusBadge,
-  ServiceTypeBadge,
-} from "./StatusBadges";
+import { Activity, Clock, User, Building, Shield } from "lucide-react";
+import { StatusBadge } from "./StatusBadges";
 import Pagination from "./Pagination";
 
-/**
- * คอมโพเนนต์ตารางแสดงรายการธุรกรรม
- * @param {Object} props - คุณสมบัติของคอมโพเนนต์
- * @param {boolean} props.loading - สถานะการโหลดข้อมูล
- * @param {Array} props.currentItems - รายการในหน้าปัจจุบัน
- * @param {string} props.dateRange - ช่วงเวลาที่เลือก
- * @param {string} props.sortField - ฟิลด์ที่ใช้ในการเรียงลำดับ
- * @param {string} props.sortDirection - ทิศทางการเรียงลำดับ
- * @param {Function} props.setSortField - ฟังก์ชันตั้งค่าฟิลด์ที่ใช้ในการเรียงลำดับ
- * @param {Function} props.setSortDirection - ฟังก์ชันตั้งค่าทิศทางการเรียงลำดับ
- * @param {number} props.totalPages - จำนวนหน้าทั้งหมด
- * @param {number} props.currentPage - หน้าปัจจุบัน
- * @param {Function} props.setCurrentPage - ฟังก์ชันตั้งค่าหน้าปัจจุบัน
- * @param {number} props.indexOfFirstItem - ดัชนีของรายการแรกในหน้าปัจจุบัน
- * @param {number} props.indexOfLastItem - ดัชนีของรายการสุดท้ายในหน้าปัจจุบัน
- * @param {Array} props.filteredData - ข้อมูลหลังจากผ่านการกรองแล้ว
- */
 const TransactionsTable = ({
   loading,
   currentItems,
@@ -49,15 +28,37 @@ const TransactionsTable = ({
     }
   };
 
+  // ฟังก์ชันแปลงรูปแบบวันที่และเวลา
+  const formatDateTime = (dateTimeStr) => {
+    if (!dateTimeStr) return "-";
+    const dateTime = new Date(dateTimeStr);
+    return dateTime.toLocaleString("th-TH", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
+  // ฟังก์ชันแปลงรูปแบบเฉพาะวันที่
+  const formatDate = (dateTimeStr) => {
+    if (!dateTimeStr) return "-";
+    const dateTime = new Date(dateTimeStr);
+    return dateTime.toLocaleDateString("th-TH");
+  };
+
   return (
     <div className="px-4 pb-6">
       <h2 className="text-lg font-semibold mb-4 flex items-center">
         <Activity size={20} className="mr-2 text-blue-500" />
         รายการทั้งหมด
-        {dateRange === "day" && " (วันนี้)"}
-        {dateRange === "week" && " (สัปดาห์นี้)"}
-        {dateRange === "month" && " (เดือนนี้)"}
-        {dateRange === "year" && " (ปีนี้)"}
+        {dateRange.startDate === dateRange.endDate
+          ? ` (${formatDate(dateRange.startDate)})`
+          : ` (${formatDate(dateRange.startDate)} - ${formatDate(
+              dateRange.endDate
+            )})`}
       </h2>
 
       {loading ? (
@@ -74,11 +75,11 @@ const TransactionsTable = ({
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("reference_number")}
+                    onClick={() => handleSort("referenceNumber")}
                   >
                     <div className="flex items-center">
-                      รหัสอ้างอิง
-                      {sortField === "reference_number" && (
+                      ID
+                      {sortField === "referenceNumber" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -88,11 +89,11 @@ const TransactionsTable = ({
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("created_at")}
+                    onClick={() => handleSort("date")}
                   >
                     <div className="flex items-center">
                       วันที่
-                      {sortField === "created_at" && (
+                      {sortField === "date" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -115,24 +116,12 @@ const TransactionsTable = ({
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort("supplier")}
                   >
-                    ประเภท
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    รายละเอียด
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("amount")}
-                  >
-                    <div className="flex items-center justify-end">
-                      จำนวนเงิน
-                      {sortField === "amount" && (
+                    <div className="flex items-center">
+                      ซัพพลายเออร์
+                      {sortField === "supplier" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -155,12 +144,26 @@ const TransactionsTable = ({
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("paymentStatus")}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort("createdBy")}
                   >
-                    <div className="flex items-center justify-center">
-                      การชำระ
-                      {sortField === "paymentStatus" && (
+                    <div className="flex items-center">
+                      Create By
+                      {sortField === "createdBy" && (
+                        <span className="ml-1">
+                          {sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort("timestamp")}
+                  >
+                    <div className="flex items-center">
+                      Timestamp
+                      {sortField === "timestamp" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -173,7 +176,7 @@ const TransactionsTable = ({
                 {currentItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="8"
+                      colSpan="7"
                       className="px-6 py-4 text-center text-gray-500"
                     >
                       ไม่พบข้อมูลในช่วงเวลาที่เลือก
@@ -188,7 +191,7 @@ const TransactionsTable = ({
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <Clock size={16} className="text-gray-400 mr-2" />
-                          {new Date(item.date).toLocaleDateString("th-TH")}
+                          {formatDate(item.date)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -197,39 +200,23 @@ const TransactionsTable = ({
                           {item.customer}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <ServiceTypeBadge type={item.serviceType} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.origin && item.destination ? (
-                          <div className="flex items-center">
-                            <span className="font-medium">{item.origin}</span>
-                            <span className="mx-1">-</span>
-                            <span className="font-medium">
-                              {item.destination}
-                            </span>
-                          </div>
-                        ) : item.airline && item.flightNumber ? (
-                          <div className="flex items-center">
-                            <span className="font-medium">{item.airline}</span>
-                            <span className="mx-1">/</span>
-                            <span>{item.flightNumber}</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                        ฿
-                        {item.amount.toLocaleString("th-TH", {
-                          minimumFractionDigits: 2,
-                        })}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="flex items-center">
+                          <Building size={16} className="text-gray-400 mr-2" />
+                          {item.supplier}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <StatusBadge status={item.status} />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <PaymentStatusBadge status={item.paymentStatus} />
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="flex items-center">
+                          <Shield size={16} className="text-gray-400 mr-2" />
+                          {item.createdBy}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDateTime(item.timestamp)}
                       </td>
                     </tr>
                   ))
