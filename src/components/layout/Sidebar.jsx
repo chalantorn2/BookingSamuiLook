@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ShoppingCart,
   FileText,
   RefreshCcw,
   Database,
   File,
-  Settings,
   ChevronsRight,
   ChevronsLeft,
   ChevronRight,
@@ -17,12 +16,16 @@ import {
   User,
   Shield,
   Activity,
+  Users,
 } from "lucide-react";
+import { useAuth } from "../../pages/Login/AuthContext";
 import logoImage from "../../assets/Logo.png";
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const [activeMenu, setActiveMenu] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
 
   const menuData = [
     {
@@ -110,7 +113,9 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       path: "/admin/activity-log",
       submenu: [
         { id: "7.1", title: "Activity Log", path: "/admin/activity-log" },
+        { id: "7.2", title: "User Management", path: "/user-management" },
       ],
+      showOnlyForRoles: ["admin"], // เพิ่มเงื่อนไขนี้
     },
   ];
 
@@ -122,12 +127,31 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     navigate(path);
   };
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
-  const handleSettings = () => {
-    navigate("/user-management");
+  const getInitials = (fullname) => {
+    if (!fullname) return "N/A";
+    return fullname.charAt(0);
+  };
+
+  const getRoleDisplayName = (role) => {
+    switch (role) {
+      case "admin":
+        return "Admin";
+      case "manager":
+        return "Manager";
+      case "viewer":
+        return "Viewer";
+      default:
+        return "Unknown";
+    }
   };
 
   return (
@@ -162,116 +186,120 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
       {/* Menu Section */}
       <div className="flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-gray-200">
-        {menuData.map((menu) => (
-          <div key={menu.id} className="mb-1 px-3">
-            <div
-              className={`flex items-center px-3 py-2 cursor-pointer rounded-md transition-all duration-200 group ${
-                menu.disabled ? "opacity-50 cursor-not-allowed" : ""
-              } ${
-                window.location.pathname === menu.path ||
-                menu.submenu.some(
-                  (submenu) => window.location.pathname === submenu.path
-                )
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-              onClick={() =>
-                menu.disabled
-                  ? null
-                  : menu.submenu.length > 0
-                  ? toggleMenu(menu.id)
-                  : navigate(menu.path)
-              }
-            >
-              <span
-                className={`${
-                  window.location.pathname === menu.path ||
+        {menuData
+          .filter(
+            (menu) => menu.id !== 7 || (menu.id === 7 && user?.role === "admin")
+          )
+          .map((menu) => (
+            <div key={menu.id} className="mb-1 px-3">
+              <div
+                className={`flex items-center px-3 py-2 cursor-pointer rounded-md transition-all duration-200 group ${
+                  menu.disabled ? "opacity-50 cursor-not-allowed" : ""
+                } ${
+                  location.pathname === menu.path ||
                   menu.submenu.some(
-                    (submenu) => window.location.pathname === submenu.path
+                    (submenu) => location.pathname === submenu.path
                   )
-                    ? "text-blue-500"
-                    : "text-gray-500"
-                } transition-transform duration-200 ${
-                  window.location.pathname === menu.path ||
-                  menu.submenu.some(
-                    (submenu) => window.location.pathname === submenu.path
-                  )
-                    ? "scale-110"
-                    : ""
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
                 }`}
+                onClick={() =>
+                  menu.disabled
+                    ? null
+                    : menu.submenu.length > 0
+                    ? toggleMenu(menu.id)
+                    : navigate(menu.path)
+                }
               >
-                {menu.icon}
-              </span>
-              {!collapsed && (
-                <>
-                  <span className="flex-1 ml-3 text-sm font-medium">
-                    {menu.title}
-                  </span>
-                  {menu.submenu.length > 0 && (
-                    <span
-                      className={`text-gray-400 transition-transform duration-300 ease-in-out ${
-                        activeMenu === menu.id ? "rotate-90" : ""
-                      }`}
-                    >
-                      <ChevronRight size={14} />
-                    </span>
-                  )}
-                </>
-              )}
-              {collapsed && menu.submenu.length > 0 && !menu.disabled && (
-                <div className="absolute left-full ml-2 bg-white rounded-md shadow-lg p-2 w-48 z-10 hidden group-hover:block opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                  <div className="text-sm font-medium text-gray-800 mb-2">
-                    {menu.title}
-                  </div>
-                  {menu.submenu.map((submenu) => (
-                    <div
-                      key={submenu.id}
-                      className="py-1 px-2 text-sm cursor-pointer rounded-md hover:bg-gray-50 text-gray-600 transition-colors duration-200"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSubmenuClick(submenu.path);
-                      }}
-                    >
-                      {submenu.title}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {!collapsed &&
-              activeMenu === menu.id &&
-              menu.submenu.length > 0 && (
-                <div
-                  className="pl-9 pr-3 mt-1 mb-2 overflow-hidden transition-all duration-300 ease-in-out"
-                  style={{
-                    maxHeight: "500px",
-                    animation: "slideDown 0.3s ease-in-out",
-                  }}
+                <span
+                  className={`${
+                    location.pathname === menu.path ||
+                    menu.submenu.some(
+                      (submenu) => location.pathname === submenu.path
+                    )
+                      ? "text-blue-500"
+                      : "text-gray-500"
+                  } transition-transform duration-200 ${
+                    location.pathname === menu.path ||
+                    menu.submenu.some(
+                      (submenu) => location.pathname === submenu.path
+                    )
+                      ? "scale-110"
+                      : ""
+                  }`}
                 >
-                  {menu.submenu.map((submenu, index) => (
-                    <div
-                      key={submenu.id}
-                      className={`py-2 px-2 text-xs cursor-pointer rounded-md transition-all duration-200 ease-in-out ${
-                        window.location.pathname === submenu.path
-                          ? "bg-blue-50 text-blue-600 font-medium"
-                          : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                      onClick={() => handleSubmenuClick(submenu.path)}
-                      style={{
-                        animationDelay: `${index * 0.05}s`,
-                        animation: "fadeInLeft 0.2s ease-in-out forwards",
-                        opacity: 0,
-                        transform: "translateX(-10px)",
-                      }}
-                    >
-                      {submenu.title}
+                  {menu.icon}
+                </span>
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 ml-3 text-sm font-medium">
+                      {menu.title}
+                    </span>
+                    {menu.submenu.length > 0 && (
+                      <span
+                        className={`text-gray-400 transition-transform duration-300 ease-in-out ${
+                          activeMenu === menu.id ? "rotate-90" : ""
+                        }`}
+                      >
+                        <ChevronRight size={14} />
+                      </span>
+                    )}
+                  </>
+                )}
+                {collapsed && menu.submenu.length > 0 && !menu.disabled && (
+                  <div className="absolute left-full ml-2 bg-white rounded-md shadow-lg p-2 w-48 z-10 hidden group-hover:block opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
+                    <div className="text-sm font-medium text-gray-800 mb-2">
+                      {menu.title}
                     </div>
-                  ))}
-                </div>
-              )}
-          </div>
-        ))}
+                    {menu.submenu.map((submenu) => (
+                      <div
+                        key={submenu.id}
+                        className="py-1 px-2 text-sm cursor-pointer rounded-md hover:bg-gray-50 text-gray-600 transition-colors duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSubmenuClick(submenu.path);
+                        }}
+                      >
+                        {submenu.title}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {!collapsed &&
+                activeMenu === menu.id &&
+                menu.submenu.length > 0 && (
+                  <div
+                    className="pl-9 pr-3 mt-1 mb-2 overflow-hidden transition-all duration-300 ease-in-out"
+                    style={{
+                      maxHeight: "500px",
+                      animation: "slideDown 0.3s ease-in-out",
+                    }}
+                  >
+                    {menu.submenu.map((submenu, index) => (
+                      <div
+                        key={submenu.id}
+                        className={`py-2 px-2 text-xs cursor-pointer rounded-md transition-all duration-200 ease-in-out ${
+                          location.pathname === submenu.path
+                            ? "bg-blue-50 text-blue-600 font-medium"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                        onClick={() => handleSubmenuClick(submenu.path)}
+                        style={{
+                          animationDelay: `${index * 0.05}s`,
+                          animation: "fadeInLeft 0.2s ease-in-out forwards",
+                          opacity: 0,
+                          transform: "translateX(-10px)",
+                        }}
+                      >
+                        {submenu.title}
+                      </div>
+                    ))}
+                  </div>
+                )}
+            </div>
+          ))}
       </div>
 
       {/* User Profile Section */}
@@ -279,68 +307,28 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         {!collapsed ? (
           <div className="bg-blue-50 rounded-md p-3 mb-3 flex items-center">
             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mr-2 flex-shrink-0">
-              <span className="text-sm font-medium">ชม</span>
+              <span className="text-sm font-medium">
+                {getInitials(user?.fullname)}
+              </span>
             </div>
             <div className="min-w-0">
               <div className="text-sm font-medium text-blue-700 truncate">
-                นายชลันธร มานพ
+                {user?.fullname || "N/A"}
               </div>
-              <div className="text-xs text-blue-600">Admin</div>
+              <div className="text-xs text-blue-600">
+                {getRoleDisplayName(user?.role)}
+              </div>
             </div>
           </div>
         ) : (
           <div className="flex justify-center mb-3">
             <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
-              <span className="text-sm font-medium">ชม</span>
+              <span className="text-sm font-medium">
+                {getInitials(user?.fullname)}
+              </span>
             </div>
           </div>
         )}
-
-        <div
-          className="flex items-center px-3 py-2 mb-2 cursor-pointer rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200"
-          onClick={handleSettings}
-        >
-          <span
-            className={`${
-              window.location.pathname === "/user-management"
-                ? "text-blue-500"
-                : "text-gray-500"
-            } transition-transform duration-200 ${
-              window.location.pathname === "/user-management" ? "scale-110" : ""
-            }`}
-          >
-            <Settings size={18} />
-          </span>
-          {!collapsed && (
-            <span className="ml-3 text-sm font-medium">User Management</span>
-          )}
-        </div>
-
-        <div
-          className="flex items-center px-3 py-2 mb-2 cursor-pointer rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ease-in-out"
-          onClick={() => navigate("/login")}
-        >
-          <span className="text-gray-500 transition-transform duration-200">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-              <polyline points="10 17 15 12 10 7"></polyline>
-              <line x1="15" y1="12" x2="3" y2="12"></line>
-            </svg>
-          </span>
-          {!collapsed && (
-            <span className="ml-3 text-sm font-medium">Login</span>
-          )}
-        </div>
 
         <div
           className="flex items-center px-3 py-2 cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 ease-in-out"
@@ -359,10 +347,10 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       <style jsx>{`
         @keyframes slideDown {
           from {
-            max-height: 0;
+            maxheight: 0;
           }
           to {
-            max-height: 500px;
+            maxheight: 500px;
           }
         }
 
