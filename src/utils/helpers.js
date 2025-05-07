@@ -21,29 +21,28 @@ export const generateReferenceNumber = (prefix = "FT") => {
   return referenceNumber;
 };
 
-// utils/helpers.js - เพิ่มฟังก์ชัน formatDateTime
+// เพิ่มฟังก์ชัน formatDate ในไฟล์ src/utils/helpers.js
 /**
- * แปลงวันที่และเวลาเป็นรูปแบบ dd/mm/yyyy HH:MM และปรับเขตเวลาเป็น UTC+7 (เวลาประเทศไทย)
- * @param {string|Date} dateTime - วันที่และเวลาที่ต้องการแปลง
- * @returns {string} - วันที่และเวลาในรูปแบบ dd/mm/yyyy HH:MM
+ * แปลงวันที่เป็นรูปแบบ dd/mm/yyyy
+ * @param {string|Date} date - วันที่ที่ต้องการแปลง
+ * @returns {string} - วันที่ในรูปแบบ dd/mm/yyyy
  */
-export const formatDateTime = (dateTime) => {
-  if (!dateTime) return "";
+export const formatDate = (date) => {
+  if (!date) return "";
 
   // สร้างวัตถุ Date จากพารามิเตอร์
-  const date = new Date(dateTime);
+  const dateObj = new Date(date);
 
-  // แสดงผลตามเขตเวลาประเทศไทย
-  return date.toLocaleString("th-TH", {
-    timeZone: "Asia/Bangkok",
+  // ตรวจสอบว่าวันที่ถูกต้องหรือไม่
+  if (isNaN(dateObj.getTime())) return date;
+
+  // แสดงผลตามรูปแบบวันที่ไทย
+  return dateObj.toLocaleDateString("th-TH", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 };
-
 /**
  * แปลงตัวเลขเป็นรูปแบบเงิน
  * @param {number|string} amount - จำนวนเงิน
