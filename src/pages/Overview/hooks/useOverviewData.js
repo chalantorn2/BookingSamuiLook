@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabase";
 
-// อาร์เรย์ของประเภทบริการ - สามารถย้ายไป config หรือ constants ได้ในอนาคต
+// อาร์เรย์ของประเภทบริการ - คงเดิม
 export const serviceTypes = [
   { id: "all", name: "All Services", icon: "Activity" },
   { id: "flight", name: "Flight Tickets", icon: "Plane" },
@@ -10,11 +10,11 @@ export const serviceTypes = [
   { id: "hotel", name: "Hotel Bookings", icon: "Hotel" },
   { id: "tour", name: "Tour Packages", icon: "Package" },
   { id: "deposit", name: "Deposits", icon: "Database" },
-  { id: "voucher", name: "Vouchers", icon: "FileText" },
+  { id: "voucher", name: "Vouchers", icon: "Voucher" },
   { id: "other", name: "Other Services", icon: "AlertCircle" },
 ];
 
-// แมปสถานะและรูปแบบการแสดงผล
+// แมปสถานะ - คงเดิม
 export const statusMap = {
   pending: { label: "รอดำเนินการ", color: "yellow" },
   confirmed: { label: "ยืนยันแล้ว", color: "green" },
@@ -80,26 +80,25 @@ export const useOverviewData = ({
         endFormatted: end.toLocaleDateString(),
       });
 
-      // ดึงข้อมูลจาก tickets_detail และ join กับ bookings_ticket ผ่าน booking_id
+      // ปรับคำสั่ง query ให้ใช้ bookings_ticket เป็นตารางหลัก
       let query = supabase
-        .from("tickets_detail")
+        .from("bookings_ticket")
         .select(
           `
           id,
-          issue_date,
-          booking:booking_id (
-            id,
-            reference_number,
-            status,
-            created_at,
-            created_by,
-            customer:customer_id(*),
-            supplier:information_id(*)
-          )
+          reference_number,
+          status,
+          payment_status,
+          created_at,
+          updated_at,
+          created_by,
+          customer:customer_id(*),
+          supplier:information_id(*),
+          tickets_detail(*)
         `
         )
-        .gte("issue_date", start.toISOString())
-        .lte("issue_date", end.toISOString());
+        .gte("created_at", start.toISOString())
+        .lte("created_at", end.toISOString());
 
       // ดำเนินการ query
       const { data, error } = await query;
@@ -126,34 +125,42 @@ export const useOverviewData = ({
       }
 
       // แปลงและจัดรูปแบบข้อมูล
-      const processedData = data
-        .map((item) => {
-          console.log("Processing item:", item);
+      const processedData = data.map((item) => {
+        console.log("Processing item:", item);
 
-          // ดึงข้อมูลจาก booking (ข้อมูลจาก bookings_ticket)
-          const booking = item.booking;
+        // กำหนดประเภทบริการ (ปรับปรุงตามความเหมาะสม)
+        let serviceType = "flight"; // ค่าเริ่มต้น
 
-          // ถ้าไม่มี booking (เช่น booking_id เป็น null) ให้ข้ามหรือตั้งค่าเริ่มต้น
-          if (!booking) {
-            return null;
-          }
+        // หาวันที่ออกตั๋ว (issue_date) จาก tickets_detail
+        let issueDate = null;
+        if (item.tickets_detail && item.tickets_detail.length > 0) {
+          issueDate = item.tickets_detail[0].issue_date;
+        }
 
-          // กำหนดประเภทบริการตาม ticket_type ที่อยู่ในฐานข้อมูล
-          let serviceType = "flight"; // ค่าเริ่มต้น
+        // คำนวณยอดเงิน (ตัวอย่างเท่านั้น - ปรับปรุงตามความเหมาะสม)
+        let amount = 0;
+        if (
+          item.tickets_detail &&
+          item.tickets_detail.length > 0 &&
+          item.tickets_detail[0].total_price
+        ) {
+          amount = parseFloat(item.tickets_detail[0].total_price);
+        }
 
-          return {
-            id: booking.id,
-            referenceNumber: booking.reference_number,
-            date: item.issue_date, // ใช้ issue_date จาก tickets_detail สำหรับคอลัมน์ date
-            customer: booking.customer?.name || "N/A",
-            supplier: booking.supplier?.name || "N/A",
-            status: booking.status || "pending",
-            createdBy: booking.created_by || "System",
-            timestamp: booking.created_at, // ใช้ created_at จาก bookings_ticket สำหรับ Timestamp
-            serviceType: serviceType,
-          };
-        })
-        .filter((item) => item !== null); // กรองข้อมูลที่ไม่มี booking ออก
+        return {
+          id: item.id,
+          referenceNumber: item.reference_number,
+          date: issueDate || item.created_at, // ใช้ issue_date ถ้ามี มิฉะนั้นใช้ created_at
+          customer: item.customer?.name || "N/A",
+          supplier: item.supplier?.name || "N/A",
+          status: item.status || "pending",
+          paymentStatus: item.payment_status || "unpaid",
+          createdBy: item.created_by || "System",
+          timestamp: item.created_at,
+          serviceType: serviceType,
+          amount: amount,
+        };
+      });
 
       console.log("Processed data:", processedData);
 
@@ -175,7 +182,7 @@ export const useOverviewData = ({
     }
   };
 
-  // กรองและค้นหาข้อมูล
+  // กรองและค้นหาข้อมูล - คงเดิม
   const getFilteredData = (data = activities, search = searchTerm) => {
     if (!data || !data.length) {
       console.log("No data to filter");
@@ -206,7 +213,7 @@ export const useOverviewData = ({
     return filtered;
   };
 
-  // คำนวณข้อมูลสรุป
+  // คำนวณข้อมูลสรุป - คงเดิม
   const calculateSummary = (data) => {
     if (!data || !data.length) {
       console.log("No data for summary calculation");

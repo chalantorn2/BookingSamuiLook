@@ -367,9 +367,10 @@ const FlightTicketsView = () => {
                         {ticket.reference_number || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {ticket.tickets_detail?.issue_date
+                        {ticket.tickets_detail &&
+                        ticket.tickets_detail.length > 0
                           ? new Date(
-                              ticket.tickets_detail.issue_date
+                              ticket.tickets_detail[0].issue_date
                             ).toLocaleDateString("th-TH")
                           : "-"}
                       </td>
@@ -405,7 +406,21 @@ const FlightTicketsView = () => {
                             className="text-gray-400 mr-2 mt-0.5"
                           />
                           <div className="text-sm text-gray-900">
-                            {displayRoutes(ticket.routes)}
+                            {ticket.routes && ticket.routes.length > 0
+                              ? ticket.routes.map((route, index) => (
+                                  <div key={index} className="mb-1 last:mb-0">
+                                    <div className="flex items-center text-xs">
+                                      <span className="font-medium text-gray-700">
+                                        {route.origin}
+                                      </span>
+                                      <span className="mx-1">➡️</span>
+                                      <span className="font-medium text-gray-700">
+                                        {route.destination}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))
+                              : "-"}
                           </div>
                         </div>
                       </td>

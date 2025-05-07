@@ -1,17 +1,7 @@
+// ไฟล์: src/pages/View/hooks/useFlightTicketsData.js
 import { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabase";
 
-/**
- * Hook สำหรับจัดการข้อมูลตั๋วเครื่องบิน
- * @param {Object} options - ตัวเลือกสำหรับการดึงข้อมูล
- * @param {string} options.startDate - วันที่เริ่มต้น
- * @param {string} options.endDate - วันที่สิ้นสุด
- * @param {string} options.searchTerm - คำค้นหา
- * @param {string} options.filterStatus - สถานะที่ต้องการกรอง
- * @param {string} options.sortField - ฟิลด์ที่ใช้เรียงลำดับ
- * @param {string} options.sortDirection - ทิศทางการเรียงลำดับ (asc|desc)
- * @returns {Object} ข้อมูลและฟังก์ชันที่เกี่ยวข้อง
- */
 export const useFlightTicketsData = ({
   startDate,
   endDate,
@@ -42,7 +32,7 @@ export const useFlightTicketsData = ({
         end: end.toISOString(),
       });
 
-      // ดึงข้อมูลพร้อมความสัมพันธ์ตามโครงสร้างฐานข้อมูลจริง
+      // ดึงข้อมูลหลักของตั๋วและข้อมูลที่เกี่ยวข้อง (ปรับแก้ตามโครงสร้างฐานข้อมูลที่ถูกต้อง)
       let query = supabase
         .from("bookings_ticket")
         .select(
@@ -53,43 +43,9 @@ export const useFlightTicketsData = ({
           payment_status,
           created_at,
           updated_at,
-          tickets_detail:tickets_detail_id(
-            id, 
-            total_price, 
-            issue_date, 
-            due_date, 
-            credit_days
-          ),
-          customer:customer_id(
-            id, 
-            name, 
-            address, 
-            id_number
-          ),
-          supplier:information_id(
-            id, 
-            category, 
-            code, 
-            name, 
-            description
-          ),
-          passenger:tickets_passengers_id(
-            id, 
-            passenger_name, 
-            age, 
-            ticket_number, 
-            ticket_code
-          ),
-          additional_info:ticket_additional_info_id(
-            id, 
-            company_payment_method, 
-            company_payment_details, 
-            customer_payment_method, 
-            customer_payment_details, 
-            code, 
-            ticket_type, 
-            ticket_type_details
-          )
+          customer:customer_id(*),
+          supplier:information_id(*),
+          tickets_detail(*)
         `
         )
         .gte("created_at", start.toISOString())
@@ -120,20 +76,26 @@ export const useFlightTicketsData = ({
 
       console.log("Flight tickets data:", data);
 
-      // ดูโครงสร้างข้อมูลของตั๋วตัวแรก (ถ้ามี)
-      if (data && data.length > 0) {
-        console.log(
-          "Sample ticket structure:",
-          JSON.stringify(data[0], null, 2)
-        );
-      }
-
-      // ปรับโครงสร้างข้อมูลและดึงข้อมูลเส้นทางเพิ่มเติม
+      // ดึงข้อมูลเพิ่มเติมสำหรับแต่ละตั๋ว
       const processedData = [];
 
       for (const ticket of data || []) {
         try {
-          // ดึงข้อมูลเส้นทางสำหรับตั๋วนี้
+          // ดึงข้อมูลผู้โดยสาร
+          const { data: passengersData, error: passengersError } =
+            await supabase
+              .from("tickets_passengers")
+              .select("*")
+              .eq("bookings_ticket_id", ticket.id);
+
+          if (passengersError) {
+            console.error(
+              `Error fetching passengers for ticket ${ticket.id}:`,
+              passengersError
+            );
+          }
+
+          // ดึงข้อมูลเส้นทาง
           const { data: routesData, error: routesError } = await supabase
             .from("tickets_routes")
             .select("*")
@@ -146,10 +108,30 @@ export const useFlightTicketsData = ({
             );
           }
 
-          // เพิ่มข้อมูลเส้นทางเข้าไปในตั๋ว
+          // ดึงข้อมูลเพิ่มเติม
+          const { data: additionalInfoData, error: additionalInfoError } =
+            await supabase
+              .from("ticket_additional_info")
+              .select("*")
+              .eq("bookings_ticket_id", ticket.id)
+              .maybeSingle();
+
+          if (
+            additionalInfoError &&
+            !additionalInfoError.message.includes("No rows found")
+          ) {
+            console.error(
+              `Error fetching additional info for ticket ${ticket.id}:`,
+              additionalInfoError
+            );
+          }
+
+          // เพิ่มข้อมูลทั้งหมดเข้าไปในตั๋ว
           const processedTicket = {
             ...ticket,
+            passengers: passengersData || [],
             routes: routesData || [],
+            additional_info: additionalInfoData || {},
           };
 
           processedData.push(processedTicket);
@@ -157,14 +139,6 @@ export const useFlightTicketsData = ({
           console.error(`Error processing ticket ${ticket.id}:`, err);
           processedData.push(ticket); // เพิ่มข้อมูลตั๋วเดิมหากมีข้อผิดพลาด
         }
-      }
-
-      // แสดงโครงสร้างข้อมูลหลังจากดึงข้อมูลเพิ่มเติม
-      if (processedData && processedData.length > 0) {
-        console.log(
-          "Processed ticket sample:",
-          JSON.stringify(processedData[0], null, 2)
-        );
       }
 
       setAllTickets(processedData);
@@ -181,6 +155,7 @@ export const useFlightTicketsData = ({
     }
   };
 
+  // ส่วนที่เหลือของโค้ดปล่อยไว้เหมือนเดิม
   // ฟังก์ชันกรองข้อมูลตามคำค้นหา
   const filterData = (data = allTickets, search = searchTerm) => {
     if (!data || !Array.isArray(data)) {
@@ -203,10 +178,12 @@ export const useFlightTicketsData = ({
           (ticket.customer?.name &&
             ticket.customer.name.toLowerCase().includes(searchLower)) ||
           // ค้นหาจากชื่อผู้โดยสาร
-          (ticket.passenger?.passenger_name &&
-            ticket.passenger.passenger_name
-              .toLowerCase()
-              .includes(searchLower)) ||
+          (ticket.passengers &&
+            ticket.passengers.some(
+              (passenger) =>
+                passenger.passenger_name &&
+                passenger.passenger_name.toLowerCase().includes(searchLower)
+            )) ||
           // ค้นหาจากชื่อซัพพลายเออร์
           (ticket.supplier?.name &&
             ticket.supplier.name.toLowerCase().includes(searchLower)) ||
@@ -255,8 +232,8 @@ export const useFlightTicketsData = ({
 
       // หาค่าตามโครงสร้างที่กำหนดใน fieldMap
       if (field === "date") {
-        valueA = a.tickets_detail?.issue_date;
-        valueB = b.tickets_detail?.issue_date;
+        valueA = a.tickets_detail?.[0]?.issue_date;
+        valueB = b.tickets_detail?.[0]?.issue_date;
       } else if (field === "customer") {
         valueA = a.customer?.name || "";
         valueB = b.customer?.name || "";
