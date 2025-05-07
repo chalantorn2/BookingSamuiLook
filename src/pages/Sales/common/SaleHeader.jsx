@@ -72,35 +72,22 @@ const SaleHeader = ({
   };
 
   const formatPhoneNumber = (value) => {
-    // Remove all non-digits
+    // ลบตัวอักษรที่ไม่ใช่ตัวเลขออก
     const digits = value.replace(/\D/g, "");
-    // Limit to 15 digits to accommodate various international formats
-    const limitedDigits = digits.slice(0, 15);
-    // Add + prefix if it's an international number (starts with country code)
-    if (limitedDigits.startsWith("0")) {
-      // Thai number: format as XXX-XXX-XXXX
-      if (limitedDigits.length <= 10) {
-        if (limitedDigits.length <= 3) return limitedDigits;
-        if (limitedDigits.length <= 6)
-          return `${limitedDigits.slice(0, 3)}-${limitedDigits.slice(3)}`;
-        return `${limitedDigits.slice(0, 3)}-${limitedDigits.slice(
-          3,
-          6
-        )}-${limitedDigits.slice(6, 10)}`;
-      }
-    } else if (limitedDigits.length > 0) {
-      // International number: add + and group every 3-4 digits
-      const groups = [];
-      let i = 0;
-      groups.push(`+${limitedDigits.slice(0, (i += 2))}`);
-      if (i < limitedDigits.length) {
-        groups.push(limitedDigits.slice(i, (i += 3)));
-      }
-      while (i < limitedDigits.length) {
-        groups.push(limitedDigits.slice(i, (i += 4)));
-      }
-      return groups.join("-");
+    // จำกัดความยาวไม่เกิน 10 หลัก (เบอร์โทรไทย)
+    const limitedDigits = digits.slice(0, 10);
+
+    // จัดรูปแบบเบอร์โทรไทย: 0XX-XXX-XXXX
+    if (limitedDigits.length) {
+      if (limitedDigits.length <= 3) return limitedDigits;
+      if (limitedDigits.length <= 6)
+        return `${limitedDigits.slice(0, 3)}-${limitedDigits.slice(3)}`;
+      return `${limitedDigits.slice(0, 3)}-${limitedDigits.slice(
+        3,
+        6
+      )}-${limitedDigits.slice(6, 10)}`;
     }
+
     return limitedDigits;
   };
 

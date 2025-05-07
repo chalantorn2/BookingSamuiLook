@@ -74,18 +74,30 @@ export const fetchData = async ({
   }
 };
 
-// ฟังก์ชันสำหรับการเพิ่มข้อมูล
-// services/supabase.js - แก้ไขส่วน insertData function
 export const insertData = async (table, data) => {
   try {
     // ถ้ามีฟิลด์ created_at และไม่ได้กำหนดค่าไว้ ให้กำหนดเป็นเวลาปัจจุบันในรูปแบบ ISO string
     // แต่ต้องปรับเขตเวลาให้เป็น UTC+7 (เวลาประเทศไทย)
     if (!data.created_at) {
-      // สร้างวัตถุ Date ปัจจุบันและแปลงเป็น ISO string
-      // (วิธีนี้จะส่งเวลาในรูปแบบ ISO ที่เป็น UTC แต่เป็นเวลาที่ถูกปรับแล้ว)
+      // สร้างวัตถุ Date ปัจจุบัน
       const now = new Date();
-      // ไม่ต้องแก้ timezone ที่นี่ เพราะ toISOString จะแปลงเป็น UTC โดยอัตโนมัติ
-      data.created_at = now.toISOString();
+
+      // คำนวณ offset ที่ต้องการ (UTC+7)
+      const offset = 7 * 60 * 60 * 1000; // 7 ชั่วโมงในมิลลิวินาที
+
+      // ปรับเวลาให้เป็น UTC+7
+      const thaiTime = new Date(now.getTime() + offset);
+
+      // แปลงเป็น ISO string
+      data.created_at = thaiTime.toISOString();
+    }
+
+    // ถ้ามีฟิลด์ updated_at ให้ทำเหมือนกับ created_at
+    if ("updated_at" in data && !data.updated_at) {
+      const now = new Date();
+      const offset = 7 * 60 * 60 * 1000;
+      const thaiTime = new Date(now.getTime() + offset);
+      data.updated_at = thaiTime.toISOString();
     }
 
     const { data: result, error } = await supabase

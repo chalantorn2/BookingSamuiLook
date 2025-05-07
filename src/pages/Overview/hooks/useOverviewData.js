@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabase";
+import { toThaiTimeZone } from "../../../utils/helpers";
 
 // อาร์เรย์ของประเภทบริการ - คงเดิม
 export const serviceTypes = [
@@ -70,12 +71,15 @@ export const useOverviewData = ({
       // แปลงวันที่ให้อยู่ในรูปแบบที่เหมาะสมสำหรับ query
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
+      const startISO = toThaiTimeZone(start, false);
+
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999); // ตั้งเวลาเป็น 23:59:59.999 ของวันที่เลือก
+      const endISO = toThaiTimeZone(end, false);
 
       console.log("Using date range:", {
-        start: start.toISOString(),
-        end: end.toISOString(),
+        start: startISO,
+        end: endISO,
         startFormatted: start.toLocaleDateString(),
         endFormatted: end.toLocaleDateString(),
       });
@@ -97,12 +101,11 @@ export const useOverviewData = ({
           tickets_detail(*)
         `
         )
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString());
+        .gte("created_at", startISO)
+        .lte("created_at", endISO);
 
       // ดำเนินการ query
       const { data, error } = await query;
-
       // ตรวจสอบและแสดงข้อมูลและข้อผิดพลาดที่ได้จาก API
       console.log("Raw data from API:", data);
       console.log("API error:", error);
@@ -124,20 +127,22 @@ export const useOverviewData = ({
         return;
       }
 
-      // แปลงและจัดรูปแบบข้อมูล
+      // ในฟังก์ชัน fetchData ตรงส่วนที่ทำการแปลงข้อมูล
       const processedData = data.map((item) => {
-        console.log("Processing item:", item);
-
-        // กำหนดประเภทบริการ (ปรับปรุงตามความเหมาะสม)
+        // กำหนดประเภทบริการ
         let serviceType = "flight"; // ค่าเริ่มต้น
 
         // หาวันที่ออกตั๋ว (issue_date) จาก tickets_detail
         let issueDate = null;
         if (item.tickets_detail && item.tickets_detail.length > 0) {
-          issueDate = item.tickets_detail[0].issue_date;
+          // เพิ่มการแปลงเวลาเป็น UTC+7
+          const rawDate = item.tickets_detail[0].issue_date;
+          issueDate = new Date(
+            new Date(rawDate).getTime() + 7 * 60 * 60 * 1000
+          );
         }
 
-        // คำนวณยอดเงิน (ตัวอย่างเท่านั้น - ปรับปรุงตามความเหมาะสม)
+        // คำนวณยอดเงิน
         let amount = 0;
         if (
           item.tickets_detail &&
@@ -147,16 +152,21 @@ export const useOverviewData = ({
           amount = parseFloat(item.tickets_detail[0].total_price);
         }
 
+        // แปลงเวลา created_at ให้เป็น UTC+7
+        const timestamp = new Date(
+          new Date(item.created_at).getTime() + 7 * 60 * 60 * 1000
+        );
+
         return {
           id: item.id,
           referenceNumber: item.reference_number,
-          date: issueDate || item.created_at, // ใช้ issue_date ถ้ามี มิฉะนั้นใช้ created_at
+          date: issueDate || timestamp, // ใช้ issue_date ถ้ามี มิฉะนั้นใช้ created_at ที่แปลงแล้ว
           customer: item.customer?.name || "N/A",
           supplier: item.supplier?.name || "N/A",
           status: item.status || "pending",
           paymentStatus: item.payment_status || "unpaid",
           createdBy: item.created_by || "System",
-          timestamp: item.created_at,
+          timestamp: timestamp, // ใช้เวลาที่แปลงแล้ว
           serviceType: serviceType,
           amount: amount,
         };

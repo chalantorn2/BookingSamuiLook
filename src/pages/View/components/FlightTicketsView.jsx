@@ -19,6 +19,7 @@ import FlightStatusFilter from "./FlightStatusFilter";
 import FlightTicketDetail from "./FlightTicketDetail";
 import { useFlightTicketsData } from "../hooks/useFlightTicketsData";
 import FlightTicketDetail_Edit from "./FlightTicketDetail_Edit";
+import { displayThaiDateTime } from "../../../utils/helpers";
 
 const FlightTicketsView = () => {
   // สร้างฟังก์ชันเพื่อรับวันแรกและวันสุดท้ายของเดือนปัจจุบัน
@@ -370,7 +371,10 @@ const FlightTicketsView = () => {
                         {ticket.tickets_detail &&
                         ticket.tickets_detail.length > 0
                           ? new Date(
-                              ticket.tickets_detail[0].issue_date
+                              new Date(
+                                ticket.tickets_detail[0].issue_date
+                              ).getTime() +
+                                7 * 60 * 60 * 1000
                             ).toLocaleDateString("th-TH")
                           : "-"}
                       </td>
@@ -431,7 +435,8 @@ const FlightTicketsView = () => {
                             {ticket.routes && ticket.routes.length > 0 ? (
                               <div className="text-sm font-medium text-gray-900">
                                 {new Date(
-                                  ticket.routes[0].date
+                                  new Date(ticket.routes[0].date).getTime() +
+                                    7 * 60 * 60 * 1000
                                 ).toLocaleDateString("th-TH")}
                               </div>
                             ) : (

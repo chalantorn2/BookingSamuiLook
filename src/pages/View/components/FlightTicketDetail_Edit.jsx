@@ -748,10 +748,20 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                       <input
                         type="date"
                         className="w-full border border-gray-400 rounded-md p-2"
-                        value={formData.date}
-                        onChange={(e) =>
-                          setFormData({ ...formData, date: e.target.value })
-                        }
+                        value={formData.date || ""}
+                        onChange={(e) => {
+                          const newDate = e.target.value;
+                          const newDueDate = calculateDueDate(
+                            newDate,
+                            formData.creditDays
+                          );
+                          setFormData({
+                            ...formData,
+                            date: newDate,
+                            dueDate: newDueDate,
+                          });
+                        }}
+                        required
                       />
                     </div>
                     <div>
@@ -780,10 +790,20 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                       <input
                         type="date"
                         className="w-full border border-gray-400 rounded-md p-2"
-                        value={formData.dueDate}
-                        onChange={(e) =>
-                          setFormData({ ...formData, dueDate: e.target.value })
-                        }
+                        value={formData.date || ""}
+                        onChange={(e) => {
+                          const newDate = e.target.value;
+                          const newDueDate = calculateDueDate(
+                            newDate,
+                            formData.creditDays
+                          );
+                          setFormData({
+                            ...formData,
+                            date: newDate,
+                            dueDate: newDueDate,
+                          });
+                        }}
+                        required
                       />
                     </div>
                     <div>

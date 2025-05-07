@@ -325,9 +325,17 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
                     <div>
                       <div className="font-medium">
                         {ticketData.detail?.issue_date
-                          ? formatDate(ticketData.detail.issue_date)
+                          ? formatDate(
+                              new Date(
+                                new Date(
+                                  ticketData.detail.issue_date
+                                ).getTime() +
+                                  7 * 60 * 60 * 1000
+                              )
+                            )
                           : "-"}
                       </div>
+
                       <div className="text-sm text-gray-600">วันที่บันทึก</div>
                     </div>
                   </div>

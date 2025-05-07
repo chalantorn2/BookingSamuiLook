@@ -1,6 +1,7 @@
 // src/services/ticketService.js
 import { supabase } from "./supabase";
-import { generateReferenceNumber } from "../utils/helpers";
+import { generateReferenceNumber } from "./referencesService";
+import { toThaiTimeZone } from "../utils/helpers"; // เพิ่มการ import
 
 /**
  * สร้าง Flight Ticket ใหม่
@@ -10,7 +11,16 @@ import { generateReferenceNumber } from "../utils/helpers";
 export const createFlightTicket = async (ticketData) => {
   try {
     // สร้างเลขอ้างอิง
-    const referenceNumber = generateReferenceNumber("FT");
+    const referenceNumber = await generateReferenceNumber(
+      "bookings_ticket",
+      "FT"
+    );
+
+    if (!referenceNumber) {
+      throw new Error("ไม่สามารถสร้างเลขอ้างอิงได้");
+    }
+
+    console.log("Generated reference number:", referenceNumber);
 
     // 1. บันทึกข้อมูลหลักลงในตาราง bookings_ticket
     const { data: bookingTicket, error: bookingTicketError } = await supabase
@@ -28,14 +38,26 @@ export const createFlightTicket = async (ticketData) => {
 
     if (bookingTicketError) throw bookingTicketError;
 
+    let bookingDate = ticketData.bookingDate;
+    if (bookingDate) {
+      bookingDate = toThaiTimeZone(new Date(bookingDate), false);
+    } else {
+      bookingDate = toThaiTimeZone(new Date(), false);
+    }
+
+    let dueDate = ticketData.dueDate;
+    if (dueDate) {
+      dueDate = toThaiTimeZone(new Date(dueDate), false);
+    }
+
     // 2. บันทึกข้อมูลรายละเอียดตั๋ว
     const { data: ticketDetail, error: ticketDetailError } = await supabase
       .from("tickets_detail")
       .insert({
         bookings_ticket_id: bookingTicket.id,
         total_price: ticketData.totalAmount,
-        issue_date: ticketData.bookingDate,
-        due_date: ticketData.dueDate,
+        issue_date: bookingDate,
+        due_date: dueDate,
         credit_days: ticketData.creditDays,
       })
       .select("id")
@@ -273,9 +295,11 @@ export const getFlightTickets = async (filters = {}) => {
     }
 
     if (filters.fromDate && filters.toDate) {
-      query = query
-        .gte("created_at", filters.fromDate)
-        .lte("created_at", filters.toDate);
+      // ใช้ฟังก์ชัน toThaiTimeZone เพื่อปรับเวลาก่อนใช้ในการกรอง
+      const fromDate = toThaiTimeZone(new Date(filters.fromDate), false);
+      const toDate = toThaiTimeZone(new Date(filters.toDate), false);
+
+      query = query.gte("created_at", fromDate).lte("created_at", toDate);
     }
 
     // เรียงลำดับตามวันที่สร้าง

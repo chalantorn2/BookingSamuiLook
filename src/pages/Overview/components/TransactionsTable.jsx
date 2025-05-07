@@ -2,6 +2,7 @@ import React from "react";
 import { Activity, Clock, User, Building, Shield } from "lucide-react";
 import { StatusBadge } from "./StatusBadges";
 import Pagination from "./Pagination";
+import { formatThaiDate } from "../../../utils/helpers";
 
 const TransactionsTable = ({
   loading,
@@ -46,7 +47,13 @@ const TransactionsTable = ({
   const formatDate = (dateTimeStr) => {
     if (!dateTimeStr) return "-";
     const dateTime = new Date(dateTimeStr);
-    return dateTime.toLocaleDateString("th-TH");
+
+    // แปลงวันที่เป็นแบบไทย (วัน/เดือน/พ.ศ.)
+    const day = dateTime.getDate().toString().padStart(2, "0");
+    const month = (dateTime.getMonth() + 1).toString().padStart(2, "0");
+    const yearThai = dateTime.getFullYear() + 543; // แปลง ค.ศ. เป็น พ.ศ.
+
+    return `${day}/${month}/${yearThai}`;
   };
 
   return (
@@ -55,8 +62,8 @@ const TransactionsTable = ({
         <Activity size={20} className="mr-2 text-blue-500" />
         รายการทั้งหมด
         {dateRange.startDate === dateRange.endDate
-          ? ` (${formatDate(dateRange.startDate)})`
-          : ` (${formatDate(dateRange.startDate)} - ${formatDate(
+          ? ` (${formatThaiDate(dateRange.startDate)})`
+          : ` (${formatThaiDate(dateRange.startDate)} - ${formatThaiDate(
               dateRange.endDate
             )})`}
       </h2>
@@ -191,7 +198,7 @@ const TransactionsTable = ({
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <Clock size={16} className="text-gray-400 mr-2" />
-                          {formatDate(item.date)}
+                          {formatThaiDate(item.date)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
