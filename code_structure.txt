@@ -1,0 +1,137 @@
+D:.
+│   App.css
+│   App.jsx
+│   index.css
+│   main.jsx
+│   style.css
+│
+├───assets
+│       Logo.png
+│
+├───components
+│   ├───auth
+│   ├───common
+│   │       FormattedNumberInput.jsx
+│   │
+│   └───layout
+│           Header.jsx
+│           MainLayout.jsx
+│           Sidebar.jsx
+│
+├───contexts
+│       AlertDialogContext.jsx
+│
+├───hooks
+│       useNotification.jsx
+│       usePricing.js
+│
+├───pages
+│   ├───Admin
+│   │       ActivityLog.jsx
+│   │       index.jsx
+│   │
+│   ├───Documents
+│   │   │   DepositList.jsx
+│   │   │   index.jsx
+│   │   │   InvoiceList.jsx
+│   │   │
+│   │   └───components
+│   │           EditInvoice.jsx
+│   │           InvoiceDetail.jsx
+│   │           PrintInvoice.css
+│   │           PrintInvoice.jsx
+│   │           SelectForInvoice.jsx
+│   │           SendEmail.jsx
+│   │
+│   ├───Information
+│   │       index.jsx
+│   │
+│   ├───Login
+│   │       AuthContext.jsx
+│   │       authService.js
+│   │       index.jsx
+│   │       passwordUtils.js
+│   │       PrivateRoute.jsx
+│   │
+│   ├───Overview
+│   │   │   index.jsx
+│   │   │
+│   │   ├───components
+│   │   │       DateRangeSelector.jsx
+│   │   │       Pagination.jsx
+│   │   │       ServiceDistribution.jsx
+│   │   │       ServiceTypeFilter.jsx
+│   │   │       StatusBadges.jsx
+│   │   │       TransactionsTable.jsx
+│   │   │
+│   │   └───hooks
+│   │           useOverviewData.js
+│   │
+│   ├───Refund
+│   ├───Reports
+│   ├───Sales
+│   │   │   index.jsx
+│   │   │   SaleDeposit.jsx
+│   │   │   SaleOther.jsx
+│   │   │   SaleTicket.jsx
+│   │   │   SaleVoucher.jsx
+│   │   │
+│   │   ├───common
+│   │   │       PaymentMethodSection.jsx
+│   │   │       PricingTable.jsx
+│   │   │       SaleHeader.jsx
+│   │   │       SaleStyles.js
+│   │   │       TotalSummary.jsx
+│   │   │
+│   │   ├───components
+│   │   ├───deposit
+│   │   ├───forms
+│   │   ├───other
+│   │   │   └───forms
+│   │   │           HotelForm.jsx
+│   │   │           InsuranceForm.jsx
+│   │   │           OtherServiceForm.jsx
+│   │   │           TrainForm.jsx
+│   │   │           VisaForm.jsx
+│   │   │
+│   │   ├───ticket
+│   │   │       ExtrasSection.jsx
+│   │   │       PassengerSection.jsx
+│   │   │       PricingSummarySection.jsx
+│   │   │       RouteSection.jsx
+│   │   │       SupplierSection.jsx
+│   │   │       TicketTypeSection.jsx
+│   │   │
+│   │   └───voucher
+│   ├───UserManagement
+│   │       AddUserModal.jsx
+│   │       ChangePasswordModal.jsx
+│   │       EditUserModal.jsx
+│   │       index.jsx
+│   │       UserPermissionsTable.jsx
+│   │       UserTable.jsx
+│   │
+│   └───View
+│       │   index.jsx
+│       │
+│       ├───components
+│       │       DateRangeSelector.jsx
+│       │       FlightStatusFilter.jsx
+│       │       FlightTicketDetail.jsx
+│       │       FlightTicketDetail_Edit.jsx
+│       │       FlightTicketsView.jsx
+│       │
+│       └───hooks
+│               useFlightTicketsData.js
+│
+├───services
+│       customerService.js
+│       referencesService.js
+│       supabase.js
+│       supplierService.js
+│       ticketService.js
+│       userService.js
+│
+└───utils
+        helpers.js
+        validation.js

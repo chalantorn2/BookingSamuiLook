@@ -12,47 +12,12 @@ export const createFlightTicket = async (ticketData) => {
     // สร้างเลขอ้างอิง
     const referenceNumber = generateReferenceNumber("FT");
 
-    // 1. บันทึกข้อมูลรายละเอียดตั๋ว
-    const { data: ticketDetail, error: ticketDetailError } = await supabase
-      .from("tickets_detail")
-      .insert({
-        total_price: ticketData.totalAmount,
-        issue_date: ticketData.bookingDate,
-        due_date: ticketData.dueDate,
-        credit_days: ticketData.creditDays,
-      })
-      .select("id")
-      .single();
-
-    if (ticketDetailError) throw ticketDetailError;
-
-    // 2. บันทึกข้อมูลผู้โดยสาร (อาจมีหลายคน)
-    const passengersToInsert = ticketData.passengers.map((passenger) => ({
-      passenger_name: passenger.name,
-      age: passenger.age || null,
-      ticket_number: passenger.ticketNumber || null,
-      ticket_code: ticketData.code || null,
-    }));
-
-    const { data: passengersData, error: passengersError } = await supabase
-      .from("tickets_passengers")
-      .insert(passengersToInsert)
-      .select("id");
-
-    if (passengersError) throw passengersError;
-
-    // หมายเหตุ: เราจะย้ายส่วนนี้ไปไว้หลังจากสร้าง booking_ticket แล้ว เพื่อให้มี bookings_ticket_id
-
-    // หมายเหตุ: เราจะย้ายส่วนนี้ไปไว้หลังจากสร้าง booking_ticket แล้ว เพื่อให้มี bookings_ticket_id
-
-    // 5. สร้าง bookings_ticket หลัก (ยังไม่ใส่ ID ของตารางอื่นๆ)
+    // 1. บันทึกข้อมูลหลักลงในตาราง bookings_ticket
     const { data: bookingTicket, error: bookingTicketError } = await supabase
       .from("bookings_ticket")
       .insert({
         reference_number: referenceNumber,
         customer_id: ticketData.customerId,
-        tickets_detail_id: ticketDetail.id,
-        tickets_passengers_id: passengersData[0].id,
         information_id: ticketData.supplierId,
         status: ticketData.status || "pending",
         payment_status: ticketData.paymentStatus || "unpaid",
@@ -63,11 +28,27 @@ export const createFlightTicket = async (ticketData) => {
 
     if (bookingTicketError) throw bookingTicketError;
 
-    // 6. บันทึกข้อมูลเพิ่มเติมของตั๋วพร้อม bookings_ticket_id
+    // 2. บันทึกข้อมูลรายละเอียดตั๋ว
+    const { data: ticketDetail, error: ticketDetailError } = await supabase
+      .from("tickets_detail")
+      .insert({
+        bookings_ticket_id: bookingTicket.id,
+        total_price: ticketData.totalAmount,
+        issue_date: ticketData.bookingDate,
+        due_date: ticketData.dueDate,
+        credit_days: ticketData.creditDays,
+      })
+      .select("id")
+      .single();
+
+    if (ticketDetailError) throw ticketDetailError;
+
+    // 3. บันทึกข้อมูลเพิ่มเติมของตั๋ว
     const { data: additionalInfoData, error: additionalInfoError } =
       await supabase
         .from("ticket_additional_info")
         .insert({
+          bookings_ticket_id: bookingTicket.id,
           company_payment_method: ticketData.companyPaymentMethod,
           company_payment_details: ticketData.companyPaymentDetails,
           customer_payment_method: ticketData.customerPaymentMethod,
@@ -75,25 +56,33 @@ export const createFlightTicket = async (ticketData) => {
           code: ticketData.code,
           ticket_type: ticketData.ticketType,
           ticket_type_details: ticketData.ticketTypeDetails,
-          bookings_ticket_id: bookingTicket.id, // เพิ่ม bookings_ticket_id
         })
         .select("id")
         .single();
 
     if (additionalInfoError) throw additionalInfoError;
 
-    // 7. อัปเดต bookings_ticket ด้วย ticket_additional_info_id
-    const { error: updateAdditionalInfoError } = await supabase
-      .from("bookings_ticket")
-      .update({ ticket_additional_info_id: additionalInfoData.id })
-      .eq("id", bookingTicket.id);
+    // 4. บันทึกข้อมูลผู้โดยสาร (อาจมีหลายคน)
+    const passengersToInsert = ticketData.passengers.map((passenger) => ({
+      bookings_ticket_id: bookingTicket.id,
+      passenger_name: passenger.name,
+      age: passenger.age || null,
+      ticket_number: passenger.ticketNumber || null,
+    }));
 
-    if (updateAdditionalInfoError) throw updateAdditionalInfoError;
+    if (passengersToInsert.length > 0) {
+      const { error: passengersError } = await supabase
+        .from("tickets_passengers")
+        .insert(passengersToInsert);
 
-    // 8. บันทึกข้อมูลราคาพร้อม bookings_ticket_id
+      if (passengersError) throw passengersError;
+    }
+
+    // 5. บันทึกข้อมูลราคา
     const { data: pricingData, error: pricingError } = await supabase
       .from("tickets_pricing")
       .insert({
+        bookings_ticket_id: bookingTicket.id,
         adult_net_price: ticketData.pricing.adult?.net || 0,
         adult_sale_price: ticketData.pricing.adult?.sale || 0,
         adult_pax: ticketData.pricing.adult?.pax || 0,
@@ -110,23 +99,15 @@ export const createFlightTicket = async (ticketData) => {
         vat_percent: ticketData.vatPercent,
         vat_amount: ticketData.vatAmount,
         total_amount: ticketData.totalAmount,
-        bookings_ticket_id: bookingTicket.id, // เพิ่ม bookings_ticket_id
       })
       .select("id")
       .single();
 
     if (pricingError) throw pricingError;
 
-    // 9. อัปเดต bookings_ticket ด้วย tickets_pricing_id
-    const { error: updatePricingError } = await supabase
-      .from("bookings_ticket")
-      .update({ tickets_pricing_id: pricingData.id })
-      .eq("id", bookingTicket.id);
-
-    if (updatePricingError) throw updatePricingError;
-
-    // 10. บันทึกข้อมูลเส้นทาง (อาจมีหลายเส้นทาง) พร้อม bookings_ticket_id
+    // 6. บันทึกข้อมูลเส้นทาง (อาจมีหลายเส้นทาง)
     const routesToInsert = ticketData.routes.map((route) => ({
+      bookings_ticket_id: bookingTicket.id,
       airline: route.airline,
       flight_number: route.flight,
       rbd: route.rbd || null,
@@ -135,49 +116,36 @@ export const createFlightTicket = async (ticketData) => {
       destination: route.destination,
       departure_time: route.departure,
       arrival_time: route.arrival,
-      bookings_ticket_id: bookingTicket.id, // เพิ่ม bookings_ticket_id ที่นี่
     }));
 
-    const { data: routesData, error: routesError } = await supabase
-      .from("tickets_routes")
-      .insert(routesToInsert)
-      .select("id");
+    if (routesToInsert.length > 0) {
+      const { error: routesError } = await supabase
+        .from("tickets_routes")
+        .insert(routesToInsert);
 
-    if (routesError) throw routesError;
+      if (routesError) throw routesError;
+    }
 
-    // 11. บันทึกข้อมูล bookings_ticket กับ tickets_routes_id
-    const { error: updateBookingError } = await supabase
-      .from("bookings_ticket")
-      .update({ tickets_routes_id: routesData[0].id })
-      .eq("id", bookingTicket.id);
-
-    if (updateBookingError) throw updateBookingError;
-
-    // 12. บันทึกข้อมูลรายการเพิ่มเติม (extras) ถ้ามี
+    // 7. บันทึกข้อมูลรายการเพิ่มเติม (extras) ถ้ามี
     if (ticketData.extras && ticketData.extras.length > 0) {
-      const extrasToInsert = ticketData.extras.map((extra) => ({
-        description: extra.description,
-        net_price: extra.net_price || extra.net || 0,
-        sale_price: extra.sale_price || extra.sale || 0,
-        quantity: extra.quantity || extra.pax || 1,
-        total_amount: extra.total_amount || extra.total || 0,
-        bookings_ticket_id: bookingTicket.id, // เพิ่ม bookings_ticket_id ที่นี่
-      }));
+      const extrasToInsert = ticketData.extras
+        .filter((extra) => extra.description && extra.description.trim())
+        .map((extra) => ({
+          bookings_ticket_id: bookingTicket.id,
+          description: extra.description,
+          net_price: extra.net_price || 0,
+          sale_price: extra.sale_price || 0,
+          quantity: extra.quantity || 1,
+          total_amount: extra.total_amount || 0,
+        }));
 
-      const { data: extrasInserted, error: extrasError } = await supabase
-        .from("tickets_extras")
-        .insert(extrasToInsert)
-        .select("id");
+      if (extrasToInsert.length > 0) {
+        const { error: extrasError } = await supabase
+          .from("tickets_extras")
+          .insert(extrasToInsert);
 
-      if (extrasError) throw extrasError;
-
-      // 13. อัพเดท tickets_extras_id ในตาราง bookings_ticket
-      const { error: updateExtrasError } = await supabase
-        .from("bookings_ticket")
-        .update({ tickets_extras_id: extrasInserted[0].id })
-        .eq("id", bookingTicket.id);
-
-      if (updateExtrasError) throw updateExtrasError;
+        if (extrasError) throw extrasError;
+      }
     }
 
     return {
@@ -208,19 +176,69 @@ export const getFlightTicket = async (ticketId) => {
         *,
         customer:customer_id(*),
         detail:tickets_detail_id(*),
-        passengers:tickets_passengers_id(*),
-        supplier:information_id(*),
-        routes:tickets_routes_id(*),
-        extras:tickets_extras_id(*),
-        pricing:tickets_pricing_id(*),
-        additionalInfo:ticket_additional_info_id(*)
+        supplier:information_id(*)
       `
       )
       .eq("id", ticketId)
       .single();
 
     if (error) throw error;
-    return { success: true, data };
+
+    // ดึงข้อมูลที่เกี่ยวข้องอื่นๆ
+    // ข้อมูลผู้โดยสาร
+    const { data: passengersData, error: passengersError } = await supabase
+      .from("tickets_passengers")
+      .select("*")
+      .eq("bookings_ticket_id", ticketId);
+
+    if (passengersError) throw passengersError;
+
+    // ข้อมูลเส้นทาง
+    const { data: routesData, error: routesError } = await supabase
+      .from("tickets_routes")
+      .select("*")
+      .eq("bookings_ticket_id", ticketId);
+
+    if (routesError) throw routesError;
+
+    // ข้อมูลราคา
+    const { data: pricingData, error: pricingError } = await supabase
+      .from("tickets_pricing")
+      .select("*")
+      .eq("bookings_ticket_id", ticketId)
+      .single();
+
+    if (pricingError) throw pricingError;
+
+    // ข้อมูลเพิ่มเติม
+    const { data: additionalInfoData, error: additionalInfoError } =
+      await supabase
+        .from("ticket_additional_info")
+        .select("*")
+        .eq("bookings_ticket_id", ticketId)
+        .single();
+
+    if (additionalInfoError) throw additionalInfoError;
+
+    // ข้อมูล extras
+    const { data: extrasData, error: extrasError } = await supabase
+      .from("tickets_extras")
+      .select("*")
+      .eq("bookings_ticket_id", ticketId);
+
+    if (extrasError) throw extrasError;
+
+    // รวมข้อมูลทั้งหมดเป็นชุดเดียว
+    const fullTicketData = {
+      ...data,
+      passengers: passengersData || [],
+      routes: routesData || [],
+      pricing: pricingData || {},
+      additionalInfo: additionalInfoData || {},
+      extras: extrasData || [],
+    };
+
+    return { success: true, data: fullTicketData };
   } catch (error) {
     console.error("Error fetching flight ticket:", error);
     return { success: false, error: error.message };
@@ -238,8 +256,7 @@ export const getFlightTickets = async (filters = {}) => {
         *,
         customer:customer_id(name),
         detail:tickets_detail_id(issue_date, due_date),
-        supplier:information_id(name),
-        pricing:tickets_pricing_id(total_amount)
+        supplier:information_id(name)
       `);
 
     // เพิ่มฟิลเตอร์ต่างๆ

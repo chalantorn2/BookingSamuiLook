@@ -1,0 +1,69 @@
+โครงสร้างตาราง
+ตาราง: bookings_ticket
+คอลัมน์: id, reference_number, customer_id, tickets_detail_id, tickets_passengers_id, information_id, tickets_routes_id, tickets_extras_id, tickets_pricing_id, ticket_additional_info_id, status, payment_status, created_by, created_at, updated_at
+
+Foreign Keys:
+
+1. customer_id
+
+2. tickets_detail_id
+
+3. tickets_passengers_id
+
+4. information_id
+
+5. tickets_routes_id
+
+6. tickets_extras_id
+
+7. tickets_pricing_id
+
+8. ticket_additional_info_id
+
+ตาราง: customers
+คอลัมน์: id, name, address, id_number, created_at, updated_at
+
+ไม่มี Foreign Key ในตารางนี้ (ตามสมมติฐานชื่อคอลัมน์)
+
+ตาราง: information
+คอลัมน์: id, category, code, name, description, active, created_at
+
+ไม่มี Foreign Key ในตารางนี้ (ตามสมมติฐานชื่อคอลัมน์)
+
+ตาราง: ticket_additional_info
+คอลัมน์: id, bookings_ticket_id, company_payment_method, company_payment_details, customer_payment_method, customer_payment_details, code, ticket_type, ticket_type_details, created_at, updated_at
+
+Foreign Keys:
+
+1. bookings_ticket_id
+
+ตาราง: tickets_detail
+คอลัมน์: id, total_price, issue_date, due_date, credit_days, created_at, updated_at, booking_id
+
+Foreign Keys:
+
+1. booking_id
+
+ตาราง: tickets_extras
+คอลัมน์: id, bookings_ticket_id, description, net_price, sale_price, quantity, total_amount, created_at, updated_at
+
+Foreign Keys:
+
+1. bookings_ticket_id
+
+ตาราง: tickets_passengers
+คอลัมน์: id, passenger_name, age, ticket_number, ticket_code, created_at, updated_at
+
+ไม่มี Foreign Key ในตารางนี้ (ตามสมมติฐานชื่อคอลัมน์)
+
+ตาราง: tickets_routes
+คอลัมน์: id, bookings_ticket_id, airline, flight_number, rbd, date, origin, destination, departure_time, arrival_time, created_at, updated_at
+
+Foreign Keys:
+
+1. bookings_ticket_id
+
+ตาราง: users
+คอลัมน์: id, username, password, fullname, email, role, active, created_at, updated_at, last_login
+
+ไม่มี Foreign Key ในตารางนี้ (ตามสมมติฐานชื่อคอลัมน์)

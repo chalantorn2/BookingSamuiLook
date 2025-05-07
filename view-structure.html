@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ดูโครงสร้างและข้อมูลตาราง</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f4f4f4;
+        margin: 0;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #output {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: white;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        white-space: pre-wrap;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      h2,
+      h3,
+      p {
+        margin: 5px 0;
+      }
+      .copy-button {
+        padding: 5px 10px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        margin-left: 10px;
+        display: inline-block;
+      }
+      .copy-button:hover {
+        background-color: #218838;
+      }
+      .error-message {
+        color: red;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ดูโครงสร้างและข้อมูลตารางใน Supabase</h1>
+    <button onclick="showSchema()">ดูโครงสร้างตาราง</button>
+    <button onclick="showSchemaAndData()">ดูโครงสร้างและข้อมูล</button>
+    <div id="output"></div>
+
+    <script>
+      // กำหนดค่า Supabase
+      const supabaseUrl = "https://ljvegvwwrudrqmduuayb.supabase.co";
+      const supabaseAnonKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqdmVndnd3cnVkcnFtZHV1YXliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5MzcyMjAsImV4cCI6MjA2MTUxMzIyMH0.Mbd1cbzxaNv8KGR2QV6dSUSezROMeeixgitf-KTuFRA";
+
+      // สร้าง Supabase client
+      const supabaseClient = supabase.createClient(
+        supabaseUrl,
+        supabaseAnonKey,
+        {
+          auth: { persistSession: true, autoRefreshToken: true },
+        }
+      );
+
+      // ฟังก์ชันช่วยเหลือสำหรับการดึงข้อมูล
+      async function fetchData({
+        table,
+        columns = "*",
+        filters = {},
+        limit = null,
+        orderBy = null,
+        orderDirection = "desc",
+        page = null,
+        pageSize = 10,
+      }) {
+        try {
+          let query = supabaseClient.from(table).select(columns);
+
+          Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+              if (typeof value === "object" && value.operator) {
+                query = query.filter(key, value.operator, value.value);
+              } else {
+                query = query.eq(key, value);
+              }
+            }
+          });
+
+          if (orderBy) {
+            query = query.order(orderBy, {
+              ascending: orderDirection === "asc",
+            });
+          }
+
+          if (limit) {
+            query = query.limit(limit);
+          }
+
+          if (page !== null) {
+            const from = page * pageSize;
+            const to = from + pageSize - 1;
+            query = query.range(from, to);
+          }
+
+          const { data, error, count } = await query;
+
+          if (error) {
+            throw error;
+          }
+
+          return { data, count };
+        } catch (error) {
+          console.error(`Error fetching data from ${table}:`, error);
+          throw error;
+        }
+      }
+
+      // รายชื่อตารางที่ระบุแบบคงที่
+      const tables = [
+        "bookings_ticket",
+        "customers",
+        "information",
+        "ticket_additional_info",
+        "tickets_detail",
+        "tickets_extras",
+        "tickets_passengers",
+        "tickets_pricing",
+        "tickets_routes",
+        "users",
+      ];
+
+      async function getTableSchema(table) {
+        const { data } = await fetchData({ table, limit: 1 });
+        if (data && data.length > 0) {
+          return Object.keys(data[0]);
+        }
+        return [];
+      }
+
+      function identifyForeignKeys(columns) {
+        const foreignKeys = [];
+        columns.forEach((col) => {
+          if (col.endsWith("_id")) {
+            foreignKeys.push(col);
+          }
+        });
+        return foreignKeys;
+      }
+
+      async function showSchema() {
+        const output = document.getElementById("output");
+        output.innerHTML = "<h2>โครงสร้างตาราง</h2>";
+
+        if (tables.length === 0) {
+          output.innerHTML += '<p class="error-message">ไม่พบตาราง</p>';
+          return;
+        }
+
+        for (const table of tables) {
+          try {
+            const columns = await getTableSchema(table);
+            const foreignKeys = identifyForeignKeys(columns);
+            let tableOutput = `<h3>ตาราง: ${table}</h3>`;
+            if (columns.length > 0) {
+              tableOutput += `<p>คอลัมน์: ${columns.join(", ")}</p>`;
+              if (foreignKeys.length > 0) {
+                tableOutput += "<p>Foreign Keys:</p>";
+                foreignKeys.forEach((fk, index) => {
+                  tableOutput += `<p>${index + 1}. ${fk}</p>`;
+                });
+              } else {
+                tableOutput +=
+                  "<p>ไม่มี Foreign Key ในตารางนี้ (ตามสมมติฐานชื่อคอลัมน์)</p>";
+              }
+            } else {
+              tableOutput += "<p>ไม่มีข้อมูลในตารางนี้</p>";
+            }
+
+            output.innerHTML += tableOutput;
+          } catch (error) {
+            output.innerHTML += `<p style="color: red;">เกิดข้อผิดพลาดในการดึงโครงสร้างของตาราง ${table}: ${error.message}</p>`;
+          }
+        }
+      }
+
+      async function showSchemaAndData() {
+        const output = document.getElementById("output");
+        output.innerHTML = "<h2>โครงสร้างและข้อมูลตาราง</h2>";
+
+        if (tables.length === 0) {
+          output.innerHTML += '<p class="error-message">ไม่พบตาราง</p>';
+          return;
+        }
+
+        for (const table of tables) {
+          try {
+            const columns = await getTableSchema(table);
+            const foreignKeys = identifyForeignKeys(columns);
+            const { data } = await fetchData({ table });
+
+            let tableOutput = `<h3>ตาราง: ${table}</h3>`;
+            if (columns.length > 0) {
+              tableOutput += `<p>คอลัมน์: ${columns.join(", ")}</p>`;
+              if (foreignKeys.length > 0) {
+                tableOutput += "<p>Foreign Keys:</p>";
+                foreignKeys.forEach((fk, index) => {
+                  tableOutput += `<p>${index + 1}. ${fk}</p>`;
+                });
+              } else {
+                tableOutput +=
+                  "<p>ไม่มี Foreign Key ในตารางนี้ (ตามสมมติฐานชื่อคอลัมน์)</p>";
+              }
+              if (data && data.length > 0) {
+                let tableHtml = "<table><thead><tr>";
+                columns.forEach((col) => {
+                  tableHtml += `<th>${col}</th>`;
+                });
+                tableHtml += "</tr></thead><tbody>";
+                data.forEach((row) => {
+                  tableHtml += "<tr>";
+                  columns.forEach((col) => {
+                    tableHtml += `<td>${row[col] ?? "N/A"}</td>`;
+                  });
+                  tableHtml += "</tr>";
+                });
+                tableHtml += "</tbody></table>";
+                tableOutput += tableHtml;
+              } else {
+                tableOutput += "<p>ไม่มีข้อมูลในตารางนี้</p>";
+              }
+            } else {
+              tableOutput += "<p>ไม่มีโครงสร้างในตารางนี้</p>";
+            }
+            const cleanText = tableOutput.replace(/<\/?[^>]+(>|$)/g, "");
+
+            output.innerHTML += tableOutput;
+          } catch (error) {
+            output.innerHTML += `<p style="color: red;">เกิดข้อผิดพลาดในการดึงข้อมูลของตาราง ${table}: ${error.message}</p>`;
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

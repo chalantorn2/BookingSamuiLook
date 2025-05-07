@@ -15,6 +15,11 @@ const ComingSoon = ({ title, description }) => (
   </div>
 );
 
+/**
+ * คอมโพเนนต์หลักสำหรับโมดูล View
+ * @param {Object} props - คุณสมบัติของคอมโพเนนต์
+ * @param {string} props.activeSubmenu - ID ของเมนูย่อยที่กำลังใช้งาน
+ */
 const ViewModule = ({ activeSubmenu }) => {
   const [activeView, setActiveView] = useState("flightTickets");
 
@@ -41,6 +46,7 @@ const ViewModule = ({ activeSubmenu }) => {
     }
   }, [activeSubmenu]);
 
+  // แสดงเนื้อหาตามประเภทที่เลือก
   const renderContent = () => {
     switch (activeView) {
       case "flightTickets":

@@ -85,9 +85,6 @@ const SaleTicket = () => {
     { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
   ]);
 
-  // แก้ไขเฉพาะในฟังก์ชัน handleSubmit ของ SaleTicket.jsx
-  // ส่วนที่ต้องแก้ไขในฟังก์ชัน handleSubmit ของ SaleTicket.jsx
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -143,31 +140,27 @@ const SaleTicket = () => {
         }
       }
 
-      console.log("Form Payment Details:", {
-        companyMethod: formData.paymentMethod,
-        companyDetails: formData.company_payment_details,
-        customerMethod: formData.customerPayment,
-        customerDetails: formData.customer_payment_details,
-      });
-
       const subtotalAmount = calculateSubtotal();
       const vatAmount = calculateVat();
       const totalAmount = calculateTotal();
 
-      // จัดรูปแบบข้อมูลเพื่อส่งไปยัง API ตามโครงสร้างฐานข้อมูลใหม่
+      // เตรียมข้อมูลที่จะส่งไปยัง API สำหรับสร้างตั๋วใหม่ตามโครงสร้างฐานข้อมูลใหม่
       const ticketData = {
-        // ข้อมูลหลัก
-        customerId: customerId, // ใช้ customerId ที่ได้จากการสร้างลูกค้าใหม่หรือที่มีอยู่แล้ว
+        // ข้อมูลหลัก bookings_ticket
+        customerId: customerId,
         supplierId: formData.supplierId || null,
-        code: formData.code || "",
-        bookingDate: formData.date,
         status: "pending",
         paymentStatus: "unpaid",
-        creditDays: formData.creditDays,
-        dueDate: formData.dueDate,
-        salesName: formData.salesName,
+        createdBy: userId,
 
-        // ข้อมูล ticket_type ใน ticket_additional_info
+        // ข้อมูล tickets_detail
+        bookingDate: formData.date,
+        dueDate: formData.dueDate,
+        creditDays: formData.creditDays,
+        totalAmount: totalAmount,
+
+        // ข้อมูล ticket_additional_info
+        code: formData.code || "",
         ticketType: formData.ticketType,
         ticketTypeDetails:
           formData.ticketType === "b2b"
@@ -175,27 +168,21 @@ const SaleTicket = () => {
             : formData.ticketType === "other"
             ? formData.otherDetails
             : null,
-
-        // ข้อมูลการชำระเงินใน ticket_additional_info
         companyPaymentMethod: formData.paymentMethod,
-        companyPaymentDetails: formData.company_payment_details || "",
+        companyPaymentDetails: formData.companyPaymentDetails || "",
         customerPaymentMethod: formData.customerPayment,
-        customerPaymentDetails: formData.customer_payment_details || "",
+        customerPaymentDetails: formData.customerPaymentDetails || "",
 
-        // ข้อมูลราคา
+        // ข้อมูล tickets_pricing
+        pricing: pricing,
         subtotalAmount,
         vatPercent,
         vatAmount,
-        totalAmount,
-        pricing,
 
-        // ข้อมูลอื่นๆ
+        // ข้อมูลรายการ
         passengers: passengers.filter((p) => p.name.trim()),
         routes: routes.filter((r) => r.origin || r.destination),
         extras: extras.filter((e) => e.description),
-
-        // ข้อมูลผู้สร้าง
-        createdBy: userId,
         remarks: formData.remarks || "",
       };
 
