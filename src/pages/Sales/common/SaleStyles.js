@@ -1,5 +1,4 @@
 // src/components/modules/Sale/common/SaleStyles.js
-
 const SaleStyles = {
   // Layout หลัก
   mainContainer: "bg-gray-100 min-h-screen p-4",
@@ -38,7 +37,7 @@ const SaleStyles = {
     twoColumns: "grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6",
     twoColumnsCompact: "grid grid-cols-2 gap-4 mt-4",
     threeColumns: "grid grid-cols-1 md:grid-cols-3 gap-4",
-    fifteenColumns: "grid grid-cols-1 lg:grid-cols-15 gap-2", // 15-column layout
+    fifteenColumns: "grid grid-cols-1 lg:grid-cols-15 gap-2",
     autoColumns: "grid grid-cols-1 md:grid-cols-auto gap-4",
     fullWidthHalf: "col-span-1",
     spaceBetween: "flex justify-between items-center",
@@ -51,15 +50,17 @@ const SaleStyles = {
     labelRequired:
       "block text-sm font-medium mb-1 after:content-['*'] after:ml-0.5 after:text-red-500",
     input:
+      "w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 text-transform uppercase",
+    inputNoUppercase:
       "w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500",
     select:
-      "w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500",
+      "w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 text-transform uppercase",
     textarea:
-      "w-full border border-gray-400 rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500",
+      "w-full border border-gray-400 rounded-md p-2 h-24 focus:ring-blue-500 focus:border-blue-500 text-transform uppercase",
     dateInput:
       "w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500",
     inputWithIcon:
-      "pl-10 w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500",
+      "pl-10 w-full border border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 text-transform uppercase",
     iconContainer:
       "absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none",
     inputDisabled: "w-full border border-gray-400 rounded-md p-2 bg-gray-100",
@@ -160,7 +161,6 @@ const SaleStyles = {
   },
 };
 
-// ฟังก์ชั่นสำหรับรวม classnames หลายๆ อัน
 export const combineClasses = (...classes) => {
   return classes.filter(Boolean).join(" ");
 };

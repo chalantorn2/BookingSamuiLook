@@ -1,5 +1,11 @@
 import { supabase, insertData, fetchData } from "./supabase";
 
+// ฟังก์ชันตัดข้อความให้มีความยาวสูงสุด
+const truncateText = (text, maxLength = 50) => {
+  if (!text) return text;
+  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+};
+
 export const getCustomers = async (search = "", limit = 10) => {
   try {
     let query = supabase.from("customers").select("*").order("name");
@@ -15,7 +21,15 @@ export const getCustomers = async (search = "", limit = 10) => {
     const { data, error } = await query;
 
     if (error) throw error;
-    return data;
+
+    // ตัดข้อความสำหรับการแสดงผลในตาราง
+    return data.map((customer) => ({
+      ...customer,
+      name: truncateText(customer.name, 30), // ตัดชื่อให้ยาวไม่เกิน 30 ตัวอักษร
+      address: truncateText(customer.address, 40), // ตัดที่อยู่ให้ยาวไม่เกิน 40 ตัวอักษร
+      full_name: customer.name, // เก็บชื่อเต็มไว้สำหรับ tooltip
+      full_address: customer.address, // เก็บที่อยู่เต็มไว้สำหรับ tooltip
+    }));
   } catch (error) {
     console.error("Error fetching customers:", error);
     return [];
@@ -54,6 +68,7 @@ export const createCustomer = async (customerData) => {
         customerData.id_number ||
         customerData.id ||
         null,
+      phone: customerData.phone || null, // เพิ่ม phone ใน payload
     };
 
     console.log("Creating customer with payload:", payload);

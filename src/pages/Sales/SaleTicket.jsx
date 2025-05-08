@@ -116,10 +116,8 @@ const SaleTicket = () => {
       const userData = await supabase.auth.getUser();
       const userId = userData.data?.user?.id;
 
-      // ตรวจสอบว่ามีลูกค้าที่เลือกหรือไม่
       let customerId = selectedCustomer?.id;
 
-      // ถ้าไม่มี customerId แต่มีชื่อลูกค้า ให้สร้างลูกค้าใหม่
       if (!customerId && formData.customer) {
         console.log("Creating new customer from form submission");
         const newCustomerResult = await createCustomer({
@@ -132,6 +130,7 @@ const SaleTicket = () => {
         if (newCustomerResult.success) {
           customerId = newCustomerResult.customerId;
           console.log("New customer created with ID:", customerId);
+          alert(`สร้างลูกค้าใหม่สำเร็จ: ${formData.customer}`); // เพิ่มแจ้งเตือน
         } else {
           console.error("Failed to create customer:", newCustomerResult.error);
           alert(`ไม่สามารถสร้างลูกค้าใหม่ได้: ${newCustomerResult.error}`);
@@ -144,22 +143,16 @@ const SaleTicket = () => {
       const vatAmount = calculateVat();
       const totalAmount = calculateTotal();
 
-      // เตรียมข้อมูลที่จะส่งไปยัง API สำหรับสร้างตั๋วใหม่ตามโครงสร้างฐานข้อมูลใหม่
       const ticketData = {
-        // ข้อมูลหลัก bookings_ticket
         customerId: customerId,
         supplierId: formData.supplierId || null,
         status: "pending",
         paymentStatus: "unpaid",
         createdBy: userId,
-
-        // ข้อมูล tickets_detail
         bookingDate: formData.date,
         dueDate: formData.dueDate,
         creditDays: formData.creditDays,
         totalAmount: totalAmount,
-
-        // ข้อมูล ticket_additional_info
         code: formData.code || "",
         ticketType: formData.ticketType,
         ticketTypeDetails:
@@ -172,14 +165,10 @@ const SaleTicket = () => {
         companyPaymentDetails: formData.companyPaymentDetails || "",
         customerPaymentMethod: formData.customerPayment,
         customerPaymentDetails: formData.customerPaymentDetails || "",
-
-        // ข้อมูล tickets_pricing
         pricing: pricing,
         subtotalAmount,
         vatPercent,
         vatAmount,
-
-        // ข้อมูลรายการ
         passengers: passengers.filter((p) => p.name.trim()),
         routes: routes.filter((r) => r.origin || r.destination),
         extras: extras.filter((e) => e.description),

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { FiSearch, FiX } from "react-icons/fi";
+import React, { useState, useEffect, useCallback } from "react";
+import { FiX } from "react-icons/fi";
 import { getCustomers } from "../../../services/customerService";
 import { getUsers } from "../../../services/userService";
-import { formatCurrency } from "../../../utils/helpers";
+import SaleStyles from "../common/SaleStyles";
+import { debounce } from "lodash";
 
 const SaleHeader = ({
   formData,
@@ -11,44 +12,43 @@ const SaleHeader = ({
   selectedCustomer,
   setSelectedCustomer,
   totalAmount = 0,
-  vatPercent = 0,
-  subtotalAmount = 0,
-  vatAmount = 0,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const today = new Date().toISOString().split("T")[0];
 
-  const handleSearchCustomer = async (term) => {
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce(async (term) => {
+      if (term.length >= 1) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const results = await getCustomers(term, 5);
+          setSearchResults(results);
+          setShowResults(true);
+        } catch (err) {
+          setError("ไม่สามารถค้นหาลูกค้าได้ กรุณาลองใหม่");
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    }, 300),
+    []
+  );
+
+  const handleSearchCustomer = (term) => {
     setSearchTerm(term);
-    if (term.length >= 2) {
-      const results = await getCustomers(term, 5);
-      setSearchResults(results);
-      setShowResults(true);
-    } else {
-      setSearchResults([]);
-      setShowResults(false);
-    }
+    debouncedSearch(term);
   };
 
-  const selectCustomer = async (customer) => {
-    if (!customer.id) {
-      console.log("Creating new customer:", customer);
-      const { success, customerId, error } = await createCustomer({
-        name: customer.name,
-        address: customer.address || "",
-        id_number: customer.id_number || customer.idNumber || "",
-      });
-
-      if (success) {
-        console.log("Customer created successfully with ID:", customerId);
-        customer.id = customerId;
-      } else {
-        console.error("Failed to create customer:", error);
-      }
-    }
-
+  const selectCustomer = (customer) => {
     setSelectedCustomer(customer);
     setFormData({
       ...formData,
@@ -60,7 +60,22 @@ const SaleHeader = ({
       dueDate: today,
       creditDays: "0",
     });
+    setSearchTerm("");
     setShowResults(false);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setShowResults(false);
+    setSearchResults([]);
+    setSelectedCustomer(null);
+    setFormData({
+      ...formData,
+      customer: "",
+      contactDetails: "",
+      phone: "",
+      id: "",
+    });
   };
 
   const formatCurrencyLocal = (amount) => {
@@ -72,12 +87,8 @@ const SaleHeader = ({
   };
 
   const formatPhoneNumber = (value) => {
-    // ลบตัวอักษรที่ไม่ใช่ตัวเลขออก
     const digits = value.replace(/\D/g, "");
-    // จำกัดความยาวไม่เกิน 10 หลัก (เบอร์โทรไทย)
     const limitedDigits = digits.slice(0, 10);
-
-    // จัดรูปแบบเบอร์โทรไทย: 0XX-XXX-XXXX
     if (limitedDigits.length) {
       if (limitedDigits.length <= 3) return limitedDigits;
       if (limitedDigits.length <= 6)
@@ -87,7 +98,6 @@ const SaleHeader = ({
         6
       )}-${limitedDigits.slice(6, 10)}`;
     }
-
     return limitedDigits;
   };
 
@@ -106,7 +116,6 @@ const SaleHeader = ({
         }));
       }
     };
-
     fetchUser();
   }, []);
 
@@ -114,44 +123,71 @@ const SaleHeader = ({
     return (
       <>
         <div className="mb-2">
-          <label className="block text-sm font-medium mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">
-            Customer Name
-          </label>
+          <label className={SaleStyles.form.labelRequired}>Customer Name</label>
           <div className="relative">
             <input
               type="text"
-              className="w-full border border-gray-400 rounded-md p-2"
+              className={SaleStyles.form.input}
               value={formData.customer}
               onChange={(e) => {
-                setFormData({ ...formData, customer: e.target.value });
-                handleSearchCustomer(e.target.value);
+                const value = e.target.value;
+                setFormData({ ...formData, customer: value });
+                handleSearchCustomer(value);
               }}
               required
+              placeholder="ชื่อลูกค้า"
             />
-            {showResults && searchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border">
-                <ul>
-                  {searchResults.map((customer) => (
-                    <li
-                      key={customer.id}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => selectCustomer(customer)}
-                    >
-                      {customer.name}
-                    </li>
-                  ))}
-                </ul>
+            {formData.customer && (
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={clearSearch}
+              >
+                <FiX className="text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+            {showResults && (
+              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto">
+                {isLoading ? (
+                  <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
+                ) : error ? (
+                  <div className="px-4 py-2 text-red-500">{error}</div>
+                ) : searchResults.length > 0 ? (
+                  <ul>
+                    {searchResults.map((customer) => (
+                      <li
+                        key={customer.id}
+                        className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col"
+                        onClick={() => selectCustomer(customer)}
+                      >
+                        <span className="font-medium">{customer.name}</span>
+                        <span className="text-sm text-gray-500">
+                          {customer.address || "ไม่มีที่อยู่"}
+                        </span>
+                        {customer.phone && (
+                          <span className="text-sm text-gray-500">
+                            โทร: {customer.phone}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="px-4 py-2 text-gray-500">
+                    ไม่พบลูกค้า "{searchTerm}"
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
         <div className="mb-2">
-          <label className="block text-sm font-medium mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">
+          <label className={SaleStyles.form.labelRequired}>
             Contact Details
           </label>
           <textarea
-            className="w-full border border-gray-400 rounded-md p-2 h-24"
+            className={SaleStyles.form.input}
             placeholder="ที่อยู่และข้อมูลติดต่อ"
             value={formData.contactDetails}
             onChange={(e) =>
@@ -163,24 +199,20 @@ const SaleHeader = ({
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Phone Number
-            </label>
+            <label className={SaleStyles.form.label}>Phone Number</label>
             <input
               type="text"
-              className="w-full border border-gray-400 rounded-md p-2"
+              className={SaleStyles.form.inputNoUppercase}
               placeholder="เบอร์โทรศัพท์"
               value={formData.phone}
               onChange={handlePhoneChange}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
-              ID/Passport
-            </label>
+            <label className={SaleStyles.form.label}>ID/Passport</label>
             <input
               type="text"
-              className="w-full border border-gray-400 rounded-md p-2"
+              className={SaleStyles.form.input}
               placeholder="เลขประจำตัว/พาสปอร์ต"
               value={formData.id}
               onChange={(e) => setFormData({ ...formData, id: e.target.value })}
@@ -215,20 +247,13 @@ const SaleHeader = ({
           <div className="text-2xl font-bold mb-1 text-blue-600">
             {formatCurrencyLocal(totalAmount)}
           </div>
-          <div className="text-xs text-gray-500">
-            ยอดก่อนภาษี: {formatCurrencyLocal(subtotalAmount)} | ภาษี{" "}
-            {vatPercent}%:{" "}
-            {formatCurrencyLocal((subtotalAmount * vatPercent) / 100)}
-          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">
-              วันที่:
-            </label>
+            <label className={SaleStyles.form.labelRequired}>วันที่:</label>
             <input
               type="date"
-              className="w-full border border-gray-400 rounded-md p-2"
+              className={SaleStyles.form.dateInput}
               value={formData.date || ""}
               onChange={(e) => {
                 const newDate = e.target.value;
@@ -246,12 +271,12 @@ const SaleHeader = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">
+            <label className={SaleStyles.form.labelRequired}>
               เครดิต (วัน):
             </label>
             <input
               type="number"
-              className="w-full border border-gray-400 rounded-md p-2"
+              className={SaleStyles.form.input}
               value={formData.creditDays || "0"}
               onChange={(e) => {
                 const credit = e.target.value;
@@ -268,12 +293,12 @@ const SaleHeader = ({
         </div>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
-            <label className="block font-medium mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">
+            <label className={SaleStyles.form.labelRequired}>
               วันครบกำหนด:
             </label>
             <input
               type="date"
-              className="w-full border border-gray-400 rounded-md p-2"
+              className={SaleStyles.form.dateInput}
               value={formData.dueDate || ""}
               onChange={(e) => {
                 const newDueDate = e.target.value;
@@ -291,12 +316,12 @@ const SaleHeader = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">
+            <label className={SaleStyles.form.labelRequired}>
               ชื่อผู้บันทึก:
             </label>
             <input
               type="text"
-              className="w-full border border-gray-400 rounded-md p-2"
+              className={SaleStyles.form.input}
               placeholder="ชื่อผู้บันทึก"
               value={formData.salesName || "นายชลันธร มานพ"}
               onChange={(e) =>

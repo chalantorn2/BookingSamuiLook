@@ -1,4 +1,5 @@
 import React from "react";
+import { formatNumber, parseInput } from "./FormatNumber";
 
 /**
  * PricingTable Component - ใช้สำหรับแสดงและจัดการตารางราคาในหน้าต่างๆ
@@ -29,47 +30,38 @@ const PricingTable = ({
     enableEdit: true,
   },
 }) => {
-  // ฟังก์ชันคำนวณราคารวมต่อรายการ
+  // ฟังก์ชันคำนวณราคารวมต่อรายการ (ไม่มีทศนิยม)
   const calculateItemTotal = (price, quantity) => {
-    const numPrice = parseFloat(price) || 0;
-    const numQuantity = parseFloat(quantity) || 0;
-    return (numPrice * numQuantity).toFixed(2);
+    const numPrice = parseInt(price) || 0;
+    const numQuantity = parseInt(quantity) || 0;
+    return (numPrice * numQuantity).toString();
   };
 
   // ฟังก์ชันอัพเดทข้อมูลราคา
   const handleUpdatePricing = (category, field, value) => {
-    // ถ้าไม่มี updatePricing function ที่ส่งมา ให้ return ออกไป
     if (!updatePricing) return;
 
     let newTotal = pricing[category].total;
+    const cleanValue = parseInput(value); // ลบ comma ออก
 
     // คำนวณ total ใหม่
     if (field === "pax") {
-      newTotal = calculateItemTotal(pricing[category].sale, value);
+      newTotal = calculateItemTotal(pricing[category].sale, cleanValue);
     } else if (field === "sale") {
-      newTotal = calculateItemTotal(value, pricing[category].pax);
+      newTotal = calculateItemTotal(cleanValue, pricing[category].pax);
     }
 
     // เรียกใช้ updatePricing function ที่ส่งมาจาก parent component
-    updatePricing(category, field, value, newTotal);
+    updatePricing(category, field, cleanValue, newTotal);
   };
 
-  // คำนวณยอดรวมทั้งหมด
+  // คำนวณยอดรวมทั้งหมด (ไม่มีทศนิยม)
   const calculateTotal = () => {
-    const adultTotal = parseFloat(pricing.adult?.total || 0);
-    const childTotal = parseFloat(pricing.child?.total || 0);
-    const infantTotal = parseFloat(pricing.infant?.total || 0);
+    const adultTotal = parseInt(pricing.adult?.total || 0);
+    const childTotal = parseInt(pricing.child?.total || 0);
+    const infantTotal = parseInt(pricing.infant?.total || 0);
 
-    return (adultTotal + childTotal + infantTotal).toFixed(2);
-  };
-
-  // แปลง string เป็น number สำหรับการแสดงผล
-  const formatNumber = (value) => {
-    if (!value) return "";
-    return parseFloat(value).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    return (adultTotal + childTotal + infantTotal).toString();
   };
 
   return (
@@ -98,11 +90,9 @@ const PricingTable = ({
           <div className="col-span-3">
             <input
               type="text"
-              min="0"
-              step="1"
               className="w-full border text-right border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
-              value={pricing.adult?.net || ""}
+              value={formatNumber(pricing.adult?.net) || ""}
               onChange={(e) =>
                 handleUpdatePricing("adult", "net", e.target.value)
               }
@@ -112,11 +102,9 @@ const PricingTable = ({
           <div className="col-span-3">
             <input
               type="text"
-              min="0"
-              step="1"
-              className="w-full border border-gray-400 text-right rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border text-right border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
-              value={pricing.adult?.sale || ""}
+              value={formatNumber(pricing.adult?.sale) || ""}
               onChange={(e) =>
                 handleUpdatePricing("adult", "sale", e.target.value)
               }
@@ -127,7 +115,7 @@ const PricingTable = ({
             <input
               type="number"
               min="0"
-              className="w-full border border-gray-400 text-center rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border text-center border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
               value={pricing.adult?.pax || ""}
               onChange={(e) =>
@@ -139,9 +127,9 @@ const PricingTable = ({
           <div className="col-span-4">
             <input
               type="text"
-              className="w-full border border-gray-400 text-right rounded-md p-2 bg-gray-100"
+              className="w-full border text-right border-gray-400 rounded-md p-2 bg-gray-100"
               placeholder="0"
-              value={formatNumber(pricing.adult?.total)}
+              value={formatNumber(pricing.adult?.total) || ""}
               disabled
             />
           </div>
@@ -155,11 +143,9 @@ const PricingTable = ({
           <div className="col-span-3">
             <input
               type="text"
-              min="0"
-              step="1"
               className="w-full border text-right border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
-              value={pricing.child?.net || ""}
+              value={formatNumber(pricing.child?.net) || ""}
               onChange={(e) =>
                 handleUpdatePricing("child", "net", e.target.value)
               }
@@ -169,11 +155,9 @@ const PricingTable = ({
           <div className="col-span-3">
             <input
               type="text"
-              min="0"
-              step="1"
-              className="w-full border border-gray-400 text-right rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border text-right border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
-              value={pricing.child?.sale || ""}
+              value={formatNumber(pricing.child?.sale) || ""}
               onChange={(e) =>
                 handleUpdatePricing("child", "sale", e.target.value)
               }
@@ -184,7 +168,7 @@ const PricingTable = ({
             <input
               type="number"
               min="0"
-              className="w-full border border-gray-400 text-center rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border text-center border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
               value={pricing.child?.pax || ""}
               onChange={(e) =>
@@ -196,9 +180,9 @@ const PricingTable = ({
           <div className="col-span-4">
             <input
               type="text"
-              className="w-full border border-gray-400 text-right rounded-md p-2 bg-gray-100"
+              className="w-full border text-right border-gray-400 rounded-md p-2 bg-gray-100"
               placeholder="0"
-              value={formatNumber(pricing.child?.total)}
+              value={formatNumber(pricing.child?.total) || ""}
               disabled
             />
           </div>
@@ -212,11 +196,9 @@ const PricingTable = ({
           <div className="col-span-3">
             <input
               type="text"
-              min="0"
-              step="1"
               className="w-full border text-right border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
-              value={pricing.infant?.net || ""}
+              value={formatNumber(pricing.infant?.net) || ""}
               onChange={(e) =>
                 handleUpdatePricing("infant", "net", e.target.value)
               }
@@ -226,11 +208,9 @@ const PricingTable = ({
           <div className="col-span-3">
             <input
               type="text"
-              min="0"
-              step="1"
-              className="w-full border border-gray-400 text-right rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border text-right border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
-              value={pricing.infant?.sale || ""}
+              value={formatNumber(pricing.infant?.sale) || ""}
               onChange={(e) =>
                 handleUpdatePricing("infant", "sale", e.target.value)
               }
@@ -241,7 +221,7 @@ const PricingTable = ({
             <input
               type="number"
               min="0"
-              className="w-full border border-gray-400 text-center rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border text-center border-gray-400 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"
               value={pricing.infant?.pax || ""}
               onChange={(e) =>
@@ -253,30 +233,13 @@ const PricingTable = ({
           <div className="col-span-4">
             <input
               type="text"
-              className="w-full border border-gray-400 text-right rounded-md p-2 bg-gray-100"
+              className="w-full border text-right border-gray-400 rounded-md p-2 bg-gray-100"
               placeholder="0"
-              value={formatNumber(pricing.infant?.total)}
+              value={formatNumber(pricing.infant?.total) || ""}
               disabled
             />
           </div>
         </div>
-
-        {/* Summary Total (optional) */}
-        {/* {config.showTotal && (
-          <div className="grid grid-cols-12 gap-2 pt-2 p-1 pl-3 items-center bg-white border-t border-gray-200 mt-2">
-            <div className="col-span-8 text-right font-semibold">
-              รวมทั้งสิ้น:
-            </div>
-            <div className="col-span-4">
-              <input
-                type="text"
-                className="w-full border border-gray-400 text-right rounded-md p-2 bg-blue-50 font-bold text-blue-600"
-                value={formatNumber(calculateTotal())}
-                disabled
-              />
-            </div>
-          </div>
-        )} */}
       </div>
     </div>
   );

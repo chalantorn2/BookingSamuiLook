@@ -1,6 +1,7 @@
 import React from "react";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
+import { formatNumber, parseInput } from "../common/FormatNumber";
 
 const ExtrasSection = ({ extras, setExtras }) => {
   const addExtra = () => {
@@ -9,10 +10,10 @@ const ExtrasSection = ({ extras, setExtras }) => {
       {
         id: extras.length + 1,
         description: "",
-        net_price: "", // เปลี่ยนจาก net เป็น net_price
-        sale_price: "", // เปลี่ยนจาก sale เป็น sale_price
-        quantity: 1, // เปลี่ยนจาก pax เป็น quantity
-        total_amount: "", // เปลี่ยนจาก total เป็น total_amount
+        net_price: "",
+        sale_price: "",
+        quantity: 1,
+        total_amount: "",
       },
     ]);
   };
@@ -21,6 +22,13 @@ const ExtrasSection = ({ extras, setExtras }) => {
     if (extras.length > 1) {
       setExtras(extras.filter((e) => e.id !== id));
     }
+  };
+
+  // ฟังก์ชันคำนวณราคารวม (ไม่มีทศนิยม)
+  const calculateItemTotal = (price, quantity) => {
+    const numPrice = parseInt(price) || 0;
+    const numQuantity = parseInt(quantity) || 0;
+    return (numPrice * numQuantity).toString();
   };
 
   return (
@@ -92,37 +100,41 @@ const ExtrasSection = ({ extras, setExtras }) => {
               </div>
               <div className="col-span-3">
                 <input
-                  type="number"
+                  type="text"
                   className={combineClasses(
                     SaleStyles.form.input,
                     "text-end appearance-none"
                   )}
                   placeholder="0"
-                  value={item.net_price || ""} // เปลี่ยนจาก net เป็น net_price
+                  value={formatNumber(item.net_price) || ""}
                   onChange={(e) => {
                     const updatedExtras = [...extras];
-                    updatedExtras[index].net_price = e.target.value; // เปลี่ยนจาก net เป็น net_price
+                    updatedExtras[index].net_price = parseInput(e.target.value);
                     setExtras(updatedExtras);
                   }}
                 />
               </div>
               <div className="col-span-3">
                 <input
-                  type="number"
+                  type="text"
                   className={combineClasses(SaleStyles.form.input, "text-end")}
                   placeholder="0"
-                  value={item.sale_price || ""} // เปลี่ยนจาก sale เป็น sale_price
+                  value={formatNumber(item.sale_price) || ""}
                   onChange={(e) => {
                     const updatedExtras = [...extras];
-                    updatedExtras[index].sale_price = e.target.value; // เปลี่ยนจาก sale เป็น sale_price
+                    updatedExtras[index].sale_price = parseInput(
+                      e.target.value
+                    );
 
                     // คำนวณยอดรวมใหม่
-                    const salePrice = parseFloat(e.target.value) || 0;
+                    const salePrice =
+                      parseInt(updatedExtras[index].sale_price) || 0;
                     const quantity =
-                      parseFloat(updatedExtras[index].quantity) || 1; // เปลี่ยนจาก pax เป็น quantity
-                    updatedExtras[index].total_amount = (
-                      salePrice * quantity
-                    ).toFixed(2); // เปลี่ยนจาก total เป็น total_amount
+                      parseInt(updatedExtras[index].quantity) || 1;
+                    updatedExtras[index].total_amount = calculateItemTotal(
+                      salePrice,
+                      quantity
+                    );
 
                     setExtras(updatedExtras);
                   }}
@@ -137,18 +149,19 @@ const ExtrasSection = ({ extras, setExtras }) => {
                     "text-center"
                   )}
                   placeholder="1"
-                  value={item.quantity || 1} // เปลี่ยนจาก pax เป็น quantity
+                  value={item.quantity || 1}
                   onChange={(e) => {
                     const updatedExtras = [...extras];
-                    updatedExtras[index].quantity = e.target.value; // เปลี่ยนจาก pax เป็น quantity
+                    updatedExtras[index].quantity = e.target.value;
 
                     // คำนวณยอดรวมใหม่
                     const salePrice =
-                      parseFloat(updatedExtras[index].sale_price) || 0; // เปลี่ยนจาก sale เป็น sale_price
-                    const quantity = parseFloat(e.target.value) || 1; // เปลี่ยนจาก pax เป็น quantity
-                    updatedExtras[index].total_amount = (
-                      salePrice * quantity
-                    ).toFixed(2); // เปลี่ยนจาก total เป็น total_amount
+                      parseInt(updatedExtras[index].sale_price) || 0;
+                    const quantity = parseInt(e.target.value) || 1;
+                    updatedExtras[index].total_amount = calculateItemTotal(
+                      salePrice,
+                      quantity
+                    );
 
                     setExtras(updatedExtras);
                   }}
@@ -162,7 +175,7 @@ const ExtrasSection = ({ extras, setExtras }) => {
                     "text-end"
                   )}
                   placeholder="0"
-                  value={item.total_amount || "0.00"} // เปลี่ยนจาก total เป็น total_amount
+                  value={formatNumber(item.total_amount) || "0"}
                   disabled
                 />
               </div>

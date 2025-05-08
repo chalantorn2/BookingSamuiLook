@@ -4,10 +4,8 @@ import React from "react";
  * TotalSummary Component - ใช้สำหรับแสดงยอดรวมทั้งหมดในหน้าต่างๆ
  *
  * @param {Object} props - Properties ของ component
- * @param {number} props.subtotal - ยอดรวมก่อนภาษี
- * @param {number} props.vatPercent - เปอร์เซ็นต์ภาษีมูลค่าเพิ่ม (default: 0)
- * @param {number} props.vatAmount - จำนวนเงินภาษีมูลค่าเพิ่ม (ถ้าไม่กำหนด จะคำนวณจาก subtotal * vatPercent)
- * @param {number} props.total - ยอดรวมทั้งสิ้น (ถ้าไม่กำหนด จะคำนวณจาก subtotal + vatAmount)
+ * @param {number} props.subtotal - ยอดรวม
+ * @param {number} props.total - ยอดรวมทั้งสิ้น (ถ้าไม่กำหนด จะใช้ subtotal)
  * @param {Object} props.config - การตั้งค่าเพิ่มเติม (optional)
  * @param {boolean} props.config.showBorder - แสดงเส้นขอบหรือไม่ (default: true)
  * @param {string} props.config.size - ขนาดของ component ('sm', 'md', 'lg') (default: 'md')
@@ -16,8 +14,6 @@ import React from "react";
  */
 const TotalSummary = ({
   subtotal = 0,
-  vatPercent = 0,
-  vatAmount,
   total,
   config = {
     showBorder: true,
@@ -28,13 +24,8 @@ const TotalSummary = ({
   pricing = {},
 }) => {
   const calculatedSubtotal = subtotal; // ใช้ subtotal ที่ส่งเข้ามาโดยตรง (ซึ่งรวม extras แล้วจาก SaleHeader)
-
-  const calculatedVatAmount =
-    vatAmount !== undefined
-      ? vatAmount
-      : (calculatedSubtotal * vatPercent) / 100;
-  const calculatedTotal =
-    total !== undefined ? total : calculatedSubtotal + calculatedVatAmount;
+  const calculatedVatAmount = 0; // กำหนด VAT เป็น 0
+  const calculatedTotal = total !== undefined ? total : calculatedSubtotal;
 
   // กำหนดขนาดตาม config
   const widthClass =
@@ -74,7 +65,7 @@ const TotalSummary = ({
         </div>
       </div>
       <div className="flex justify-between mb-2">
-        <div className="font-medium">ภาษีมูลค่าเพิ่ม {vatPercent}%</div>
+        <div className="font-medium">ภาษีมูลค่าเพิ่ม 0%</div>
         <div className="text-gray-700">
           {formatCurrency(calculatedVatAmount)}
         </div>
