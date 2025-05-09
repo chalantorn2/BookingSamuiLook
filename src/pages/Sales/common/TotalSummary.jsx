@@ -1,17 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 
-/**
- * TotalSummary Component - ใช้สำหรับแสดงยอดรวมทั้งหมดในหน้าต่างๆ
- *
- * @param {Object} props - Properties ของ component
- * @param {number} props.subtotal - ยอดรวม
- * @param {number} props.total - ยอดรวมทั้งสิ้น (ถ้าไม่กำหนด จะใช้ subtotal)
- * @param {Object} props.config - การตั้งค่าเพิ่มเติม (optional)
- * @param {boolean} props.config.showBorder - แสดงเส้นขอบหรือไม่ (default: true)
- * @param {string} props.config.size - ขนาดของ component ('sm', 'md', 'lg') (default: 'md')
- * @param {string} props.config.align - จัดตำแหน่ง ('left', 'right', 'center') (default: 'right')
- * @returns {JSX.Element}
- */
 const TotalSummary = ({
   subtotal = 0,
   total,
@@ -22,12 +10,25 @@ const TotalSummary = ({
   },
   extras = [],
   pricing = {},
+  setFormData,
 }) => {
-  const calculatedSubtotal = subtotal; // ใช้ subtotal ที่ส่งเข้ามาโดยตรง (ซึ่งรวม extras แล้วจาก SaleHeader)
-  const calculatedVatAmount = 0; // กำหนด VAT เป็น 0
-  const calculatedTotal = total !== undefined ? total : calculatedSubtotal;
+  const [vatPercentInput, setVatPercentInput] = useState("0");
 
-  // กำหนดขนาดตาม config
+  // อัปเดต formData.vatPercent เมื่อ vatPercentInput เปลี่ยน
+  const handleVatChange = (e) => {
+    const value = e.target.value;
+    if (value === "" || (Number(value) >= 0 && Number(value) <= 100)) {
+      setVatPercentInput(value);
+      setFormData((prev) => ({ ...prev, vatPercent: value }));
+    }
+  };
+
+  const calculatedSubtotal = subtotal;
+  const calculatedVatAmount =
+    (calculatedSubtotal * parseFloat(vatPercentInput || 0)) / 100;
+  const calculatedTotal =
+    total !== undefined ? total : calculatedSubtotal + calculatedVatAmount;
+
   const widthClass =
     config.size === "sm"
       ? "w-full max-w-xs"
@@ -35,7 +36,6 @@ const TotalSummary = ({
       ? "w-full max-w-xl"
       : "w-full max-w-md";
 
-  // กำหนดการจัดวาง
   const alignClass =
     config.align === "left"
       ? "mr-auto"
@@ -43,7 +43,6 @@ const TotalSummary = ({
       ? "mx-auto"
       : "ml-auto";
 
-  // ฟังก์ชันสำหรับการ format ตัวเลขเป็นรูปแบบเงิน
   const formatCurrency = (amount) => {
     return parseFloat(amount || 0).toLocaleString(undefined, {
       minimumFractionDigits: 2,
@@ -60,12 +59,24 @@ const TotalSummary = ({
       <div className="flex justify-between mb-2">
         <div className="font-medium">ยอดรวมเป็นเงิน</div>
         <div className="font-bold text-gray-700">
-          {formatCurrency(calculatedSubtotal)}{" "}
-          {/* ใช้ calculatedSubtotal ที่รวม extras แล้ว */}
+          {formatCurrency(calculatedSubtotal)}
         </div>
       </div>
-      <div className="flex justify-between mb-2">
-        <div className="font-medium">ภาษีมูลค่าเพิ่ม 0%</div>
+      <div className="flex justify-between mb-2 items-center">
+        <div className="font-medium">
+          ภาษีมูลค่าเพิ่ม
+          <input
+            type="number"
+            value={vatPercentInput}
+            onChange={handleVatChange}
+            className="mx-2 w-8 p-1 border text-center rounded-md"
+            placeholder="0"
+            min="0"
+            max="100"
+            step="0.01"
+          />
+          %
+        </div>
         <div className="text-gray-700">
           {formatCurrency(calculatedVatAmount)}
         </div>

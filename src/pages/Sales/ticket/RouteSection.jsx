@@ -2,14 +2,13 @@ import React from "react";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
-const RouteSection = ({ routes, setRoutes }) => {
+const RouteSection = ({ routes, setRoutes, supplierCode }) => {
   const addRoute = () => {
     setRoutes([
       ...routes,
       {
         id: routes.length + 1,
         date: "",
-        airline: "",
         flight: "",
         rbd: "",
         origin: "",
@@ -35,7 +34,7 @@ const RouteSection = ({ routes, setRoutes }) => {
 
   return (
     <section
-      className={combineClasses(SaleStyles.subsection.container, "col-span-8")}
+      className={combineClasses(SaleStyles.subsection.container, "col-span-7")}
     >
       <div className={SaleStyles.subsection.header}>
         <h2 className={SaleStyles.subsection.title}>
@@ -66,56 +65,137 @@ const RouteSection = ({ routes, setRoutes }) => {
                 <FiTrash2 size={18} />
               </button>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-8 gap-3">
-              {[
-                { label: "สายการบิน", key: "airline" },
-                { label: "เที่ยวบิน", key: "flight" },
-                { label: "RBD", key: "rbd" },
-                { label: "วันที่", key: "date" },
-                { label: "ต้นทาง", key: "origin" },
-                { label: "ปลายทาง", key: "destination" },
-                { label: "เวลาออก", key: "departure" },
-                { label: "เวลาถึง", key: "arrival" },
-              ].map((field) => (
-                <div key={field.key} className="col-span-1">
-                  <label
-                    className={combineClasses(
-                      SaleStyles.form.label,
-                      "text-xs text-center block"
-                    )}
-                  >
-                    {field.label}
-                  </label>
-                  <input
-                    type="text"
-                    className={combineClasses(
-                      SaleStyles.form.input,
-                      "text-center"
-                    )}
-                    value={route[field.key] || ""}
-                    onChange={(e) => {
-                      const updatedRoutes = [...routes];
-                      if (
-                        field.key === "departure" ||
-                        field.key === "arrival"
-                      ) {
-                        updatedRoutes[index][field.key] = formatTime(
-                          e.target.value
-                        );
-                      } else {
-                        updatedRoutes[index][field.key] =
-                          e.target.value.toUpperCase();
-                      }
-                      setRoutes(updatedRoutes);
-                    }}
-                    pattern={
-                      field.key === "departure" || field.key === "arrival"
-                        ? "^([0-1]?[0-9]|2[0-3])[:.][0-5][0-9]$"
-                        : undefined
+            <div className="grid grid-cols-28 gap-3">
+              {/* เที่ยวบิน: ให้มีพื้นที่มากขึ้น (6 ส่วน) */}
+              <div className="col-span-6">
+                <label className="text-xs text-center block mb-1">
+                  เที่ยวบิน
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
+                  value={
+                    supplierCode
+                      ? `${supplierCode}${route.flight || ""}`
+                      : route.flight || ""
+                  }
+                  onChange={(e) => {
+                    const updatedRoutes = [...routes];
+                    if (supplierCode) {
+                      updatedRoutes[index].flight = e.target.value.replace(
+                        supplierCode,
+                        ""
+                      );
+                    } else {
+                      updatedRoutes[index].flight =
+                        e.target.value.toUpperCase();
                     }
-                  />
-                </div>
-              ))}
+                    setRoutes(updatedRoutes);
+                  }}
+                />
+              </div>
+
+              {/* RBD: ให้เล็กที่สุด (2 ส่วน) */}
+              <div className="col-span-2">
+                <label className="text-xs text-center block mb-1">RBD</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
+                  value={route.rbd || ""}
+                  onChange={(e) => {
+                    const updatedRoutes = [...routes];
+                    updatedRoutes[index].rbd = e.target.value
+                      .toUpperCase()
+                      .substring(0, 1);
+                    setRoutes(updatedRoutes);
+                  }}
+                  maxLength={1}
+                />
+              </div>
+
+              {/* วันที่: ให้มีพื้นที่ปกติ (4 ส่วน) */}
+              <div className="col-span-4">
+                <label className="text-xs text-center block mb-1">วันที่</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
+                  value={route.date || ""}
+                  onChange={(e) => {
+                    const updatedRoutes = [...routes];
+                    updatedRoutes[index].date = e.target.value.toUpperCase();
+                    setRoutes(updatedRoutes);
+                  }}
+                />
+              </div>
+
+              {/* ต้นทาง: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              <div className="col-span-4">
+                <label className="text-xs text-center block mb-1">ต้นทาง</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
+                  value={route.origin || ""}
+                  onChange={(e) => {
+                    const updatedRoutes = [...routes];
+                    updatedRoutes[index].origin = e.target.value.toUpperCase();
+                    setRoutes(updatedRoutes);
+                  }}
+                />
+              </div>
+
+              {/* ปลายทาง: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              <div className="col-span-4">
+                <label className="text-xs text-center block mb-1">
+                  ปลายทาง
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
+                  value={route.destination || ""}
+                  onChange={(e) => {
+                    const updatedRoutes = [...routes];
+                    updatedRoutes[index].destination =
+                      e.target.value.toUpperCase();
+                    setRoutes(updatedRoutes);
+                  }}
+                />
+              </div>
+
+              {/* เวลาออก: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              <div className="col-span-4">
+                <label className="text-xs text-center block mb-1">
+                  เวลาออก
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500"
+                  value={route.departure || ""}
+                  onChange={(e) => {
+                    const updatedRoutes = [...routes];
+                    updatedRoutes[index].departure = formatTime(e.target.value);
+                    setRoutes(updatedRoutes);
+                  }}
+                  pattern="^([0-1]?[0-9]|2[0-3])[:.][0-5][0-9]$"
+                />
+              </div>
+
+              {/* เวลาถึง: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              <div className="col-span-4">
+                <label className="text-xs text-center block mb-1">
+                  เวลาถึง
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500"
+                  value={route.arrival || ""}
+                  onChange={(e) => {
+                    const updatedRoutes = [...routes];
+                    updatedRoutes[index].arrival = formatTime(e.target.value);
+                    setRoutes(updatedRoutes);
+                  }}
+                  pattern="^([0-1]?[0-9]|2[0-3])[:.][0-5][0-9]$"
+                />
+              </div>
             </div>
           </div>
         ))}

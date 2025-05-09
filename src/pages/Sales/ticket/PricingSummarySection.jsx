@@ -6,7 +6,7 @@ import SaleStyles, { combineClasses } from "../common/SaleStyles";
 const PricingSummarySection = ({
   pricing,
   updatePricing,
-  vatPercent,
+  setFormData,
   extras,
 }) => {
   return (
@@ -50,7 +50,7 @@ const PricingSummarySection = ({
                 0
               )
             }
-            vatPercent={vatPercent}
+            setFormData={setFormData}
             pricing={pricing}
             extras={extras}
           />

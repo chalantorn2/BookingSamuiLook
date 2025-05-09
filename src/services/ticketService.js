@@ -130,7 +130,6 @@ export const createFlightTicket = async (ticketData) => {
     // 6. บันทึกข้อมูลเส้นทาง (อาจมีหลายเส้นทาง)
     const routesToInsert = ticketData.routes.map((route) => ({
       bookings_ticket_id: bookingTicket.id,
-      airline: route.airline,
       flight_number: route.flight,
       rbd: route.rbd || null,
       date: route.date,

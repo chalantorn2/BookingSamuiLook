@@ -10,7 +10,6 @@ import ExtrasSection from "./ticket/ExtrasSection";
 import PricingSummarySection from "./ticket/PricingSummarySection";
 import usePricing from "../../hooks/usePricing";
 import SaleStyles, { combineClasses } from "./common/SaleStyles";
-
 import { createFlightTicket } from "../../services/ticketService";
 import { getSuppliers } from "../../services/supplierService";
 import { getCustomers, createCustomer } from "../../services/customerService";
@@ -40,29 +39,21 @@ const SaleTicket = () => {
     companyPaymentDetails: "",
     customerPayment: "",
     customerPaymentDetails: "",
+    vatPercent: "0", // เพิ่ม field สำหรับเก็บ vatPercent
   });
 
   useEffect(() => {
     const loadInitialData = async () => {
       const airlinesData = await getSuppliers("airline");
       setSuppliers(airlinesData);
-
       const customersData = await getCustomers();
       setCustomers(customersData);
     };
-
     loadInitialData();
   }, []);
 
-  const {
-    pricing,
-    vatPercent,
-    setVatPercent,
-    updatePricing,
-    calculateSubtotal,
-    calculateVat,
-    calculateTotal,
-  } = usePricing();
+  const { pricing, updatePricing, calculateSubtotal, calculateTotal } =
+    usePricing();
 
   const [passengers, setPassengers] = useState([
     { id: 1, name: "", age: "", ticketNo: "" },
@@ -72,7 +63,6 @@ const SaleTicket = () => {
     {
       id: 1,
       date: "",
-      airline: "",
       flight: "",
       origin: "",
       destination: "",
@@ -130,7 +120,7 @@ const SaleTicket = () => {
         if (newCustomerResult.success) {
           customerId = newCustomerResult.customerId;
           console.log("New customer created with ID:", customerId);
-          alert(`สร้างลูกค้าใหม่สำเร็จ: ${formData.customer}`); // เพิ่มแจ้งเตือน
+          alert(`สร้างลูกค้าใหม่สำเร็จ: ${formData.customer}`);
         } else {
           console.error("Failed to create customer:", newCustomerResult.error);
           alert(`ไม่สามารถสร้างลูกค้าใหม่ได้: ${newCustomerResult.error}`);
@@ -140,8 +130,9 @@ const SaleTicket = () => {
       }
 
       const subtotalAmount = calculateSubtotal();
-      const vatAmount = calculateVat();
-      const totalAmount = calculateTotal();
+      const vatAmount =
+        (subtotalAmount * parseFloat(formData.vatPercent || 0)) / 100;
+      const totalAmount = subtotalAmount + vatAmount;
 
       const ticketData = {
         customerId: customerId,
@@ -167,10 +158,10 @@ const SaleTicket = () => {
         customerPaymentDetails: formData.customerPaymentDetails || "",
         pricing: pricing,
         subtotalAmount,
-        vatPercent,
+        vatPercent: parseFloat(formData.vatPercent || 0),
         vatAmount,
         passengers: passengers.filter((p) => p.name.trim()),
-        routes: routes.filter((r) => r.origin || r.destination),
+
         extras: extras.filter((e) => e.description),
         remarks: formData.remarks || "",
       };
@@ -197,11 +188,9 @@ const SaleTicket = () => {
       const data = await getSuppliers("airline");
       setSuppliers(data);
     };
-
     fetchSuppliers();
   }, []);
 
-  // สร้างฟังก์ชันสำหรับรีเซ็ตฟอร์ม
   const resetForm = () => {
     setFormData({
       customer: "",
@@ -219,6 +208,7 @@ const SaleTicket = () => {
       companyPaymentDetails: "",
       customerPayment: "",
       customerPaymentDetails: "",
+      vatPercent: "0",
     });
 
     updatePricing("adult", "net", "", 0);
@@ -254,7 +244,8 @@ const SaleTicket = () => {
   const calculatedSubtotal =
     calculateSubtotal() +
     extras.reduce((sum, item) => sum + parseFloat(item.total_amount || 0), 0);
-  const calculatedVatAmount = (calculatedSubtotal * vatPercent) / 100;
+  const calculatedVatAmount =
+    (calculatedSubtotal * parseFloat(formData.vatPercent || 0)) / 100;
   const calculatedTotal = calculatedSubtotal + calculatedVatAmount;
 
   return (
@@ -315,7 +306,7 @@ const SaleTicket = () => {
                   setFormData={setFormData}
                   section="price"
                   totalAmount={calculatedTotal}
-                  vatPercent={vatPercent}
+                  vatPercent={formData.vatPercent} // ส่ง vatPercent
                   subtotalAmount={calculatedSubtotal}
                   vatAmount={calculatedVatAmount}
                 />
@@ -367,7 +358,11 @@ const SaleTicket = () => {
                 </h2>
               </div>
               <div className="grid grid-cols-10 gap-2">
-                <RouteSection routes={routes} setRoutes={setRoutes} />
+                <RouteSection
+                  routes={routes}
+                  setRoutes={setRoutes}
+                  supplierCode={formData.supplier} // ส่งรหัสสายการบินจาก supplier ที่เลือก
+                />
                 <TicketTypeSection
                   formData={formData}
                   setFormData={setFormData}
@@ -379,8 +374,8 @@ const SaleTicket = () => {
             <PricingSummarySection
               pricing={pricing}
               updatePricing={updatePricing}
-              vatPercent={vatPercent}
-              extras={extras} // ส่ง props extras ไปยัง PricingSummarySection
+              setFormData={setFormData} // ส่ง setFormData เพื่ออัปเดต vatPercent
+              extras={extras}
             />
 
             <div className={SaleStyles.section.container}>
