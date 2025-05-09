@@ -3,7 +3,9 @@ import { FiX } from "react-icons/fi";
 import { getCustomers } from "../../../services/customerService";
 import { getUsers } from "../../../services/userService";
 import SaleStyles from "../common/SaleStyles";
+import { useAuth } from "../../../pages/Login/AuthContext";
 import { debounce } from "lodash";
+import { FaCalendarAlt } from "react-icons/fa";
 
 const SaleHeader = ({
   formData,
@@ -15,6 +17,7 @@ const SaleHeader = ({
   subtotalAmount = 0,
   vatAmount = 0,
 }) => {
+  const { user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -22,9 +25,9 @@ const SaleHeader = ({
   const [error, setError] = useState(null);
   const [dateError, setDateError] = useState("");
   const [dueDateError, setDueDateError] = useState("");
+  const [tempDueDate, setTempDueDate] = useState(""); // เพิ่ม state สำหรับเก็บวันที่ชั่วคราว
   const today = new Date().toISOString().split("T")[0];
 
-  // ฟังก์ชันแปลงวันที่จาก YYYY-MM-DD เป็น DD/MM/YYYY
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -35,14 +38,12 @@ const SaleHeader = ({
     return `${day}/${month}/${year}`;
   };
 
-  // ฟังก์ชันแปลงวันที่จาก DD/MM/YYYY เป็น YYYY-MM-DD
   const parseDate = (dateString) => {
     if (!dateString) return "";
     const [day, month, year] = dateString.split("/");
     return `${year}-${month}-${day}`;
   };
 
-  // ฟังก์ชัน validate รูปแบบวันที่ DD/MM/YYYY
   const validateDate = (dateString) => {
     if (!dateString) return "กรุณาป้อนวันที่";
     const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
@@ -145,27 +146,27 @@ const SaleHeader = ({
     setFormData({ ...formData, phone: formatted });
   };
 
-  const handleDateChange = (e) => {
-    const value = e.target.value;
-    const error = validateDate(value);
-    setDateError(error);
-    if (!error) {
-      const newDate = parseDate(value);
-      const newDueDate = calculateDueDate(newDate, formData.creditDays);
-      setFormData({
-        ...formData,
-        date: newDate,
-        dueDate: newDueDate,
-      });
-    } else {
-      setFormData({ ...formData, date: value });
-    }
+  const calculateDueDate = (baseDate, creditDays) => {
+    if (!baseDate) return today;
+    const date = new Date(baseDate);
+    const days = parseInt(creditDays, 10) || 0;
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split("T")[0];
+  };
+
+  const calculateCreditDays = (baseDate, dueDate) => {
+    if (!baseDate || !dueDate) return "0";
+    const d1 = new Date(baseDate);
+    const d2 = new Date(dueDate);
+    const diffTime = d2 - d1;
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays).toString();
   };
 
   const handleDueDateChange = (e) => {
     const value = e.target.value;
+    setTempDueDate(value); // เก็บค่า input ชั่วคราว
     const error = validateDate(value);
-    setDueDateError(error);
     if (!error) {
       const newDueDate = parseDate(value);
       const newCreditDays = calculateCreditDays(formData.date, newDueDate);
@@ -174,23 +175,59 @@ const SaleHeader = ({
         dueDate: newDueDate,
         creditDays: newCreditDays,
       });
+      setDueDateError("");
     } else {
-      setFormData({ ...formData, dueDate: value });
+      setDueDateError(error);
     }
   };
 
+  const handleDueDateBlur = () => {
+    const error = validateDate(tempDueDate);
+    if (error) {
+      // ถ้าผิดรูปแบบ ให้รีเซ็ตกลับไปเป็นวันที่เดิมใน formData
+      setTempDueDate(formatDate(formData.dueDate || today));
+      setDueDateError(error);
+    } else {
+      const newDueDate = parseDate(tempDueDate);
+      const newCreditDays = calculateCreditDays(formData.date, newDueDate);
+      setFormData({
+        ...formData,
+        dueDate: newDueDate,
+        creditDays: newCreditDays,
+      });
+      setDueDateError("");
+    }
+  };
+
+  const handleCreditDaysChange = (e) => {
+    const credit = e.target.value;
+    const newDueDate = calculateDueDate(formData.date, credit);
+    setFormData({
+      ...formData,
+      creditDays: credit,
+      dueDate: newDueDate,
+    });
+    setTempDueDate(formatDate(newDueDate)); // อัพเดต tempDueDate ให้สอดคล้อง
+    setDueDateError("");
+  };
+
   useEffect(() => {
-    const fetchUser = async () => {
-      const users = await getUsers();
-      if (users.length > 0 && !formData.salesName) {
-        setFormData((prev) => ({
-          ...prev,
-          salesName: users[0].username,
-        }));
-      }
-    };
-    fetchUser();
-  }, []);
+    if (currentUser?.fullname && !formData.salesName) {
+      setFormData((prev) => ({
+        ...prev,
+        salesName: currentUser.fullname,
+      }));
+    }
+    if (!formData.date) {
+      setFormData((prev) => ({
+        ...prev,
+        date: today,
+        dueDate: today,
+        creditDays: "0",
+      }));
+      setTempDueDate(formatDate(today)); // อัพเดต tempDueDate เริ่มต้น
+    }
+  }, [currentUser, formData.salesName, formData.date, today]);
 
   if (section === "customer") {
     return (
@@ -296,57 +333,28 @@ const SaleHeader = ({
     );
   }
   if (section === "price") {
-    const calculateDueDate = (baseDate, creditDays) => {
-      if (!baseDate) return today;
-      const date = new Date(baseDate);
-      const days = parseInt(creditDays, 10) || 0; // ถ้า creditDays เป็นค่าว่าง ใช้ 0
-      date.setDate(date.getDate() + days);
-      return date.toISOString().split("T")[0];
-    };
-
-    const calculateCreditDays = (baseDate, dueDate) => {
-      if (!baseDate || !dueDate) return "";
-      const d1 = new Date(baseDate);
-      const d2 = new Date(dueDate);
-      const diffTime = d2 - d1;
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays.toString();
-    };
-
-    // ตั้งค่า dueDate เป็น today และ creditDays เป็นค่าว่างถ้ายังไม่มีค่า
-    useEffect(() => {
-      if (!formData.dueDate) {
-        setFormData((prev) => ({
-          ...prev,
-          dueDate: today,
-          creditDays: "", // ตั้งเป็นค่าว่าง
-        }));
-      }
-    }, [formData.dueDate, today]);
     return (
-      <>
-        <div className="bg-blue-50 p-4 rounded-md mb-2">
-          <div className="text-sm text-gray-600 mb-1">ราคารวมทั้งสิ้น</div>
-          <div className="text-2xl font-bold mb-1 text-blue-600">
+      <div className="space-y-2">
+        <div className="bg-blue-50 p-3 rounded-md">
+          <div className="text-sm text-gray-600">ราคารวมทั้งสิ้น</div>
+          <div className="text-xl font-bold text-blue-600">
             {formatCurrencyLocal(totalAmount)}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="relative">
             <label className={SaleStyles.form.labelRequired}>วันที่:</label>
             <input
               type="text"
-              className={`${SaleStyles.form.input} ${
-                dateError ? "border-red-500" : ""
-              }`}
-              value={formData.date ? formatDate(formData.date) : ""}
-              onChange={handleDateChange}
+              className={`${SaleStyles.form.input} pr-10`}
+              value={
+                formData.date ? formatDate(formData.date) : formatDate(today)
+              }
+              readOnly
               placeholder="วัน/เดือน/ปี (เช่น 09/05/2025)"
               required
             />
-            {dateError && (
-              <div className="text-red-500 text-sm mt-1">{dateError}</div>
-            )}
+            <FaCalendarAlt className="absolute right-3 top-9 text-gray-400" />
           </div>
           <div>
             <label className={SaleStyles.form.labelRequired}>
@@ -355,24 +363,14 @@ const SaleHeader = ({
             <input
               type="number"
               className={SaleStyles.form.input}
-              value={formData.creditDays || ""}
-              onChange={(e) => {
-                const credit = e.target.value;
-                const newDueDate = calculateDueDate(formData.date, credit);
-                setFormData({
-                  ...formData,
-                  creditDays: credit,
-                  dueDate: newDueDate,
-                });
-                setDueDateError(validateDate(formatDate(newDueDate)));
-              }}
+              value={formData.creditDays || "0"}
+              onChange={handleCreditDaysChange}
               placeholder="0"
               required
+              min="0"
             />
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
+          <div className="relative">
             <label className={SaleStyles.form.labelRequired}>
               วันครบกำหนด:
             </label>
@@ -380,16 +378,14 @@ const SaleHeader = ({
               type="text"
               className={`${SaleStyles.form.input} ${
                 dueDateError ? "border-red-500" : ""
-              }`}
-              value={
-                formData.dueDate
-                  ? formatDate(formData.dueDate)
-                  : formatDate(today)
-              }
+              } pr-10`}
+              value={tempDueDate || formatDate(formData.dueDate || today)}
               onChange={handleDueDateChange}
+              onBlur={handleDueDateBlur}
               placeholder="วัน/เดือน/ปี (เช่น 09/05/2025)"
               required
             />
+            <FaCalendarAlt className="absolute right-3 top-9 text-gray-400" />
             {dueDateError && (
               <div className="text-red-500 text-sm mt-1">{dueDateError}</div>
             )}
@@ -402,15 +398,16 @@ const SaleHeader = ({
               type="text"
               className={SaleStyles.form.input}
               placeholder="ชื่อผู้บันทึก"
-              value={formData.salesName || "นายชลันธร มานพ"}
+              value={formData.salesName || currentUser?.fullname || ""}
               onChange={(e) =>
                 setFormData({ ...formData, salesName: e.target.value })
               }
               required
+              readOnly={!!currentUser?.fullname}
             />
           </div>
         </div>
-      </>
+      </div>
     );
   }
 

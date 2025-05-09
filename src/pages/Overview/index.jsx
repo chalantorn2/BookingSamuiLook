@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Filter } from "lucide-react";
-import { format, startOfMonth, endOfMonth } from "date-fns"; // ใช้ date-fns เพื่อคำนวณวันที่
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import DateRangeSelector from "./components/DateRangeSelector";
 import ServiceTypeFilter from "./components/ServiceTypeFilter";
 import TransactionsTable from "./components/TransactionsTable";
@@ -8,40 +8,20 @@ import { useOverviewData } from "./hooks/useOverviewData";
 
 const Overview = () => {
   const getCurrentMonthRange = () => {
-    const now = new Date("2025-05-04T00:00:00Z"); // บังคับวันที่เป็น 4 พ.ค. 2025 ใน UTC เพื่อป้องกันปัญหา timezone
-    const firstDay = startOfMonth(now); // 2025-05-01
-    const lastDay = endOfMonth(now); // 2025-05-31
+    const now = new Date("2025-05-04T00:00:00Z");
+    const firstDay = startOfMonth(now);
+    const lastDay = endOfMonth(now);
 
     return {
-      start: format(firstDay, "yyyy-MM-dd"), // '2025-05-01'
-      end: format(lastDay, "yyyy-MM-dd"), // '2025-05-31'
+      start: format(firstDay, "yyyy-MM-dd"),
+      end: format(lastDay, "yyyy-MM-dd"),
     };
   };
 
   const dateRange = getCurrentMonthRange();
 
-  const [startDate, setStartDate] = useState(dateRange.start); // '2025-05-01'
-  const [endDate, setEndDate] = useState(dateRange.end); // '2025-05-31'
-
-  // บังคับวันที่เมื่อโหลดหน้า
-  useEffect(() => {
-    const range = getCurrentMonthRange();
-    console.log("Initial date range:", range);
-
-    // ตั้งค่าวันที่เริ่มต้นและสิ้นสุด
-    setStartDate(range.start);
-    setEndDate(range.end);
-
-    // ใช้ setTimeout เพื่อให้แน่ใจว่าค่าวันที่ถูกตั้งแล้วก่อนเรียก fetchData (ตามโค้ดที่คุณปรับไว้)
-    setTimeout(() => {
-      console.log("Calling fetchData with date range:", {
-        start: range.start,
-        end: range.end,
-      });
-      fetchData();
-    }, 100);
-  }, []);
-
+  const [startDate, setStartDate] = useState(dateRange.start);
+  const [endDate, setEndDate] = useState(dateRange.end);
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("created_at");
@@ -50,7 +30,7 @@ const Overview = () => {
   const [itemsPerPage] = useState(10);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  const { loading, filteredData, summary, fetchData } = useOverviewData({
+  const { loading, filteredData, fetchData } = useOverviewData({
     startDate,
     endDate,
     serviceTypeFilter,
@@ -60,6 +40,15 @@ const Overview = () => {
     currentPage,
     itemsPerPage,
   });
+
+  useEffect(() => {
+    const range = getCurrentMonthRange();
+    setStartDate(range.start);
+    setEndDate(range.end);
+    setTimeout(() => {
+      fetchData();
+    }, 100);
+  }, []);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;

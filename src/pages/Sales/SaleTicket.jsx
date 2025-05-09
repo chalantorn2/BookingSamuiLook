@@ -8,6 +8,7 @@ import RouteSection from "./ticket/RouteSection";
 import TicketTypeSection from "./ticket/TicketTypeSection";
 import ExtrasSection from "./ticket/ExtrasSection";
 import PricingSummarySection from "./ticket/PricingSummarySection";
+import TestDataFiller from "./common/TestDataFiller"; // นำเข้า component ใหม่
 import usePricing from "../../hooks/usePricing";
 import SaleStyles, { combineClasses } from "./common/SaleStyles";
 import { createFlightTicket } from "../../services/ticketService";
@@ -15,8 +16,10 @@ import { getSuppliers } from "../../services/supplierService";
 import { getCustomers, createCustomer } from "../../services/customerService";
 import { validateFlightTicket } from "../../utils/validation";
 import { supabase } from "../../services/supabase";
+import { useAuth } from "../../pages/Login/AuthContext";
 
 const SaleTicket = () => {
+  const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [suppliers, setSuppliers] = useState([]);
@@ -63,6 +66,7 @@ const SaleTicket = () => {
     {
       id: 1,
       date: "",
+      airline: "",
       flight: "",
       origin: "",
       destination: "",
@@ -81,6 +85,7 @@ const SaleTicket = () => {
     setValidationErrors({});
 
     console.log("Form submitted", { formData, passengers, routes, pricing });
+    console.log("ticketType to be saved:", formData.ticketType);
 
     const { isValid, errors } = validateFlightTicket({
       customer: formData.customer,
@@ -103,8 +108,15 @@ const SaleTicket = () => {
     }
 
     try {
-      const userData = await supabase.auth.getUser();
-      const userId = userData.data?.user?.id;
+      // ใช้ข้อมูลจาก currentUser แทนการเรียก supabase.auth.getUser()
+      let userId = currentUser?.id;
+      let userFullname = currentUser?.fullname;
+
+      // กรณีที่ไม่มี currentUser (เช่น ถ้าโค้ดเดิมทำงานได้ดีแล้ว)
+      if (!userId) {
+        const userData = await supabase.auth.getUser();
+        userId = userData.data?.user?.id;
+      }
 
       let customerId = selectedCustomer?.id;
 
@@ -134,18 +146,25 @@ const SaleTicket = () => {
         (subtotalAmount * parseFloat(formData.vatPercent || 0)) / 100;
       const totalAmount = subtotalAmount + vatAmount;
 
+      const validTicketTypes = ["bsp", "airline", "web", "tg", "b2b", "other"];
+      let ticketTypeFixed = formData.ticketType.toLowerCase();
+      if (!validTicketTypes.includes(ticketTypeFixed)) {
+        ticketTypeFixed = "bsp"; // ใช้ค่าเริ่มต้นถ้าไม่ตรงกับค่าที่กำหนด
+      }
+
       const ticketData = {
         customerId: customerId,
         supplierId: formData.supplierId || null,
         status: "pending",
         paymentStatus: "unpaid",
         createdBy: userId,
+        updatedBy: userId,
         bookingDate: formData.date,
         dueDate: formData.dueDate,
         creditDays: formData.creditDays,
         totalAmount: totalAmount,
         code: formData.code || "",
-        ticketType: formData.ticketType,
+        ticketType: ticketTypeFixed,
         ticketTypeDetails:
           formData.ticketType === "b2b"
             ? formData.b2bDetails
@@ -161,11 +180,12 @@ const SaleTicket = () => {
         vatPercent: parseFloat(formData.vatPercent || 0),
         vatAmount,
         passengers: passengers.filter((p) => p.name.trim()),
-
+        routes: routes.filter((r) => r.origin || r.destination),
         extras: extras.filter((e) => e.description),
         remarks: formData.remarks || "",
+        salesName: userFullname || formData.salesName, // เพิ่มชื่อผู้บันทึก
       };
-
+      console.log("ticketType before sending:", formData.ticketType);
       console.log("Sending data to createFlightTicket:", ticketData);
       const result = await createFlightTicket(ticketData);
 
@@ -203,7 +223,7 @@ const SaleTicket = () => {
       salesName: "",
       supplier: "",
       supplierName: "",
-      ticketType: "bsp",
+      ticketType: "",
       paymentMethod: "",
       companyPaymentDetails: "",
       customerPayment: "",
@@ -240,6 +260,277 @@ const SaleTicket = () => {
     setSelectedCustomer(null);
     setValidationErrors({});
   };
+
+  // ฟังก์ชันเติมข้อมูลทดสอบ
+  const fillTestData = () => {
+    // 1. ข้อมูลลูกค้า
+    const newFormData = {
+      ...formData,
+      customer: "นายสมชาย ใจดี",
+      contactDetails: "123 หมู่ 4 ต.ตลาด อ.เมือง จ.สุราษฎร์ธานี 84000",
+      phone: "081-234-5678",
+      id: "1234567890123",
+      date: new Date().toISOString().split("T")[0],
+      creditDays: "0",
+      dueDate: new Date().toISOString().split("T")[0],
+      salesName: "นายชลันธร มานพ",
+      supplier: "TG",
+      supplierName: "THAI AIRWAYS",
+      code: "ABC123",
+      ticketType: "bsp",
+      paymentMethod: "creditCard",
+      companyPaymentDetails: "VISA บัตรบริษัท",
+      customerPayment: "creditCard",
+      customerPaymentDetails: "VISA *1234",
+      vatPercent: "7",
+    };
+    setFormData(newFormData);
+
+    // 2. ข้อมูลผู้โดยสาร
+    const newPassengers = [
+      {
+        id: 1,
+        name: "MR. SOMCHAI JAIDEE",
+        age: "35",
+        ticketNumber: "217-1234567890",
+      },
+      {
+        id: 2,
+        name: "MRS. SOMSRI JAIDEE",
+        age: "32",
+        ticketNumber: "217-1234567891",
+      },
+    ];
+    setPassengers(newPassengers);
+
+    // 3. ข้อมูลเส้นทาง
+    const today = new Date();
+    const depDate = `${today.getDate().toString().padStart(2, "0")}${
+      [
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
+      ][today.getMonth()]
+    }${today.getFullYear().toString().slice(-2)}`;
+
+    const newRoutes = [
+      {
+        id: 1,
+        date: depDate,
+        airline: "TG",
+        flight: "203",
+        origin: "BKK",
+        destination: "USM",
+        departure: "10:30",
+        arrival: "11:45",
+        rbd: "Y",
+      },
+      {
+        id: 2,
+        date: depDate,
+        airline: "TG",
+        flight: "204",
+        origin: "USM",
+        destination: "BKK",
+        departure: "12:30",
+        arrival: "13:45",
+        rbd: "Y",
+      },
+    ];
+    setRoutes(newRoutes);
+
+    // 4. ข้อมูลราคา
+    updatePricing("adult", "net", "8500", "17000");
+    updatePricing("adult", "sale", "10000", "20000");
+    updatePricing("adult", "pax", "2", "20000");
+
+    updatePricing("child", "net", "6000", "6000");
+    updatePricing("child", "sale", "7000", "7000");
+    updatePricing("child", "pax", "1", "7000");
+
+    updatePricing("infant", "net", "500", "0");
+    updatePricing("infant", "sale", "800", "0");
+    updatePricing("infant", "pax", "0", "0");
+
+    // 5. ข้อมูลรายการเพิ่มเติม (Extras)
+    const newExtras = [
+      {
+        id: 1,
+        description: "ค่าประกันภัยการเดินทาง",
+        net_price: "800",
+        sale_price: "1000",
+        quantity: 2,
+        total_amount: "2000",
+      },
+    ];
+    setExtras(newExtras);
+  };
+
+  // ฟังก์ชันเติมข้อมูลทดสอบแบบที่ 2 (สไตล์อื่น)
+  const fillAnotherTestData = () => {
+    // 1. ข้อมูลลูกค้า
+    const newFormData = {
+      ...formData,
+      customer: "Ms. Jane Smith",
+      contactDetails: "321 Chaweng Beach Road, Koh Samui, Suratthani 84320",
+      phone: "094-789-1234",
+      id: "AA123456",
+      date: new Date().toISOString().split("T")[0],
+      creditDays: "15",
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 15))
+        .toISOString()
+        .split("T")[0],
+
+      supplier: "FD",
+      supplierName: "THAI AIRASIA",
+      code: "XYZ789",
+      ticketType: "web",
+      paymentMethod: "bankTransfer",
+      companyPaymentDetails: "โอนเงินผ่าน SCB 12/05/25",
+      customerPayment: "credit",
+      customerPaymentDetails: "เครดิต 15 วัน",
+      vatPercent: "7",
+    };
+    setFormData(newFormData);
+
+    // 2. ข้อมูลผู้โดยสาร
+    const newPassengers = [
+      {
+        id: 1,
+        name: "MS. JANE SMITH",
+        age: "28",
+        ticketNumber: "XXX-7890123456",
+      },
+      {
+        id: 2,
+        name: "MR. JOHN SMITH",
+        age: "29",
+        ticketNumber: "XXX-7890123457",
+      },
+      {
+        id: 3,
+        name: "MSTR. JAMES SMITH",
+        age: "5",
+        ticketNumber: "XXX-7890123458",
+      },
+    ];
+    setPassengers(newPassengers);
+
+    // 3. ข้อมูลเส้นทาง
+    const today = new Date();
+    const departureDate = new Date(today);
+    departureDate.setDate(today.getDate() + 30);
+    const depDate = `${departureDate.getDate().toString().padStart(2, "0")}${
+      [
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
+      ][departureDate.getMonth()]
+    }${departureDate.getFullYear().toString().slice(-2)}`;
+
+    const returnDate = new Date(departureDate);
+    returnDate.setDate(departureDate.getDate() + 7);
+    const retDate = `${returnDate.getDate().toString().padStart(2, "0")}${
+      [
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
+      ][returnDate.getMonth()]
+    }${returnDate.getFullYear().toString().slice(-2)}`;
+
+    const newRoutes = [
+      {
+        id: 1,
+        date: depDate,
+        airline: "FD",
+        flight: "3001",
+        origin: "DMK",
+        destination: "USM",
+        departure: "09:20",
+        arrival: "10:40",
+        rbd: "L",
+      },
+      {
+        id: 2,
+        date: retDate,
+        airline: "FD",
+        flight: "3002",
+        origin: "USM",
+        destination: "DMK",
+        departure: "11:20",
+        arrival: "12:40",
+        rbd: "L",
+      },
+    ];
+    setRoutes(newRoutes);
+
+    // 4. ข้อมูลราคา
+    updatePricing("adult", "net", "4500", "9000");
+    updatePricing("adult", "sale", "5500", "11000");
+    updatePricing("adult", "pax", "2", "11000");
+
+    updatePricing("child", "net", "3500", "3500");
+    updatePricing("child", "sale", "4500", "4500");
+    updatePricing("child", "pax", "1", "4500");
+
+    updatePricing("infant", "net", "0", "0");
+    updatePricing("infant", "sale", "0", "0");
+    updatePricing("infant", "pax", "0", "0");
+
+    // 5. ข้อมูลรายการเพิ่มเติม (Extras)
+    const newExtras = [
+      {
+        id: 1,
+        description: "น้ำหนักกระเป๋าเพิ่ม 10 กก.",
+        net_price: "500",
+        sale_price: "750",
+        quantity: 2,
+        total_amount: "1500",
+      },
+      {
+        id: 2,
+        description: "ที่นั่งริมหน้าต่าง",
+        net_price: "200",
+        sale_price: "300",
+        quantity: 3,
+        total_amount: "900",
+      },
+    ];
+    setExtras(newExtras);
+  };
+
+  // เตรียมข้อมูลสำหรับ TestDataFiller
+  const testDataSets = [
+    { name: "เติมข้อมูลชุดที่ 1 (ตัวอย่างทั่วไป)", action: fillTestData },
+    { name: "เติมข้อมูลชุดที่ 2 (ต่างประเทศ)", action: fillAnotherTestData },
+  ];
 
   const calculatedSubtotal =
     calculateSubtotal() +
@@ -465,6 +756,9 @@ const SaleTicket = () => {
           </div>
         </div>
       </form>
+
+      {/* เพิ่ม TestDataFiller */}
+      <TestDataFiller fillTestData={fillTestData} testDataSets={testDataSets} />
     </div>
   );
 };

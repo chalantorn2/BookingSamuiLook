@@ -12,19 +12,9 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  DollarSign,
 } from "lucide-react";
-import {
-  statusMap,
-  paymentStatusMap,
-  serviceTypes,
-} from "../hooks/useOverviewData";
+import { statusMap, serviceTypes } from "../hooks/useOverviewData";
 
-/**
- * คอมโพเนนต์แสดงสถานะการทำงาน
- * @param {Object} props - คุณสมบัติของคอมโพเนนต์
- * @param {string} props.status - สถานะที่ต้องการแสดง
- */
 export const StatusBadge = ({ status }) => {
   const statusInfo = statusMap[status] || { label: status, color: "gray" };
 
@@ -32,15 +22,14 @@ export const StatusBadge = ({ status }) => {
     green: "bg-green-100 text-green-800",
     yellow: "bg-yellow-100 text-yellow-800",
     red: "bg-red-100 text-red-800",
-    blue: "bg-blue-100 text-blue-800",
     gray: "bg-gray-100 text-gray-800",
   };
 
   const getIcon = () => {
     switch (status) {
-      case "confirmed":
+      case "invoiced":
         return <CheckCircle size={14} className="mr-1" />;
-      case "pending":
+      case "not_invoiced":
         return <Clock size={14} className="mr-1" />;
       case "cancelled":
         return <XCircle size={14} className="mr-1" />;
@@ -61,56 +50,6 @@ export const StatusBadge = ({ status }) => {
   );
 };
 
-/**
- * คอมโพเนนต์แสดงสถานะการชำระเงิน
- * @param {Object} props - คุณสมบัติของคอมโพเนนต์
- * @param {string} props.status - สถานะการชำระเงินที่ต้องการแสดง
- */
-export const PaymentStatusBadge = ({ status }) => {
-  const statusInfo = paymentStatusMap[status] || {
-    label: status,
-    color: "gray",
-  };
-
-  const colorClasses = {
-    green: "bg-green-100 text-green-800",
-    purple: "bg-purple-100 text-purple-800",
-    gray: "bg-gray-100 text-gray-800",
-    pink: "bg-pink-100 text-pink-800",
-  };
-
-  const getIcon = () => {
-    switch (status) {
-      case "paid":
-        return <CheckCircle size={14} className="mr-1" />;
-      case "unpaid":
-        return <DollarSign size={14} className="mr-1" />;
-      case "partially":
-        return <DollarSign size={14} className="mr-1" />;
-      case "refunded":
-        return <DollarSign size={14} className="mr-1" />;
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <span
-      className={`px-2 py-1 ${
-        colorClasses[statusInfo.color]
-      } rounded-full text-xs font-medium flex items-center justify-center`}
-    >
-      {getIcon()}
-      {statusInfo.label}
-    </span>
-  );
-};
-
-/**
- * คอมโพเนนต์แสดงประเภทบริการ
- * @param {Object} props - คุณสมบัติของคอมโพเนนต์
- * @param {string} props.type - ประเภทบริการที่ต้องการแสดง
- */
 export const ServiceTypeBadge = ({ type }) => {
   const service = serviceTypes.find((s) => s.id === type) || {
     name: type,
@@ -129,7 +68,6 @@ export const ServiceTypeBadge = ({ type }) => {
     all: "bg-gray-100 text-gray-800",
   };
 
-  // แมปไอคอน Lucide สำหรับแต่ละประเภทบริการ
   const getIcon = (iconName, size = 16) => {
     switch (iconName) {
       case "Activity":

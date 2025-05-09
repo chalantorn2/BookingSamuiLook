@@ -28,8 +28,17 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
   const formatTime = (value) => {
     // Allow complete deletion
     if (!value) return "";
-    // Allow only digits, colon, and dot
-    return value.replace(/[^0-9:.]/g, "");
+
+    // Allow only digits and keep at most 4 digits
+    let cleanValue = value.replace(/[^0-9]/g, "").slice(0, 4);
+
+    // If input is exactly 4 digits (e.g., "1400"), format to "14.00"
+    if (cleanValue.length === 4) {
+      return `${cleanValue.slice(0, 2)}.${cleanValue.slice(2)}`;
+    }
+
+    // Return cleaned value if not yet complete
+    return cleanValue;
   };
 
   return (
@@ -175,7 +184,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                     updatedRoutes[index].departure = formatTime(e.target.value);
                     setRoutes(updatedRoutes);
                   }}
-                  pattern="^([0-1]?[0-9]|2[0-3])[:.][0-5][0-9]$"
+                  pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
                 />
               </div>
 
@@ -193,7 +202,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                     updatedRoutes[index].arrival = formatTime(e.target.value);
                     setRoutes(updatedRoutes);
                   }}
-                  pattern="^([0-1]?[0-9]|2[0-3])[:.][0-5][0-9]$"
+                  pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
                 />
               </div>
             </div>

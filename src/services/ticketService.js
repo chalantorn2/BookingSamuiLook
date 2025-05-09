@@ -31,7 +31,8 @@ export const createFlightTicket = async (ticketData) => {
         information_id: ticketData.supplierId,
         status: ticketData.status || "pending",
         payment_status: ticketData.paymentStatus || "unpaid",
-        created_by: ticketData.createdBy,
+        created_by: ticketData.createdBy, // บันทึก user ID
+        updated_by: ticketData.updatedBy, // บันทึก user ID
       })
       .select("id, reference_number")
       .single();
@@ -65,6 +66,11 @@ export const createFlightTicket = async (ticketData) => {
 
     if (ticketDetailError) throw ticketDetailError;
 
+    console.log(
+      "About to insert into ticket_additional_info with ticket_type:",
+      ticketData.ticketType
+    );
+
     // 3. บันทึกข้อมูลเพิ่มเติมของตั๋ว
     const { data: additionalInfoData, error: additionalInfoError } =
       await supabase
@@ -76,7 +82,7 @@ export const createFlightTicket = async (ticketData) => {
           customer_payment_method: ticketData.customerPaymentMethod,
           customer_payment_details: ticketData.customerPaymentDetails,
           code: ticketData.code,
-          ticket_type: ticketData.ticketType,
+          ticket_type: (ticketData.ticketType || "").toLowerCase(),
           ticket_type_details: ticketData.ticketTypeDetails,
         })
         .select("id")

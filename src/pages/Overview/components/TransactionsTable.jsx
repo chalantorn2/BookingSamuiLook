@@ -2,7 +2,6 @@ import React from "react";
 import { Activity, Clock, User, Building, Shield } from "lucide-react";
 import { StatusBadge } from "./StatusBadges";
 import Pagination from "./Pagination";
-import { formatThaiDate } from "../../../utils/helpers";
 
 const TransactionsTable = ({
   loading,
@@ -19,7 +18,6 @@ const TransactionsTable = ({
   indexOfLastItem,
   filteredData,
 }) => {
-  // ฟังก์ชันจัดการการเรียงลำดับ
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -29,31 +27,25 @@ const TransactionsTable = ({
     }
   };
 
-  // ฟังก์ชันแปลงรูปแบบวันที่และเวลา
-  const formatDateTime = (dateTimeStr) => {
-    if (!dateTimeStr) return "-";
-    const dateTime = new Date(dateTimeStr);
-    return dateTime.toLocaleString("th-TH", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+  const formatDate = (date) => {
+    if (!date || isNaN(new Date(date).getTime())) return "-";
+    const dateObj = new Date(date);
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
-  // ฟังก์ชันแปลงรูปแบบเฉพาะวันที่
-  const formatDate = (dateTimeStr) => {
-    if (!dateTimeStr) return "-";
-    const dateTime = new Date(dateTimeStr);
-
-    // แปลงวันที่เป็นแบบไทย (วัน/เดือน/พ.ศ.)
-    const day = dateTime.getDate().toString().padStart(2, "0");
-    const month = (dateTime.getMonth() + 1).toString().padStart(2, "0");
-    const yearThai = dateTime.getFullYear() + 543; // แปลง ค.ศ. เป็น พ.ศ.
-
-    return `${day}/${month}/${yearThai}`;
+  const formatDateTime = (dateTime) => {
+    if (!dateTime || isNaN(new Date(dateTime).getTime())) return "-";
+    const dateObj = new Date(dateTime);
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const year = dateObj.getFullYear();
+    const hours = dateObj.getHours().toString().padStart(2, "0");
+    const minutes = dateObj.getMinutes().toString().padStart(2, "0");
+    const seconds = dateObj.getSeconds().toString().padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   };
 
   return (
@@ -62,8 +54,8 @@ const TransactionsTable = ({
         <Activity size={20} className="mr-2 text-blue-500" />
         รายการทั้งหมด
         {dateRange.startDate === dateRange.endDate
-          ? ` (${formatThaiDate(dateRange.startDate)})`
-          : ` (${formatThaiDate(dateRange.startDate)} - ${formatThaiDate(
+          ? ` (${formatDate(dateRange.startDate)})`
+          : ` (${formatDate(dateRange.startDate)} - ${formatDate(
               dateRange.endDate
             )})`}
       </h2>
@@ -82,11 +74,11 @@ const TransactionsTable = ({
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("referenceNumber")}
+                    onClick={() => handleSort("reference_number")}
                   >
                     <div className="flex items-center">
                       ID
-                      {sortField === "referenceNumber" && (
+                      {sortField === "reference_number" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -96,11 +88,11 @@ const TransactionsTable = ({
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("date")}
+                    onClick={() => handleSort("created_at")}
                   >
                     <div className="flex items-center">
                       วันที่
-                      {sortField === "date" && (
+                      {sortField === "created_at" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -152,11 +144,11 @@ const TransactionsTable = ({
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("createdBy")}
+                    onClick={() => handleSort("created_by")}
                   >
                     <div className="flex items-center">
                       Create By
-                      {sortField === "createdBy" && (
+                      {sortField === "created_by" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -166,11 +158,11 @@ const TransactionsTable = ({
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("timestamp")}
+                    onClick={() => handleSort("created_at")}
                   >
                     <div className="flex items-center">
                       Timestamp
-                      {sortField === "timestamp" && (
+                      {sortField === "created_at" && (
                         <span className="ml-1">
                           {sortDirection === "asc" ? "↑" : "↓"}
                         </span>
@@ -186,7 +178,7 @@ const TransactionsTable = ({
                       colSpan="7"
                       className="px-6 py-4 text-center text-gray-500"
                     >
-                      ไม่พบข้อมูลในช่วงเวลาที่เลือก
+                      ไม่พบข้อมูลในช่วงเวลที่เลือก
                     </td>
                   </tr>
                 ) : (
@@ -198,7 +190,7 @@ const TransactionsTable = ({
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <Clock size={16} className="text-gray-400 mr-2" />
-                          {formatThaiDate(item.date)}
+                          {formatDate(item.date)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -232,7 +224,6 @@ const TransactionsTable = ({
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
