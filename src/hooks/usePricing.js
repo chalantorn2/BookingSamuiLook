@@ -10,7 +10,7 @@ import { useState } from "react";
 // แก้ไขเฉพาะจุดในฟังก์ชัน resetPricing เพื่อแก้บั๊กที่มีอยู่
 const usePricing = (
   initialPricing = {
-    adult: { net: "", sale: "", pax: 1, total: "0" },
+    adult: { net: "", sale: "", pax: 0, total: "0" },
     child: { net: "", sale: "", pax: 0, total: "0" },
     infant: { net: "", sale: "", pax: 0, total: "0" },
   },
@@ -20,14 +20,35 @@ const usePricing = (
   const [vatPercent, setVatPercent] = useState(initialVatPercent);
 
   // ฟังก์ชันอัพเดทข้อมูลราคา
-  const updatePricing = (category, field, value, total) => {
-    setPricing({
-      ...pricing,
-      [category]: {
-        ...pricing[category],
-        [field]: value,
-        total: total || pricing[category].total,
-      },
+  // ในไฟล์ usePricing.js
+  const updatePricing = (category, field, value, total = null) => {
+    setPricing((prev) => {
+      const newPricing = { ...prev };
+
+      // ถ้ายังไม่มีข้อมูลของประเภทนี้ ให้สร้างใหม่
+      if (!newPricing[category]) {
+        newPricing[category] = { net: "", sale: "", pax: 0, total: 0 };
+      }
+
+      // อัพเดทค่าตามฟิลด์ที่ระบุ
+      newPricing[category][field] = value;
+
+      // ถ้ามีการระบุ total โดยตรง ให้ใช้ค่านั้น
+      if (total !== null) {
+        newPricing[category].total = total;
+      }
+      // ถ้าไม่ได้ระบุ total ให้คำนวณใหม่เฉพาะเมื่อเป็นการอัพเดท sale หรือ pax
+      else if (field === "sale" || field === "pax") {
+        const sale = parseFloat(newPricing[category].sale) || 0;
+        const pax = parseInt(newPricing[category].pax) || 0;
+        newPricing[category].total = sale * pax;
+      }
+
+      console.log(
+        `Updated ${category}.${field} to ${value}, total: ${newPricing[category].total}`
+      );
+
+      return newPricing;
     });
   };
 
@@ -53,7 +74,7 @@ const usePricing = (
   // แก้ไขฟังก์ชัน resetPricing ที่มีบั๊ก
   const resetPricing = () => {
     setPricing({
-      adult: { net: "", sale: "", pax: 1, total: "0" },
+      adult: { net: "", sale: "", pax: 0, total: "0" },
       child: { net: "", sale: "", pax: 0, total: "0" },
       infant: { net: "", sale: "", pax: 0, total: "0" },
     });

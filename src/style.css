@@ -13,3 +13,13 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none; /* ซ่อนลูกศรใน Chrome, Safari, Edge */
   margin: 0;
 }
+
+.passenger-type-select {
+  text-align-last: center;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.passenger-type-select option {
+  text-align: center;
+}

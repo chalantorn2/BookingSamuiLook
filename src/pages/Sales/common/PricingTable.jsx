@@ -17,7 +17,7 @@ import { formatNumber, parseInput } from "./FormatNumber";
  */
 const PricingTable = ({
   pricing = {
-    adult: { net: "", sale: "", pax: 1, total: 0 },
+    adult: { net: "", sale: "", pax: 0, total: 0 },
     child: { net: "", sale: "", pax: 0, total: 0 },
     infant: { net: "", sale: "", pax: 0, total: 0 },
   },

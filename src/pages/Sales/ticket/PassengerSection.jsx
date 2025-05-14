@@ -1,19 +1,96 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
-const PassengerSection = ({ passengers, setPassengers }) => {
+const PassengerSection = ({
+  passengers,
+  setPassengers,
+  updatePricing,
+  pricing,
+}) => {
+  // เพิ่มประเภทผู้โดยสาร
+  const passengerTypes = [
+    { value: "ADL", label: "ผู้ใหญ่ (ADL)", priceField: "adult" },
+    { value: "CHD", label: "เด็ก (CHD)", priceField: "child" },
+    { value: "INF", label: "ทารก (INF)", priceField: "infant" },
+  ];
+
+  // ฟังก์ชันอัพเดทจำนวนผู้โดยสารแต่ละประเภท
+  const updatePassengerCount = (passengersList) => {
+    // นับจำนวนผู้โดยสารแต่ละประเภท
+    const adultCount = passengersList.filter((p) => p.type === "ADL").length;
+    const childCount = passengersList.filter((p) => p.type === "CHD").length;
+    const infantCount = passengersList.filter((p) => p.type === "INF").length;
+
+    console.log("PassengerSection: Updating counts:", {
+      adultCount,
+      childCount,
+      infantCount,
+    });
+
+    // คำนวณยอดรวมแต่ละประเภท (ใช้ราคาที่มีอยู่เดิม)
+    const adultSale = pricing?.adult?.sale || 0;
+    const childSale = pricing?.child?.sale || 0;
+    const infantSale = pricing?.infant?.sale || 0;
+
+    const adultTotal = adultCount * parseFloat(adultSale);
+    const childTotal = childCount * parseFloat(childSale);
+    const infantTotal = infantCount * parseFloat(infantSale);
+
+    // อัพเดทค่า pax และ total ใน pricing
+    updatePricing("adult", "pax", adultCount, adultTotal);
+    updatePricing("child", "pax", childCount, childTotal);
+    updatePricing("infant", "pax", infantCount, infantTotal);
+  };
+
+  // เพิ่ม useEffect เพื่อให้ทำงานตอนโหลดคอมโพเนนต์และเมื่อ passengers หรือ pricing เปลี่ยนแปลง
+  useEffect(() => {
+    updatePassengerCount(passengers);
+  }, []);
+
+  // เพิ่ม useEffect ที่ทำงานเมื่อ pricing เปลี่ยนแปลง
+  useEffect(() => {
+    console.log("Pricing changed:", pricing);
+    if (pricing) {
+      updatePassengerCount(passengers);
+    }
+  }, [pricing.adult?.sale, pricing.child?.sale, pricing.infant?.sale]);
+
   const addPassenger = () => {
-    setPassengers([
-      ...passengers,
-      { id: passengers.length + 1, name: "", age: "", ticketNumber: "" }, // เปลี่ยนจาก ticketNo เป็น ticketNumber
-    ]);
+    const newPassenger = {
+      id: passengers.length + 1,
+      name: "",
+      type: "ADL", // ค่าเริ่มต้นเป็น ADL
+      ticketNumber: "",
+    };
+
+    const updatedPassengers = [...passengers, newPassenger];
+    setPassengers(updatedPassengers);
+
+    // อัพเดทจำนวน Pax ในส่วนของ pricing
+    updatePassengerCount(updatedPassengers);
   };
 
   const removePassenger = (id) => {
     if (passengers.length > 1) {
-      setPassengers(passengers.filter((p) => p.id !== id));
+      const updatedPassengers = passengers.filter((p) => p.id !== id);
+      setPassengers(updatedPassengers);
+
+      // อัพเดทจำนวน Pax เมื่อลบผู้โดยสาร
+      updatePassengerCount(updatedPassengers);
     }
+  };
+
+  // ฟังก์ชันเมื่อเปลี่ยนประเภทผู้โดยสาร
+  const handleTypeChange = (index, newType) => {
+    const updatedPassengers = [...passengers];
+    updatedPassengers[index].type = newType;
+    setPassengers(updatedPassengers);
+
+    // อัพเดทจำนวน Pax เมื่อเปลี่ยนประเภทผู้โดยสาร
+    setTimeout(() => {
+      updatePassengerCount(updatedPassengers);
+    }, 0);
   };
 
   return (
@@ -37,7 +114,7 @@ const PassengerSection = ({ passengers, setPassengers }) => {
             >
               ชื่อผู้โดยสาร
             </div>
-            <div className="col-span-2 text-center">อายุ</div>
+            <div className="col-span-2 text-center">ประเภท</div>
             <div className="col-span-3 text-center">เลขที่ตั๋ว</div>
           </div>
           {passengers.map((passenger, index) => (
@@ -69,19 +146,24 @@ const PassengerSection = ({ passengers, setPassengers }) => {
                 />
               </div>
               <div className="col-span-2">
-                <input
-                  type="text"
+                <select
                   className={combineClasses(
-                    SaleStyles.form.input,
-                    "text-center"
+                    SaleStyles.form.select,
+                    "text-center w-full px-0 passenger-type-select"
                   )}
-                  value={passenger.age || ""}
-                  onChange={(e) => {
-                    const updatedPassengers = [...passengers];
-                    updatedPassengers[index].age = e.target.value;
-                    setPassengers(updatedPassengers);
-                  }}
-                />
+                  value={passenger.type || "ADL"}
+                  onChange={(e) => handleTypeChange(index, e.target.value)}
+                >
+                  {passengerTypes.map((type) => (
+                    <option
+                      key={type.value}
+                      value={type.value}
+                      className="text-center"
+                    >
+                      {type.value}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="col-span-3">
                 <input
@@ -90,10 +172,10 @@ const PassengerSection = ({ passengers, setPassengers }) => {
                     SaleStyles.form.input,
                     "text-center"
                   )}
-                  value={passenger.ticketNumber || ""} // เปลี่ยนจาก ticketNo เป็น ticketNumber
+                  value={passenger.ticketNumber || ""}
                   onChange={(e) => {
                     const updatedPassengers = [...passengers];
-                    updatedPassengers[index].ticketNumber = e.target.value; // เปลี่ยนจาก ticketNo เป็น ticketNumber
+                    updatedPassengers[index].ticketNumber = e.target.value;
                     setPassengers(updatedPassengers);
                   }}
                 />
