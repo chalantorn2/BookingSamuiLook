@@ -1,25 +1,50 @@
 import { supabase } from "./supabase";
 
 export const getSuppliers = async (
-  category = "airline",
+  type = "Airline",
   search = "",
   limit = 100
 ) => {
   try {
-    let query = supabase
-      .from("information")
-      .select("*")
-      .eq("category", category)
-      .eq("active", true)
-      .order("code");
+    let query = supabase.from("information").select("*").eq("active", true);
 
-    if (search) {
-      query = query.ilike("code", `%${search}%`);
+    // กรองตามประเภท (Airline, Voucher, Other)
+    if (type === "Airline") {
+      // ใช้ category เดิม
+      query = query.eq("category", "airline");
+    } else if (type === "Voucher") {
+      query = query.eq("category", "supplier-voucher");
+    } else if (type === "Other") {
+      query = query.eq("category", "supplier-other");
     }
 
+    // ถ้ามีการใช้คอลัมน์ type แล้ว สามารถเพิ่มเงื่อนไขได้
+    if (type) {
+      query = query.or(
+        `type.eq.${type},category.eq.${
+          type === "Airline"
+            ? "airline"
+            : type === "Voucher"
+            ? "supplier-voucher"
+            : type === "Other"
+            ? "supplier-other"
+            : ""
+        }`
+      );
+    }
+
+    // ค้นหาตามชื่อหรือรหัส
+    if (search) {
+      query = query.or(`code.ilike.%${search}%,name.ilike.%${search}%`);
+    }
+
+    // จำกัดจำนวนผลลัพธ์
     if (limit) {
       query = query.limit(limit);
     }
+
+    // เรียงข้อมูลตามรหัส
+    query = query.order("code");
 
     const { data, error } = await query;
 
@@ -49,11 +74,22 @@ export const getSupplierById = async (id) => {
 
 export const createSupplier = async (supplierData) => {
   try {
+    // แปลงประเภทเป็น category ที่สอดคล้องกับโครงสร้างเดิม
+    let category = "supplier-other"; // ค่าเริ่มต้น
+
+    if (supplierData.type === "Airline") {
+      category = "airline";
+    } else if (supplierData.type === "Voucher") {
+      category = "supplier-voucher";
+    } else if (supplierData.type === "Other") {
+      category = "supplier-other";
+    }
+
     const payload = {
-      category: supplierData.category || "airline",
+      category: category,
       code: supplierData.code,
       name: supplierData.name,
-      description: supplierData.description,
+      type: supplierData.type || "Other",
       active: true,
     };
 

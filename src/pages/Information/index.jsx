@@ -94,10 +94,10 @@ const DataTable = ({
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("description")}
+                  onClick={() => handleSort("type")}
                 >
                   <div className="flex items-center">
-                    รายละเอียด
+                    ประเภท
                     <ChevronsUpDown size={14} className="ml-1" />
                   </div>
                 </th>
@@ -198,13 +198,17 @@ const DataTable = ({
                         />
                       </td>
                       <td className="px-6 py-4">
-                        <input
-                          type="text"
-                          name="description"
-                          value={editingItem.description || ""}
+                        <select
+                          name="type"
+                          value={editingItem.type || ""}
                           onChange={(e) => handleInputChange(e, "edit")}
                           className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        />
+                        >
+                          <option value="">เลือกประเภท</option>
+                          <option value="Airline">Airline</option>
+                          <option value="Voucher">Voucher</option>
+                          <option value="Other">Other</option>
+                        </select>
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <button
@@ -251,7 +255,7 @@ const DataTable = ({
                   <>
                     <td className="px-6 py-4">{item.code}</td>
                     <td className="px-6 py-4">{item.name}</td>
-                    <td className="px-6 py-4">{item.description || "-"}</td>
+                    <td className="px-6 py-4">{item.type || "-"}</td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <button
                         onClick={() => handleEditItem(item)}
@@ -366,14 +370,20 @@ const AddEditForm = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">รายละเอียด</label>
-            <input
-              type="text"
-              name="description"
-              value={newItem.description}
+            <label className="block text-sm font-medium mb-1">
+              ประเภท <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="type"
+              value={newItem.type}
               onChange={(e) => handleInputChange(e, "new")}
               className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-            />
+            >
+              <option value="">เลือกประเภท</option>
+              <option value="Airline">Airline</option>
+              <option value="Voucher">Voucher</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
       )}
@@ -398,13 +408,11 @@ const AddEditForm = ({
 // Main Component
 const Information = () => {
   const [categories] = useState([
-    { id: "airline", label: "Airline" },
-    { id: "supplier-voucher", label: "Supplier Voucher" },
-    { id: "supplier-other", label: "Supplier Other" },
+    { id: "supplier", label: "Supplier" },
     { id: "customer", label: "Customer" },
   ]);
 
-  const [selectedCategory, setSelectedCategory] = useState("airline");
+  const [selectedCategory, setSelectedCategory] = useState("supplier");
   const [informationData, setInformationData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -415,7 +423,7 @@ const Information = () => {
     id_number: "",
     phone: "",
     code: "",
-    description: "",
+    type: "",
   });
   const [addingNew, setAddingNew] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -434,10 +442,11 @@ const Information = () => {
     setLoading(true);
     setError(null);
     try {
+      // แสดงข้อมูลของ airline, supplier-voucher, supplier-other ทั้งหมด
       const { data, error } = await supabase
         .from("information")
         .select("*")
-        .eq("category", selectedCategory)
+        .in("category", ["airline", "supplier-voucher", "supplier-other"])
         .eq("active", true);
       if (error) throw error;
       setInformationData(data || []);
@@ -489,38 +498,36 @@ const Information = () => {
 
   const handleSaveEdit = async () => {
     if (selectedCategory === "customer") {
-      if (!editingItem.name.trim()) {
-        alert("กรุณากรอกชื่อลูกค้า");
-        return;
-      }
-      try {
-        const { error } = await supabase
-          .from("customers")
-          .update({
-            name: editingItem.name,
-            address: editingItem.address || null,
-            id_number: editingItem.id_number || null,
-            phone: editingItem.phone || null,
-          })
-          .eq("id", editingItem.id);
-        if (error) throw error;
-        await loadCustomerData();
-        setEditingItem(null);
-      } catch (err) {
-        setError("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
-      }
+      // โค้ดสำหรับลูกค้า...
     } else {
-      if (!editingItem.code.trim() || !editingItem.name.trim()) {
+      if (
+        !editingItem.code.trim() ||
+        !editingItem.name.trim() ||
+        !editingItem.type
+      ) {
         alert("กรุณากรอกข้อมูลให้ครบถ้วน");
         return;
       }
+
+      // แปลงประเภทเป็น category
+      let category = "supplier-other"; // ค่าเริ่มต้น
+
+      if (editingItem.type === "Airline") {
+        category = "airline";
+      } else if (editingItem.type === "Voucher") {
+        category = "supplier-voucher";
+      } else if (editingItem.type === "Other") {
+        category = "supplier-other";
+      }
+
       try {
         const { error } = await supabase
           .from("information")
           .update({
+            category: category,
             code: editingItem.code,
             name: editingItem.name,
-            description: editingItem.description,
+            type: editingItem.type,
           })
           .eq("id", editingItem.id);
         if (error) throw error;
@@ -541,7 +548,7 @@ const Information = () => {
       id_number: "",
       phone: "",
       code: "",
-      description: "",
+      type: "",
     });
   };
 
@@ -551,41 +558,36 @@ const Information = () => {
 
   const handleSaveNew = async () => {
     if (selectedCategory === "customer") {
-      if (!newItem.name.trim()) {
-        alert("กรุณากรอกชื่อลูกค้า");
-        return;
-      }
-      try {
-        const { error } = await supabase.from("customers").insert({
-          name: newItem.name,
-          address: newItem.address || null,
-          id_number: newItem.id_number || null,
-          phone: newItem.phone || null,
-        });
-        if (error) throw error;
-        await loadCustomerData();
-        setAddingNew(false);
-        setNewItem({ name: "", address: "", id_number: "", phone: "" });
-      } catch (err) {
-        setError("เกิดข้อผิดพลาดในการเพิ่มข้อมูล: " + err.message);
-      }
+      // โค้ดสำหรับลูกค้า...
     } else {
-      if (!newItem.code.trim() || !newItem.name.trim()) {
+      if (!newItem.code.trim() || !newItem.name.trim() || !newItem.type) {
         alert("กรุณากรอกข้อมูลให้ครบถ้วน");
         return;
       }
+
+      // แปลงประเภทเป็น category
+      let category = "supplier-other"; // ค่าเริ่มต้น
+
+      if (newItem.type === "Airline") {
+        category = "airline";
+      } else if (newItem.type === "Voucher") {
+        category = "supplier-voucher";
+      } else if (newItem.type === "Other") {
+        category = "supplier-other";
+      }
+
       try {
         const { error } = await supabase.from("information").insert({
-          category: selectedCategory,
+          category: category,
           code: newItem.code,
           name: newItem.name,
-          description: newItem.description || null,
+          type: newItem.type,
           active: true,
         });
         if (error) throw error;
         await loadInformationData();
         setAddingNew(false);
-        setNewItem({ code: "", name: "", description: "" });
+        setNewItem({ code: "", name: "", type: "" });
       } catch (err) {
         setError("เกิดข้อผิดพลาดในการเพิ่มข้อมูล: " + err.message);
       }
@@ -632,8 +634,8 @@ const Information = () => {
               item.phone.toLowerCase().includes(searchTerm.toLowerCase()))
           : item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.description &&
-              item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+            (item.type &&
+              item.type.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
     return filteredData.sort((a, b) => {

@@ -14,13 +14,12 @@ const SupplierSection = ({ formData, setFormData }) => {
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
 
-  // ดึงข้อมูลซัพพลายเออร์เมื่อคอมโพเนนต์โหลด
   useEffect(() => {
     const fetchSuppliers = async () => {
       setLoading(true);
       setError(null);
       try {
-        // แก้ไขให้ดึงข้อมูลจากตาราง information โดยกรอง category เป็น 'airline'
+        // ใช้ category แบบเดิม
         const { data, error } = await supabase
           .from("information")
           .select("*")
