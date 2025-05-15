@@ -1,5 +1,5 @@
 import React from "react";
-import SaleStyles from "../common/SaleStyles";
+import SaleStyles from "./SaleStyles";
 
 const PaymentMethodSection = ({
   title,
@@ -14,9 +14,21 @@ const PaymentMethodSection = ({
   className,
 }) => {
   const selectedValue = formData[fieldName];
-  const detailsField = sectionType
-    ? `${sectionType}_payment_details`
-    : detailsFieldName;
+
+  // กำหนดฟิลด์สำหรับเก็บรายละเอียดการชำระเงินตามประเภท
+  const detailsField =
+    sectionType === "company"
+      ? "companyPaymentDetails"
+      : sectionType === "customer"
+      ? "customerPaymentDetails"
+      : detailsFieldName;
+
+  console.log(`PaymentMethodSection (${sectionType}):`, {
+    fieldName,
+    detailsField,
+    selectedValue,
+    currentDetailsValue: formData[detailsField],
+  });
 
   const handlePaymentMethodChange = (method) => {
     setFormData({
@@ -26,6 +38,7 @@ const PaymentMethodSection = ({
   };
 
   const handleDetailsChange = (e) => {
+    console.log(`Updating ${detailsField} to:`, e.target.value);
     setFormData({
       ...formData,
       [detailsField]: e.target.value,

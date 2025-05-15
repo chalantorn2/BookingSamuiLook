@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useRef } from "react";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
 const RouteSection = ({ routes, setRoutes, supplierCode }) => {
+  // สร้าง ref สำหรับแต่ละ input เพื่อควบคุม focus
+  const inputRefs = useRef([]);
+
   const addRoute = () => {
     setRoutes([
       ...routes,
@@ -26,19 +29,40 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
   };
 
   const formatTime = (value) => {
-    // Allow complete deletion
     if (!value) return "";
-
-    // Allow only digits and keep at most 4 digits
     let cleanValue = value.replace(/[^0-9]/g, "").slice(0, 4);
-
-    // If input is exactly 4 digits (e.g., "1400"), format to "14.00"
     if (cleanValue.length === 4) {
       return `${cleanValue.slice(0, 2)}.${cleanValue.slice(2)}`;
     }
-
-    // Return cleaned value if not yet complete
     return cleanValue;
+  };
+
+  // ฟังก์ชันสำหรับจัดการการย้าย focus
+  const handleInputChange = (e, index, field, maxLength, nextField) => {
+    const value = e.target.value;
+    const updatedRoutes = [...routes];
+
+    // อัปเดตค่าใน state
+    if (field === "flight") {
+      updatedRoutes[index].flight = supplierCode
+        ? value.replace(supplierCode, "").toUpperCase()
+        : value.toUpperCase();
+    } else if (field === "rbd") {
+      updatedRoutes[index].rbd = value.toUpperCase().substring(0, 1);
+    } else if (field === "departure" || field === "arrival") {
+      updatedRoutes[index][field] = formatTime(value);
+    } else {
+      updatedRoutes[index][field] = value.toUpperCase();
+    }
+    setRoutes(updatedRoutes);
+
+    // ตรวจสอบ maxLength และย้าย focus
+    if (value.length >= maxLength && nextField) {
+      const nextInput = inputRefs.current[`${index}-${nextField}`];
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
   };
 
   return (
@@ -75,7 +99,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
               </button>
             </div>
             <div className="grid grid-cols-28 gap-3">
-              {/* เที่ยวบิน: ให้มีพื้นที่มากขึ้น (6 ส่วน) */}
+              {/* เที่ยวบิน */}
               <div className="col-span-6">
                 <label className="text-xs text-center block mb-1">
                   เที่ยวบิน
@@ -88,71 +112,60 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                       ? `${supplierCode}${route.flight || ""}`
                       : route.flight || ""
                   }
-                  onChange={(e) => {
-                    const updatedRoutes = [...routes];
-                    if (supplierCode) {
-                      updatedRoutes[index].flight = e.target.value.replace(
-                        supplierCode,
-                        ""
-                      );
-                    } else {
-                      updatedRoutes[index].flight =
-                        e.target.value.toUpperCase();
-                    }
-                    setRoutes(updatedRoutes);
-                  }}
+                  onChange={(e) =>
+                    handleInputChange(e, index, "flight", 6, "rbd")
+                  }
+                  maxLength={6}
+                  ref={(el) => (inputRefs.current[`${index}-flight`] = el)}
                 />
               </div>
 
-              {/* RBD: ให้เล็กที่สุด (2 ส่วน) */}
+              {/* RBD */}
               <div className="col-span-2">
                 <label className="text-xs text-center block mb-1">RBD</label>
                 <input
                   type="text"
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
                   value={route.rbd || ""}
-                  onChange={(e) => {
-                    const updatedRoutes = [...routes];
-                    updatedRoutes[index].rbd = e.target.value
-                      .toUpperCase()
-                      .substring(0, 1);
-                    setRoutes(updatedRoutes);
-                  }}
+                  onChange={(e) =>
+                    handleInputChange(e, index, "rbd", 1, "date")
+                  }
                   maxLength={1}
+                  ref={(el) => (inputRefs.current[`${index}-rbd`] = el)}
                 />
               </div>
 
-              {/* วันที่: ให้มีพื้นที่ปกติ (4 ส่วน) */}
+              {/* วันที่ */}
               <div className="col-span-4">
                 <label className="text-xs text-center block mb-1">วันที่</label>
                 <input
                   type="text"
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
                   value={route.date || ""}
-                  onChange={(e) => {
-                    const updatedRoutes = [...routes];
-                    updatedRoutes[index].date = e.target.value.toUpperCase();
-                    setRoutes(updatedRoutes);
-                  }}
+                  onChange={(e) =>
+                    handleInputChange(e, index, "date", 5, "origin")
+                  }
+                  maxLength={5}
+                  ref={(el) => (inputRefs.current[`${index}-date`] = el)}
                 />
               </div>
 
-              {/* ต้นทาง: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              {/* ต้นทาง */}
               <div className="col-span-4">
                 <label className="text-xs text-center block mb-1">ต้นทาง</label>
                 <input
                   type="text"
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
                   value={route.origin || ""}
-                  onChange={(e) => {
-                    const updatedRoutes = [...routes];
-                    updatedRoutes[index].origin = e.target.value.toUpperCase();
-                    setRoutes(updatedRoutes);
-                  }}
+                  onChange={(e) =>
+                    handleInputChange(e, index, "origin", 3, "destination")
+                  }
+                  maxLength={3}
+                  ref={(el) => (inputRefs.current[`${index}-origin`] = el)}
                 />
               </div>
 
-              {/* ปลายทาง: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              {/* ปลายทาง */}
               <div className="col-span-4">
                 <label className="text-xs text-center block mb-1">
                   ปลายทาง
@@ -161,16 +174,15 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   type="text"
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
                   value={route.destination || ""}
-                  onChange={(e) => {
-                    const updatedRoutes = [...routes];
-                    updatedRoutes[index].destination =
-                      e.target.value.toUpperCase();
-                    setRoutes(updatedRoutes);
-                  }}
+                  onChange={(e) =>
+                    handleInputChange(e, index, "destination", 3, "departure")
+                  }
+                  maxLength={3}
+                  ref={(el) => (inputRefs.current[`${index}-destination`] = el)}
                 />
               </div>
 
-              {/* เวลาออก: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              {/* เวลาออก */}
               <div className="col-span-4">
                 <label className="text-xs text-center block mb-1">
                   เวลาออก
@@ -179,16 +191,15 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   type="text"
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500"
                   value={route.departure || ""}
-                  onChange={(e) => {
-                    const updatedRoutes = [...routes];
-                    updatedRoutes[index].departure = formatTime(e.target.value);
-                    setRoutes(updatedRoutes);
-                  }}
+                  onChange={(e) =>
+                    handleInputChange(e, index, "departure", 5, "arrival")
+                  }
                   pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
+                  ref={(el) => (inputRefs.current[`${index}-departure`] = el)}
                 />
               </div>
 
-              {/* เวลาถึง: ให้มีพื้นที่ปกติ (3 ส่วน) */}
+              {/* เวลาถึง */}
               <div className="col-span-4">
                 <label className="text-xs text-center block mb-1">
                   เวลาถึง
@@ -197,12 +208,11 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   type="text"
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500"
                   value={route.arrival || ""}
-                  onChange={(e) => {
-                    const updatedRoutes = [...routes];
-                    updatedRoutes[index].arrival = formatTime(e.target.value);
-                    setRoutes(updatedRoutes);
-                  }}
+                  onChange={(e) =>
+                    handleInputChange(e, index, "arrival", 5, null)
+                  }
                   pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
+                  ref={(el) => (inputRefs.current[`${index}-arrival`] = el)}
                 />
               </div>
             </div>

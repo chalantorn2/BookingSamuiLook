@@ -96,6 +96,7 @@ export const createFlightTicket = async (ticketData) => {
       passenger_name: passenger.name,
       age: passenger.age || null,
       ticket_number: passenger.ticketNumber || null,
+      ticket_code: passenger.ticket_code || null,
     }));
 
     if (passengersToInsert.length > 0) {
@@ -136,7 +137,7 @@ export const createFlightTicket = async (ticketData) => {
     // 6. บันทึกข้อมูลเส้นทาง (อาจมีหลายเส้นทาง)
     const routesToInsert = ticketData.routes.map((route) => ({
       bookings_ticket_id: bookingTicket.id,
-      flight_number: route.flight,
+      flight_number: route.flight_number || route.flight,
       rbd: route.rbd || null,
       date: route.date,
       origin: route.origin,

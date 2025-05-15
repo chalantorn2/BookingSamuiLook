@@ -58,7 +58,7 @@ const SaleTicket = () => {
     usePricing();
 
   const [passengers, setPassengers] = useState([
-    { id: 1, name: "", type: "ADL", ticketNumber: "" },
+    { id: 1, name: "", type: "ADL", ticketNumber: "", ticketCode: "" },
   ]);
 
   const [routes, setRoutes] = useState([
@@ -77,6 +77,8 @@ const SaleTicket = () => {
   const [extras, setExtras] = useState([
     { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
   ]);
+
+  // แก้ไขส่วนฟอร์มการรวบรวมข้อมูลเพื่อส่งไปบันทึกใน handleSubmit ของ SaleTicket.jsx
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -151,6 +153,23 @@ const SaleTicket = () => {
         ticketTypeFixed = "bsp"; // ใช้ค่าเริ่มต้นถ้าไม่ตรงกับค่าที่กำหนด
       }
 
+      // กำหนด ticket_type_details ให้รองรับทุกประเภทตั๋ว
+      let ticketTypeDetails = null;
+      if (ticketTypeFixed === "b2b") {
+        ticketTypeDetails = formData.b2bDetails;
+      } else if (ticketTypeFixed === "other") {
+        ticketTypeDetails = formData.otherDetails;
+      } else if (ticketTypeFixed === "tg") {
+        ticketTypeDetails = formData.tgDetails;
+      }
+
+      console.log("Payment details before sending:", {
+        companyMethod: formData.paymentMethod,
+        companyDetails: formData.companyPaymentDetails,
+        customerMethod: formData.customerPayment,
+        customerDetails: formData.customerPaymentDetails,
+      });
+
       const ticketData = {
         customerId: customerId,
         supplierId: formData.supplierId || null,
@@ -164,12 +183,7 @@ const SaleTicket = () => {
         totalAmount: totalAmount,
         code: formData.code || "",
         ticketType: ticketTypeFixed,
-        ticketTypeDetails:
-          formData.ticketType === "b2b"
-            ? formData.b2bDetails
-            : formData.ticketType === "other"
-            ? formData.otherDetails
-            : null,
+        ticketTypeDetails: ticketTypeDetails,
         companyPaymentMethod: formData.paymentMethod,
         companyPaymentDetails: formData.companyPaymentDetails || "",
         customerPaymentMethod: formData.customerPayment,
@@ -182,17 +196,47 @@ const SaleTicket = () => {
           .filter((p) => p.name.trim())
           .map((p) => ({
             name: p.name,
-            age: p.type, // เปลี่ยนจาก age เป็น type
+            age: p.type,
             ticketNumber: p.ticketNumber,
+            ticket_code: p.ticketCode || "", // เพิ่ม ticket_code จาก supplier code
           })),
-        routes: routes.filter((r) => r.origin || r.destination),
-        extras: extras.filter((e) => e.description),
+        routes: routes
+          .filter((r) => r.origin || r.destination)
+          .map((r) => ({
+            flight: r.flight,
+            flight_number: formData.supplier
+              ? `${formData.supplier}${r.flight}`
+              : r.flight, // สร้าง flight_number ที่ถูกต้อง
+            rbd: r.rbd,
+            date: r.date,
+            origin: r.origin,
+            destination: r.destination,
+            departure: r.departure,
+            arrival: r.arrival,
+          })),
+        extras: extras
+          .filter((e) => e.description)
+          .map((e) => ({
+            description: e.description,
+            net_price: e.net || 0,
+            sale_price: e.sale || 0,
+            quantity: e.pax || 1,
+            total_amount: e.total || 0,
+          })),
         remarks: formData.remarks || "",
-        salesName: userFullname || formData.salesName, // เพิ่มชื่อผู้บันทึก
+        salesName: userFullname || formData.salesName,
       };
 
-      console.log("ticketType before sending:", formData.ticketType);
       console.log("Sending data to createFlightTicket:", ticketData);
+      console.log("Details sending for debugging:", {
+        paymentMethod: formData.paymentMethod,
+        companyPaymentDetails: formData.companyPaymentDetails,
+        customerPayment: formData.customerPayment,
+        customerPaymentDetails: formData.customerPaymentDetails,
+        ticketType: formData.ticketType,
+        ticketTypeDetails,
+      });
+
       const result = await createFlightTicket(ticketData);
 
       if (result.success) {
@@ -247,7 +291,9 @@ const SaleTicket = () => {
     updatePricing("infant", "sale", "", 0);
     updatePricing("infant", "pax", 0, 0);
 
-    setPassengers([{ id: 1, name: "", type: "ADL", ticketNumber: "" }]);
+    setPassengers([
+      { id: 1, name: "", type: "ADL", ticketNumber: "", ticketCode: "" },
+    ]);
     setRoutes([
       {
         id: 1,

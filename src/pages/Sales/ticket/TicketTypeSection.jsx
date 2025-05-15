@@ -2,6 +2,14 @@ import React from "react";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
 const TicketTypeSection = ({ formData, setFormData }) => {
+  // เพิ่มการล็อกเพื่อดูการเปลี่ยนแปลงค่า
+  console.log("Current ticketType:", formData.ticketType);
+  console.log("Current details:", {
+    b2bDetails: formData.b2bDetails,
+    otherDetails: formData.otherDetails,
+    tgDetails: formData.tgDetails,
+  });
+
   return (
     <section
       className={combineClasses(
@@ -162,12 +170,14 @@ const TicketTypeSection = ({ formData, setFormData }) => {
                   )}
                   disabled={formData.ticketType !== "tg"}
                   value={formData.tgDetails || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    console.log("Updating tgDetails to:", e.target.value);
                     setFormData({
                       ...formData,
                       tgDetails: e.target.value,
-                    })
-                  }
+                    });
+                  }}
+                  placeholder="รายละเอียด TG"
                 />
               </div>
             </div>
@@ -188,12 +198,14 @@ const TicketTypeSection = ({ formData, setFormData }) => {
                   )}
                   disabled={formData.ticketType !== "b2b"}
                   value={formData.b2bDetails || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    console.log("Updating b2bDetails to:", e.target.value);
                     setFormData({
                       ...formData,
                       b2bDetails: e.target.value,
-                    })
-                  }
+                    });
+                  }}
+                  placeholder="รายละเอียด B2B"
                 />
               </div>
             </div>
@@ -214,12 +226,14 @@ const TicketTypeSection = ({ formData, setFormData }) => {
                   )}
                   disabled={formData.ticketType !== "other"}
                   value={formData.otherDetails || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    console.log("Updating otherDetails to:", e.target.value);
                     setFormData({
                       ...formData,
                       otherDetails: e.target.value,
-                    })
-                  }
+                    });
+                  }}
+                  placeholder="รายละเอียดประเภทอื่นๆ"
                 />
               </div>
             </div>

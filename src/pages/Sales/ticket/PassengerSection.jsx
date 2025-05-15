@@ -62,6 +62,7 @@ const PassengerSection = ({
       name: "",
       type: "ADL", // ค่าเริ่มต้นเป็น ADL
       ticketNumber: "",
+      ticketCode: "", // เพิ่มฟิลด์ ticketCode
     };
 
     const updatedPassengers = [...passengers, newPassenger];
@@ -110,11 +111,11 @@ const PassengerSection = ({
             )}
           >
             <div
-              className={combineClasses("col-span-14", SaleStyles.spacing.ml4)}
+              className={combineClasses("col-span-13", SaleStyles.spacing.ml4)}
             >
               ชื่อผู้โดยสาร
             </div>
-            <div className="col-span-2 text-center">ประเภท</div>
+            <div className="col-span-3 text-center">อายุ</div>
             <div className="col-span-3 text-center">เลขที่ตั๋ว</div>
           </div>
           {passengers.map((passenger, index) => (
@@ -125,7 +126,7 @@ const PassengerSection = ({
                 SaleStyles.spacing.mb2
               )}
             >
-              <div className="flex col-span-14">
+              <div className="flex col-span-13">
                 <div
                   className={combineClasses(
                     "w-[16px] flex items-center justify-center",
@@ -145,7 +146,7 @@ const PassengerSection = ({
                   }}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-3">
                 <select
                   className={combineClasses(
                     SaleStyles.form.select,
@@ -184,10 +185,11 @@ const PassengerSection = ({
                 <input
                   type="text"
                   className={SaleStyles.form.input}
-                  value={passenger.additionalInfo || ""}
+                  // placeholder="รหัสตั๋ว (Ticket Code)"
+                  value={passenger.ticketCode || ""}
                   onChange={(e) => {
                     const updatedPassengers = [...passengers];
-                    updatedPassengers[index].additionalInfo = e.target.value;
+                    updatedPassengers[index].ticketCode = e.target.value;
                     setPassengers(updatedPassengers);
                   }}
                 />
