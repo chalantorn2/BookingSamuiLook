@@ -25,20 +25,19 @@ export const useFlightTicketsData = ({
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
 
-      // ดึงข้อมูลหลักจาก bookings_ticket รวม created_at
       let query = supabase
         .from("bookings_ticket")
         .select(
           `
-          id,
-          reference_number,
-          status,
-          payment_status,
-          created_at,
-          updated_at,
-          customer:customer_id(name),
-          supplier:information_id(name)
-        `
+        id,
+        reference_number,
+        status,
+        payment_status,
+        created_at,
+        updated_at,
+        customer:customer_id(name),
+        supplier:information_id(name)
+      `
         )
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString());
@@ -57,8 +56,18 @@ export const useFlightTicketsData = ({
         return;
       }
 
+      // ปรับ created_at ให้อยู่ใน timezone +07:00
+      const adjustedTickets = tickets.map((ticket) => {
+        const createdAt = new Date(ticket.created_at);
+        createdAt.setHours(createdAt.getHours() + 7); // ปรับเป็น +07:00
+        return {
+          ...ticket,
+          created_at: createdAt.toISOString(),
+        };
+      });
+
       // ดึงข้อมูล ticket_additional_info แยก
-      const ticketIds = tickets.map((ticket) => ticket.id);
+      const ticketIds = adjustedTickets.map((ticket) => ticket.id);
       const { data: additionalInfo, error: additionalInfoError } =
         await supabase
           .from("ticket_additional_info")
@@ -72,14 +81,12 @@ export const useFlightTicketsData = ({
         );
       }
 
-      // สร้าง map สำหรับ ticket_additional_info
       const additionalInfoMap = new Map(
         additionalInfo?.map((info) => [info.bookings_ticket_id, info.code]) ||
           []
       );
 
-      // รวมข้อมูล code เข้ากับ tickets
-      const processedData = tickets.map((ticket) => ({
+      const processedData = adjustedTickets.map((ticket) => ({
         ...ticket,
         code: additionalInfoMap.get(ticket.id) || null,
       }));

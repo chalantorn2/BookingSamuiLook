@@ -38,24 +38,44 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
           .from("bookings_ticket")
           .select(
             `
-            id,
-            reference_number,
-            status,
-            created_at,
-            updated_at,
-            created_by,
-            updated_by,
-            cancelled_at,
-            cancelled_by,
-            cancel_reason,
-            customer:customer_id(name, address, id_number, phone, credit_days, branch_type, branch_number),
-            supplier:information_id(name, code)
-          `
+          id,
+          reference_number,
+          status,
+          created_at,
+          updated_at,
+          created_by,
+          updated_by,
+          cancelled_at,
+          cancelled_by,
+          cancel_reason,
+          customer:customer_id(name, address, id_number, phone, credit_days, branch_type, branch_number),
+          supplier:information_id(name, code)
+        `
           )
           .eq("id", ticketId)
           .single();
 
         if (ticketError) throw ticketError;
+
+        // ปรับ timezone สำหรับ created_at, updated_at, และ cancelled_at
+        const adjustedTicket = {
+          ...ticket,
+          created_at: ticket.created_at
+            ? new Date(
+                new Date(ticket.created_at).getTime() + 7 * 60 * 60 * 1000
+              ).toISOString()
+            : null,
+          updated_at: ticket.updated_at
+            ? new Date(
+                new Date(ticket.updated_at).getTime() + 7 * 60 * 60 * 1000
+              ).toISOString()
+            : null,
+          cancelled_at: ticket.cancelled_at
+            ? new Date(
+                new Date(ticket.cancelled_at).getTime() + 7 * 60 * 60 * 1000
+              ).toISOString()
+            : null,
+        };
 
         const { data: additionalInfo, error: additionalInfoError } =
           await supabase
@@ -80,6 +100,21 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
         if (detailError && !detailError.message.includes("No rows found")) {
           throw detailError;
         }
+
+        // ปรับ timezone สำหรับ issue_date และ due_date
+        const adjustedDetail = {
+          ...detail,
+          issue_date: detail?.issue_date
+            ? new Date(
+                new Date(detail.issue_date).getTime() + 7 * 60 * 60 * 1000
+              ).toISOString()
+            : null,
+          due_date: detail?.due_date
+            ? new Date(
+                new Date(detail.due_date).getTime() + 7 * 60 * 60 * 1000
+              ).toISOString()
+            : null,
+        };
 
         const { data: pricing, error: pricingError } = await supabase
           .from("tickets_pricing")
@@ -113,9 +148,9 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
         if (extrasError) throw extrasError;
 
         const userIds = [
-          ticket.created_by,
-          ticket.updated_by,
-          ticket.cancelled_by,
+          adjustedTicket.created_by,
+          adjustedTicket.updated_by,
+          adjustedTicket.cancelled_by,
         ].filter(Boolean);
         const { data: users, error: usersError } = await supabase
           .from("users")
@@ -129,16 +164,16 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
         );
 
         setTicketData({
-          ...ticket,
+          ...adjustedTicket,
           additionalInfo: additionalInfo || {},
-          detail: detail || {},
+          detail: adjustedDetail || {},
           pricing: pricing || {},
           passengers: passengers || [],
           routes: routes || [],
           extras: extras || [],
-          createdByName: userMap.get(ticket.created_by) || "-",
-          updatedByName: userMap.get(ticket.updated_by) || "-",
-          cancelledByName: userMap.get(ticket.cancelled_by) || "-",
+          createdByName: userMap.get(adjustedTicket.created_by) || "-",
+          updatedByName: userMap.get(adjustedTicket.updated_by) || "-",
+          cancelledByName: userMap.get(adjustedTicket.cancelled_by) || "-",
         });
       } catch (err) {
         console.error("Error fetching ticket details:", err);
@@ -202,7 +237,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 modal-backdrop bg-black  flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -215,7 +250,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
           <div className="text-center text-red-500 mb-4">
             <AlertTriangle className="h-12 w-12 mx-auto" />
@@ -237,7 +272,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit }) => {
   if (!ticketData) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-blue-600 p-3 text-white flex justify-between items-center">
