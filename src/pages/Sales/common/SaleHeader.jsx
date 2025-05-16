@@ -25,8 +25,19 @@ const SaleHeader = ({
   const [error, setError] = useState(null);
   const [dateError, setDateError] = useState("");
   const [dueDateError, setDueDateError] = useState("");
-  const [tempDueDate, setTempDueDate] = useState(""); // เพิ่ม state สำหรับเก็บวันที่ชั่วคราว
+  const [tempDueDate, setTempDueDate] = useState("");
   const today = new Date().toISOString().split("T")[0];
+
+  const [branchType, setBranchType] = useState("Head Office");
+  const [branchNumber, setBranchNumber] = useState("");
+
+  // ดีบักเพื่อตรวจสอบค่า selectedCustomer และ formData.customer
+  console.log(
+    "SaleHeader Render - selectedCustomer:",
+    selectedCustomer,
+    "formData.customer:",
+    formData.customer
+  );
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -89,7 +100,14 @@ const SaleHeader = ({
   };
 
   const selectCustomer = (customer) => {
+    console.log("Selecting Customer:", customer);
     setSelectedCustomer(customer);
+    const creditDays = customer.credit_days?.toString() || "0";
+    const dueDate = calculateDueDate(today, creditDays);
+
+    setBranchType(customer.branch_type || "Head Office");
+    setBranchNumber(customer.branch_number || "");
+
     setFormData({
       ...formData,
       customer: customer.name,
@@ -97,25 +115,37 @@ const SaleHeader = ({
       phone: customer.phone || "",
       id: customer.id_number || "",
       date: today,
-      dueDate: today,
-      creditDays: "0",
+      dueDate: dueDate,
+      creditDays: creditDays,
+      branchType: customer.branch_type || "Head Office",
+      branchNumber: customer.branch_number || "",
     });
     setSearchTerm("");
     setShowResults(false);
+    setTempDueDate(formatDate(dueDate));
   };
 
-  const clearSearch = () => {
+  const clearSearch = (e) => {
+    e.preventDefault();
+    console.log("Clearing Search");
     setSearchTerm("");
     setShowResults(false);
     setSearchResults([]);
     setSelectedCustomer(null);
+    setBranchType("Head Office");
+    setBranchNumber("");
     setFormData({
       ...formData,
       customer: "",
       contactDetails: "",
       phone: "",
       id: "",
+      branchType: "Head Office",
+      branchNumber: "",
+      dueDate: today,
+      creditDays: "0",
     });
+    setTempDueDate(formatDate(today));
   };
 
   const formatCurrencyLocal = (amount) => {
@@ -142,6 +172,7 @@ const SaleHeader = ({
   };
 
   const handlePhoneChange = (e) => {
+    if (selectedCustomer) return;
     const formatted = formatPhoneNumber(e.target.value);
     setFormData({ ...formData, phone: formatted });
   };
@@ -163,9 +194,57 @@ const SaleHeader = ({
     return Math.max(0, diffDays).toString();
   };
 
+  const handleBranchTypeChange = (e) => {
+    if (selectedCustomer) return;
+
+    const newBranchType = e.target.value;
+    setBranchType(newBranchType);
+
+    if (newBranchType !== "Branch") {
+      setBranchNumber("");
+    }
+
+    setFormData({
+      ...formData,
+      branchType: newBranchType,
+      branchNumber: newBranchType !== "Branch" ? "" : formData.branchNumber,
+    });
+  };
+
+  const handleBranchNumberChange = (e) => {
+    if (selectedCustomer) return;
+
+    const value = e.target.value.replace(/\D/g, "").substring(0, 3);
+    setBranchNumber(value);
+    setFormData({
+      ...formData,
+      branchNumber: value,
+    });
+  };
+
+  const handleContactDetailsChange = (e) => {
+    if (selectedCustomer) return;
+
+    setFormData({
+      ...formData,
+      contactDetails: e.target.value,
+    });
+  };
+
+  const handleIdNumberChange = (e) => {
+    if (selectedCustomer) return;
+
+    setFormData({
+      ...formData,
+      id: e.target.value,
+    });
+  };
+
   const handleDueDateChange = (e) => {
+    if (selectedCustomer) return;
+
     const value = e.target.value;
-    setTempDueDate(value); // เก็บค่า input ชั่วคราว
+    setTempDueDate(value);
     const error = validateDate(value);
     if (!error) {
       const newDueDate = parseDate(value);
@@ -182,9 +261,10 @@ const SaleHeader = ({
   };
 
   const handleDueDateBlur = () => {
+    if (selectedCustomer) return;
+
     const error = validateDate(tempDueDate);
     if (error) {
-      // ถ้าผิดรูปแบบ ให้รีเซ็ตกลับไปเป็นวันที่เดิมใน formData
       setTempDueDate(formatDate(formData.dueDate || today));
       setDueDateError(error);
     } else {
@@ -200,6 +280,8 @@ const SaleHeader = ({
   };
 
   const handleCreditDaysChange = (e) => {
+    if (selectedCustomer) return;
+
     const credit = e.target.value;
     const newDueDate = calculateDueDate(formData.date, credit);
     setFormData({
@@ -207,7 +289,7 @@ const SaleHeader = ({
       creditDays: credit,
       dueDate: newDueDate,
     });
-    setTempDueDate(formatDate(newDueDate)); // อัพเดต tempDueDate ให้สอดคล้อง
+    setTempDueDate(formatDate(newDueDate));
     setDueDateError("");
   };
 
@@ -225,9 +307,32 @@ const SaleHeader = ({
         dueDate: today,
         creditDays: "0",
       }));
-      setTempDueDate(formatDate(today)); // อัพเดต tempDueDate เริ่มต้น
+      setTempDueDate(formatDate(today));
     }
-  }, [currentUser, formData.salesName, formData.date, today]);
+
+    if (formData.branchType !== undefined) {
+      setBranchType(formData.branchType);
+    }
+    if (formData.branchNumber !== undefined) {
+      setBranchNumber(formData.branchNumber);
+    }
+
+    // รีเซ็ต selectedCustomer เฉพาะเมื่อ formData.customer ว่างเปล่าและยังไม่ได้เลือก customer
+    if (!formData.customer && selectedCustomer && !searchTerm) {
+      console.log("Resetting selectedCustomer due to empty formData.customer");
+      setSelectedCustomer(null);
+    }
+  }, [
+    currentUser,
+    formData.salesName,
+    formData.date,
+    formData.branchType,
+    formData.branchNumber,
+    formData.customer,
+    selectedCustomer,
+    searchTerm,
+    today,
+  ]);
 
   if (section === "customer") {
     return (
@@ -279,6 +384,17 @@ const SaleHeader = ({
                             โทร: {customer.phone}
                           </span>
                         )}
+                        {customer.credit_days > 0 && (
+                          <span className="text-sm text-blue-500">
+                            เครดิต: {customer.credit_days} วัน
+                          </span>
+                        )}
+                        {customer.branch_type === "Branch" &&
+                          customer.branch_number && (
+                            <span className="text-sm text-purple-500">
+                              {customer.branch_type} {customer.branch_number}
+                            </span>
+                          )}
                       </li>
                     ))}
                   </ul>
@@ -292,46 +408,85 @@ const SaleHeader = ({
           </div>
         </div>
 
-        <div className="mb-2">
-          <label className={SaleStyles.form.labelRequired}>
-            Contact Details
-          </label>
-          <textarea
-            className={SaleStyles.form.input}
-            placeholder="ที่อยู่และข้อมูลติดต่อ"
-            value={formData.contactDetails}
-            onChange={(e) =>
-              setFormData({ ...formData, contactDetails: e.target.value })
-            }
-            required
-          ></textarea>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <div>
             <label className={SaleStyles.form.label}>Phone Number</label>
             <input
               type="text"
-              className={SaleStyles.form.inputNoUppercase}
+              className={`${SaleStyles.form.inputNoUppercase} ${
+                selectedCustomer ? "bg-gray-100" : ""
+              }`}
               placeholder="เบอร์โทรศัพท์"
               value={formData.phone}
               onChange={handlePhoneChange}
+              disabled={!!selectedCustomer}
             />
           </div>
           <div>
-            <label className={SaleStyles.form.label}>ID/Passport</label>
+            <label className={SaleStyles.form.label}>Tax ID Number</label>
             <input
               type="text"
-              className={SaleStyles.form.input}
-              placeholder="เลขประจำตัว/พาสปอร์ต"
+              className={`${SaleStyles.form.input} ${
+                selectedCustomer ? "bg-gray-100" : ""
+              }`}
+              placeholder="เลขผู้เสียภาษี"
               value={formData.id}
-              onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+              onChange={handleIdNumberChange}
+              disabled={!!selectedCustomer}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2 grid-cols-11">
+          <div className="mb-2 col-span-5">
+            <label className={SaleStyles.form.labelRequired}>
+              Contact Details
+            </label>
+            <textarea
+              className={`${SaleStyles.form.input} ${
+                selectedCustomer ? "bg-gray-100" : ""
+              }`}
+              placeholder="ที่อยู่และข้อมูลติดต่อ"
+              value={formData.contactDetails}
+              onChange={handleContactDetailsChange}
+              required
+              disabled={!!selectedCustomer}
+            ></textarea>
+          </div>
+
+          <div className="col-span-3">
+            <label className={SaleStyles.form.label}>Branch type</label>
+            <select
+              className={`${SaleStyles.form.select} ${
+                selectedCustomer ? "bg-gray-100" : ""
+              }`}
+              value={branchType}
+              onChange={handleBranchTypeChange}
+              disabled={!!selectedCustomer}
+            >
+              <option value="Head Office">Head Office</option>
+              <option value="Branch">Branch</option>
+            </select>
+          </div>
+          <div className="col-span-3">
+            <label className={SaleStyles.form.label}>Branch number</label>
+            <input
+              type="text"
+              className={`${SaleStyles.form.input} ${
+                selectedCustomer || branchType !== "Branch" ? "bg-gray-100" : ""
+              }`}
+              placeholder="หมายเลขสาขา"
+              value={branchNumber}
+              onChange={handleBranchNumberChange}
+              maxLength={3}
+              disabled={branchType !== "Branch" || !!selectedCustomer}
             />
           </div>
         </div>
       </>
     );
   }
+
   if (section === "price") {
     return (
       <div className="space-y-2">
@@ -360,32 +515,40 @@ const SaleHeader = ({
             <label className={SaleStyles.form.labelRequired}>
               เครดิต (วัน):
             </label>
-            <input
-              type="number"
-              className={SaleStyles.form.input}
-              value={formData.creditDays || "0"}
-              onChange={handleCreditDaysChange}
-              placeholder="0"
-              required
-              min="0"
-            />
+            <div className="relative">
+              <input
+                type="number"
+                className={`${SaleStyles.form.input} ${
+                  selectedCustomer ? "bg-gray-100" : ""
+                }`}
+                value={formData.creditDays || "0"}
+                onChange={handleCreditDaysChange}
+                placeholder="0"
+                required
+                min="0"
+                disabled={!!selectedCustomer}
+              />
+            </div>
           </div>
           <div className="relative">
             <label className={SaleStyles.form.labelRequired}>
               วันครบกำหนด:
             </label>
-            <input
-              type="text"
-              className={`${SaleStyles.form.input} ${
-                dueDateError ? "border-red-500" : ""
-              } pr-10`}
-              value={tempDueDate || formatDate(formData.dueDate || today)}
-              onChange={handleDueDateChange}
-              onBlur={handleDueDateBlur}
-              placeholder="วัน/เดือน/ปี (เช่น 09/05/2025)"
-              required
-            />
-            <FaCalendarAlt className="absolute right-3 top-9 text-gray-400" />
+            <div className="relative">
+              <input
+                type="text"
+                className={`${SaleStyles.form.input} ${
+                  dueDateError ? "border-red-500" : ""
+                } ${selectedCustomer ? "bg-gray-100" : ""} pr-10`}
+                value={tempDueDate || formatDate(formData.dueDate || today)}
+                onChange={handleDueDateChange}
+                onBlur={handleDueDateBlur}
+                placeholder="วัน/เดือน/ปี (เช่น 09/05/2025)"
+                required
+                disabled={!!selectedCustomer}
+              />
+              <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </div>
             {dueDateError && (
               <div className="text-red-500 text-sm mt-1">{dueDateError}</div>
             )}

@@ -11,6 +11,8 @@ import {
 import { supabase } from "../../services/supabase";
 
 // Component สำหรับตารางข้อมูล
+// ส่วนของ DataTable Component ที่ปรับปรุงสำหรับตาราง Customer
+
 const DataTable = ({
   data,
   selectedCategory,
@@ -24,8 +26,220 @@ const DataTable = ({
   handleCancelEdit,
   handleSaveEdit,
 }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [currentEditItem, setCurrentEditItem] = useState(null);
+
+  const formatBranchInfo = (item) => {
+    if (item.branch_type === "Branch" && item.branch_number) {
+      return (
+        <div className="flex items-center">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+            Branch {item.branch_number}
+          </span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            Head Office
+          </span>
+        </div>
+      );
+    }
+  };
+
+  const formatCredit = (days) => {
+    if (!days || parseInt(days) === 0) {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          ไม่มีเครดิต
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        {days} วัน
+      </span>
+    );
+  };
+
+  const handleOpenEditModal = (item) => {
+    setCurrentEditItem({ ...item });
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setCurrentEditItem(null);
+  };
+
+  const handleSaveModalEdit = async () => {
+    if (!currentEditItem.name.trim()) {
+      alert("กรุณากรอกชื่อลูกค้า");
+      return;
+    }
+    if (
+      currentEditItem.branch_type === "Branch" &&
+      !currentEditItem.branch_number
+    ) {
+      alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("customers")
+        .update({
+          name: currentEditItem.name,
+          address: currentEditItem.address || null,
+          id_number: currentEditItem.id_number || null,
+          phone: currentEditItem.phone || null,
+          branch_type: currentEditItem.branch_type || "Head Office",
+          branch_number:
+            currentEditItem.branch_type === "Branch"
+              ? currentEditItem.branch_number
+              : null,
+          credit_days: currentEditItem.credit_days || 0,
+        })
+        .eq("id", currentEditItem.id);
+
+      if (error) throw error;
+      handleCloseModal();
+      window.location.reload(); // รีเฟรชข้อมูลหลังบันทึก
+    } catch (err) {
+      alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+    }
+  };
+
+  const handleModalInputChange = (e) => {
+    const { name, value } = e.target;
+    const updatedItem = { ...currentEditItem, [name]: value };
+    if (name === "branch_type" && value === "Head Office") {
+      updatedItem.branch_number = "";
+    }
+    setCurrentEditItem(updatedItem);
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
+      {/* Modal สำหรับการแก้ไข */}
+      {showModal && currentEditItem && (
+        <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">แก้ไขข้อมูลลูกค้า</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  ชื่อลูกค้า
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={currentEditItem.name}
+                  onChange={handleModalInputChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">สาขา</label>
+                <select
+                  name="branch_type"
+                  value={currentEditItem.branch_type || "Head Office"}
+                  onChange={handleModalInputChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                >
+                  <option value="Head Office">Head Office</option>
+                  <option value="Branch">Branch</option>
+                </select>
+                {currentEditItem.branch_type === "Branch" && (
+                  <input
+                    type="text"
+                    name="branch_number"
+                    value={currentEditItem.branch_number || ""}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .substring(0, 3);
+                      setCurrentEditItem({
+                        ...currentEditItem,
+                        branch_number: value,
+                      });
+                    }}
+                    placeholder="หมายเลขสาขา"
+                    maxLength={3}
+                    className="mt-2 w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  เครดิต (วัน)
+                </label>
+                <input
+                  type="number"
+                  name="credit_days"
+                  value={currentEditItem.credit_days || 0}
+                  onChange={handleModalInputChange}
+                  min="0"
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  เลขผู้เสียภาษี
+                </label>
+                <input
+                  type="text"
+                  name="id_number"
+                  value={currentEditItem.id_number || ""}
+                  onChange={handleModalInputChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  โทรศัพท์
+                </label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={currentEditItem.phone || ""}
+                  onChange={handleModalInputChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  ที่อยู่
+                </label>
+                <textarea
+                  name="address"
+                  value={currentEditItem.address || ""}
+                  onChange={handleModalInputChange}
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end mt-4 space-x-2">
+              <button
+                onClick={handleCloseModal}
+                className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+              >
+                <X size={16} className="mr-1 inline" /> ยกเลิก
+              </button>
+              <button
+                onClick={handleSaveModalEdit}
+                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+              >
+                <Save size={16} className="mr-1 inline" /> บันทึก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <table
         className={`min-w-full divide-y divide-gray-200 ${
           selectedCategory === "customer" ? "table-customer" : ""
@@ -36,43 +250,38 @@ const DataTable = ({
             {selectedCategory === "customer" ? (
               <>
                 <th
-                  className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center">
-                    ชื่อ
+                    ชื่อลูกค้า
                     <ChevronsUpDown size={14} className="ml-1" />
                   </div>
                 </th>
                 <th
-                  className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("address")}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort("branch_type")}
                 >
                   <div className="flex items-center">
-                    ที่อยู่
+                    สาขา
                     <ChevronsUpDown size={14} className="ml-1" />
                   </div>
                 </th>
                 <th
-                  className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("id_number")}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort("credit_days")}
                 >
                   <div className="flex items-center">
-                    เลขประจำตัว/พาสปอร์ต
+                    เครดิต
                     <ChevronsUpDown size={14} className="ml-1" />
                   </div>
                 </th>
-                <th
-                  className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("phone")}
-                >
-                  <div className="flex items-center">
-                    เบอร์โทรศัพท์
-                    <ChevronsUpDown size={14} className="ml-1" />
-                  </div>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  จัดการ
                 </th>
               </>
             ) : (
+              // คงส่วนเดิมของ Supplier ไว้
               <>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -101,18 +310,18 @@ const DataTable = ({
                     <ChevronsUpDown size={14} className="ml-1" />
                   </div>
                 </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  จัดการ
+                </th>
               </>
             )}
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              จัดการ
-            </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {data.length === 0 ? (
             <tr>
               <td
-                colSpan={selectedCategory === "customer" ? 5 : 4}
+                colSpan={selectedCategory === "customer" ? 4 : 4}
                 className="px-6 py-4 text-center text-gray-500"
               >
                 ไม่พบข้อมูล
@@ -120,123 +329,34 @@ const DataTable = ({
             </tr>
           ) : (
             data.map((item) => (
-              <tr key={item.id}>
-                {editingItem && editingItem.id === item.id ? (
-                  selectedCategory === "customer" ? (
-                    <>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          name="name"
-                          value={editingItem.name}
-                          onChange={(e) => handleInputChange(e, "edit")}
-                          className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          name="address"
-                          value={editingItem.address || ""}
-                          onChange={(e) => handleInputChange(e, "edit")}
-                          className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          name="id_number"
-                          value={editingItem.id_number || ""}
-                          onChange={(e) => handleInputChange(e, "edit")}
-                          className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          name="phone"
-                          value={editingItem.phone || ""}
-                          onChange={(e) => handleInputChange(e, "edit")}
-                          className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-right whitespace-nowrap">
-                        <button
-                          onClick={handleCancelEdit}
-                          className="text-gray-500 hover:text-gray-700 mr-2"
-                          title="ยกเลิก"
-                        >
-                          <X size={18} />
-                        </button>
-                        <button
-                          onClick={handleSaveEdit}
-                          className="text-green-500 hover:text-green-700"
-                          title="บันทึก"
-                        >
-                          <Save size={18} />
-                        </button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-6 py-4">
-                        <input
-                          type="text"
-                          name="code"
-                          value={editingItem.code}
-                          onChange={(e) => handleInputChange(e, "edit")}
-                          className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <input
-                          type="text"
-                          name="name"
-                          value={editingItem.name}
-                          onChange={(e) => handleInputChange(e, "edit")}
-                          className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <select
-                          name="type"
-                          value={editingItem.type || ""}
-                          onChange={(e) => handleInputChange(e, "edit")}
-                          className="w-full border border-gray-300 rounded-md p-1 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                        >
-                          <option value="">เลือกประเภท</option>
-                          <option value="Airline">Airline</option>
-                          <option value="Voucher">Voucher</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <button
-                          onClick={handleCancelEdit}
-                          className="text-gray-500 hover:text-gray-700 mr-2"
-                          title="ยกเลิก"
-                        >
-                          <X size={18} />
-                        </button>
-                        <button
-                          onClick={handleSaveEdit}
-                          className="text-green-500 hover:text-green-700"
-                          title="บันทึก"
-                        >
-                          <Save size={18} />
-                        </button>
-                      </td>
-                    </>
-                  )
-                ) : selectedCategory === "customer" ? (
+              <tr key={item.id} className="hover:bg-gray-50">
+                {selectedCategory === "customer" ? (
                   <>
-                    <td className="px-3 py-2">{item.name}</td>
-                    <td className="px-3 py-2">{item.address || "-"}</td>
-                    <td className="px-3 py-2">{item.id_number || "-"}</td>
-                    <td className="px-3 py-2">{item.phone || "-"}</td>
-                    <td className="px-3 py-2 text-right whitespace-nowrap">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900">
+                        {item.name}
+                      </div>
+                      {(item.id_number || item.phone || item.address) && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          {item.id_number && (
+                            <div>เลขผู้เสียภาษี: {item.id_number}</div>
+                          )}
+                          {item.phone && <div>โทรศัพท์: {item.phone}</div>}
+                          {item.address && (
+                            <div className="truncate max-w-xs">
+                              ที่อยู่: {item.address}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">{formatBranchInfo(item)}</td>
+                    <td className="px-4 py-3">
+                      {formatCredit(item.credit_days)}
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
                       <button
-                        onClick={() => handleEditItem(item)}
+                        onClick={() => handleOpenEditModal(item)}
                         className="text-blue-500 hover:text-blue-700 mr-3"
                         title="แก้ไข"
                       >
@@ -245,13 +365,14 @@ const DataTable = ({
                       <button
                         onClick={() => handleDeactivate(item.id)}
                         className="text-red-500 hover:text-red-700"
-                        title="ลบ"
+                        title="ยกเลิกการใช้งาน"
                       >
                         <Trash size={18} />
                       </button>
                     </td>
                   </>
                 ) : (
+                  // คงส่วนเดิมของ Supplier ไว้
                   <>
                     <td className="px-6 py-4">{item.code}</td>
                     <td className="px-6 py-4">{item.name}</td>
@@ -267,7 +388,7 @@ const DataTable = ({
                       <button
                         onClick={() => handleDeactivate(item.id)}
                         className="text-red-500 hover:text-red-700"
-                        title="ลบ"
+                        title="ยกเลิกการใช้งาน"
                       >
                         <Trash size={18} />
                       </button>
@@ -282,7 +403,6 @@ const DataTable = ({
     </div>
   );
 };
-
 // Component สำหรับฟอร์มเพิ่ม/แก้ไขข้อมูล
 const AddEditForm = ({
   selectedCategory,
@@ -295,7 +415,7 @@ const AddEditForm = ({
     <div className="mb-6 bg-blue-50 p-4 rounded-md">
       <h3 className="font-semibold mb-2">เพิ่มข้อมูลใหม่</h3>
       {selectedCategory === "customer" ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">
               ชื่อ <span className="text-red-500">*</span>
@@ -320,7 +440,7 @@ const AddEditForm = ({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              เลขประจำตัว/พาสปอร์ต
+              เลขผู้เสียภาษี
             </label>
             <input
               type="text"
@@ -339,6 +459,57 @@ const AddEditForm = ({
               name="phone"
               value={newItem.phone}
               onChange={(e) => handleInputChange(e, "new")}
+              className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">สาขา</label>
+            <select
+              name="branch_type"
+              value={newItem.branch_type || "Head Office"}
+              onChange={(e) => handleInputChange(e, "new")}
+              className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+            >
+              <option value="Head Office">Head Office</option>
+              <option value="Branch">Branch</option>
+            </select>
+            {newItem.branch_type === "Branch" && (
+              <div className="mt-2">
+                <label className="block text-sm font-medium mb-1">
+                  หมายเลขสาขา <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="branch_number"
+                  value={newItem.branch_number || ""}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .replace(/\D/g, "")
+                      .substring(0, 3);
+                    handleInputChange(
+                      {
+                        target: { name: "branch_number", value },
+                      },
+                      "new"
+                    );
+                  }}
+                  placeholder="เฉพาะตัวเลข 3 หลัก"
+                  maxLength={3}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                />
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              เครดิต (วัน)
+            </label>
+            <input
+              type="number"
+              name="credit_days"
+              value={newItem.credit_days || 0}
+              onChange={(e) => handleInputChange(e, "new")}
+              min="0"
               className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
             />
           </div>
@@ -422,6 +593,9 @@ const Information = () => {
     address: "",
     id_number: "",
     phone: "",
+    branch_type: "Head Office",
+    branch_number: "",
+    credit_days: 0,
     code: "",
     type: "",
   });
@@ -461,7 +635,12 @@ const Information = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase.from("customers").select("*");
+      // เพิ่มการกรองเฉพาะข้อมูลที่ active = true
+      const { data, error } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("active", true);
+
       if (error) throw error;
       setInformationData(data || []);
     } catch (err) {
@@ -489,16 +668,64 @@ const Information = () => {
 
   const handleInputChange = (e, type) => {
     const { name, value } = e.target;
+
     if (type === "edit") {
-      setEditingItem({ ...editingItem, [name]: value });
+      const updatedItem = { ...editingItem, [name]: value };
+
+      // Reset branch_number if branch_type is changed to Head Office
+      if (name === "branch_type" && value === "Head Office") {
+        updatedItem.branch_number = "";
+      }
+
+      setEditingItem(updatedItem);
     } else {
-      setNewItem({ ...newItem, [name]: value });
+      const updatedItem = { ...newItem, [name]: value };
+
+      // Reset branch_number if branch_type is changed to Head Office
+      if (name === "branch_type" && value === "Head Office") {
+        updatedItem.branch_number = "";
+      }
+
+      setNewItem(updatedItem);
     }
   };
 
   const handleSaveEdit = async () => {
     if (selectedCategory === "customer") {
-      // โค้ดสำหรับลูกค้า...
+      if (!editingItem.name.trim()) {
+        alert("กรุณากรอกชื่อลูกค้า");
+        return;
+      }
+
+      // Validate branch_number when branch_type is "Branch"
+      if (editingItem.branch_type === "Branch" && !editingItem.branch_number) {
+        alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from("customers")
+          .update({
+            name: editingItem.name,
+            address: editingItem.address || null,
+            id_number: editingItem.id_number || null,
+            phone: editingItem.phone || null,
+            branch_type: editingItem.branch_type || "Head Office",
+            branch_number:
+              editingItem.branch_type === "Branch"
+                ? editingItem.branch_number
+                : null,
+            credit_days: editingItem.credit_days || 0,
+          })
+          .eq("id", editingItem.id);
+
+        if (error) throw error;
+        await loadCustomerData();
+        setEditingItem(null);
+      } catch (err) {
+        setError("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+      }
     } else {
       if (
         !editingItem.code.trim() ||
@@ -547,6 +774,9 @@ const Information = () => {
       address: "",
       id_number: "",
       phone: "",
+      branch_type: "Head Office",
+      branch_number: "",
+      credit_days: 0,
       code: "",
       type: "",
     });
@@ -558,7 +788,44 @@ const Information = () => {
 
   const handleSaveNew = async () => {
     if (selectedCategory === "customer") {
-      // โค้ดสำหรับลูกค้า...
+      if (!newItem.name.trim()) {
+        alert("กรุณากรอกชื่อลูกค้า");
+        return;
+      }
+
+      // Validate branch_number when branch_type is "Branch"
+      if (newItem.branch_type === "Branch" && !newItem.branch_number) {
+        alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
+        return;
+      }
+
+      try {
+        const { error } = await supabase.from("customers").insert({
+          name: newItem.name,
+          address: newItem.address || null,
+          id_number: newItem.id_number || null,
+          phone: newItem.phone || null,
+          branch_type: newItem.branch_type || "Head Office",
+          branch_number:
+            newItem.branch_type === "Branch" ? newItem.branch_number : null,
+          credit_days: newItem.credit_days || 0,
+        });
+
+        if (error) throw error;
+        await loadCustomerData();
+        setAddingNew(false);
+        setNewItem({
+          name: "",
+          address: "",
+          id_number: "",
+          phone: "",
+          branch_type: "Head Office",
+          branch_number: "",
+          credit_days: 0,
+        });
+      } catch (err) {
+        setError("เกิดข้อผิดพลาดในการเพิ่มข้อมูล: " + err.message);
+      }
     } else {
       if (!newItem.code.trim() || !newItem.name.trim() || !newItem.type) {
         alert("กรุณากรอกข้อมูลให้ครบถ้วน");
@@ -594,26 +861,31 @@ const Information = () => {
     }
   };
 
+  // ฟังก์ชัน handleDeactivate ที่ปรับปรุงใหม่
   const handleDeactivate = async (id) => {
     const confirmText =
       selectedCategory === "customer"
-        ? "คุณต้องการลบข้อมูลลูกค้านี้ใช่หรือไม่?"
+        ? "คุณต้องการยกเลิกการใช้งานข้อมูลลูกค้านี้ใช่หรือไม่?"
         : "คุณต้องการยกเลิกการใช้งานข้อมูลนี้ใช่หรือไม่?";
+
     if (window.confirm(confirmText)) {
       try {
         const table =
           selectedCategory === "customer" ? "customers" : "information";
-        const updateData =
-          selectedCategory === "customer" ? undefined : { active: false };
-        const { error } = await (updateData
-          ? supabase.from(table).update(updateData).eq("id", id)
-          : supabase.from(table).delete().eq("id", id));
+
+        // ใช้การอัปเดตสถานะ active เป็น false แทนการลบ
+        const { error } = await supabase
+          .from(table)
+          .update({ active: false })
+          .eq("id", id);
+
         if (error) throw error;
+
         selectedCategory === "customer"
           ? await loadCustomerData()
           : await loadInformationData();
       } catch (err) {
-        setError("เกิดข้อผิดพลาดในการลบ: " + err.message);
+        setError("เกิดข้อผิดพลาดในการยกเลิกรายการ: " + err.message);
       }
     }
   };
@@ -623,7 +895,7 @@ const Information = () => {
     if (searchTerm) {
       filteredData = informationData.filter((item) =>
         selectedCategory === "customer"
-          ? item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ? item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.address &&
               item.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
             (item.id_number &&
@@ -631,9 +903,10 @@ const Information = () => {
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase())) ||
             (item.phone &&
-              item.phone.toLowerCase().includes(searchTerm.toLowerCase()))
-          : item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              item.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (item.branch_number && item.branch_number.includes(searchTerm))
+          : item.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.type &&
               item.type.toLowerCase().includes(searchTerm.toLowerCase()))
       );
@@ -641,7 +914,16 @@ const Information = () => {
     return filteredData.sort((a, b) => {
       const aValue = a[sortField] || "";
       const bValue = b[sortField] || "";
-      const comparison = aValue.localeCompare(bValue);
+
+      // Handle numeric sorting for credit_days
+      if (sortField === "credit_days") {
+        const aNum = parseInt(aValue) || 0;
+        const bNum = parseInt(bValue) || 0;
+        return sortDirection === "asc" ? aNum - bNum : bNum - aNum;
+      }
+
+      // Default string comparison
+      const comparison = String(aValue).localeCompare(String(bValue));
       return sortDirection === "asc" ? comparison : -comparison;
     });
   };
@@ -675,18 +957,24 @@ const Information = () => {
       
     }
     .table-customer th:nth-child(1), .table-customer td:nth-child(1) {
-      max-width: 250px; /* ชื่อ */
+      max-width: 200px; /* ชื่อ */
     }
     .table-customer th:nth-child(2), .table-customer td:nth-child(2) {
-      max-width: 250px; /* ที่อยู่ */
+      max-width: 200px; /* ที่อยู่ */
     }
     .table-customer th:nth-child(3), .table-customer td:nth-child(3) {
-      max-width: 150px; /* เลขประจำตัว/พาสปอร์ต */
+      max-width: 120px; /* เลขผู้เสียภาษี */
     }
     .table-customer th:nth-child(4), .table-customer td:nth-child(4) {
-      max-width: 120px; /* เบอร์โทรศัพท์ */
+      max-width: 100px; /* สาขา */
     }
     .table-customer th:nth-child(5), .table-customer td:nth-child(5) {
+      max-width: 80px; /* เครดิต */
+    }
+    .table-customer th:nth-child(6), .table-customer td:nth-child(6) {
+      max-width: 120px; /* เบอร์โทรศัพท์ */
+    }
+    .table-customer th:nth-child(7), .table-customer td:nth-child(7) {
       max-width: 80px; /* จัดการ */
     }
   `}

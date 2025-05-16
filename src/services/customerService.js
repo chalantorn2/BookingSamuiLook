@@ -8,7 +8,12 @@ const truncateText = (text, maxLength = 50) => {
 
 export const getCustomers = async (search = "", limit = 10) => {
   try {
-    let query = supabase.from("customers").select("*").order("name");
+    // เพิ่มการกรองเฉพาะลูกค้าที่ active = true
+    let query = supabase
+      .from("customers")
+      .select("*")
+      .eq("active", true) // เพิ่มเงื่อนไขนี้
+      .order("name");
 
     if (search) {
       query = query.ilike("name", `%${search}%`);
@@ -59,6 +64,11 @@ export const createCustomer = async (customerData) => {
       throw new Error("Customer name is required");
     }
 
+    // ตรวจสอบความถูกต้องของข้อมูลสาขา
+    if (customerData.branch_type === "Branch" && !customerData.branch_number) {
+      throw new Error("Branch number is required when branch type is Branch");
+    }
+
     // สร้าง payload ที่สอดคล้องกับโครงสร้างตาราง customers
     const payload = {
       name: customerData.name,
@@ -68,7 +78,13 @@ export const createCustomer = async (customerData) => {
         customerData.id_number ||
         customerData.id ||
         null,
-      phone: customerData.phone || null, // เพิ่ม phone ใน payload
+      phone: customerData.phone || null,
+      branch_type: customerData.branch_type || "Head Office",
+      branch_number:
+        customerData.branch_type === "Branch"
+          ? customerData.branch_number
+          : null,
+      credit_days: customerData.credit_days || 0,
     };
 
     console.log("Creating customer with payload:", payload);
@@ -91,6 +107,52 @@ export const createCustomer = async (customerData) => {
     return { success: true, customerId: data[0].id, customer: data[0] };
   } catch (error) {
     console.error("Error creating customer:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateCustomer = async (id, customerData) => {
+  try {
+    // ตรวจสอบว่ามีข้อมูลที่จำเป็นหรือไม่
+    if (!customerData.name) {
+      throw new Error("Customer name is required");
+    }
+
+    // ตรวจสอบความถูกต้องของข้อมูลสาขา
+    if (customerData.branch_type === "Branch" && !customerData.branch_number) {
+      throw new Error("Branch number is required when branch type is Branch");
+    }
+
+    // สร้าง payload ที่สอดคล้องกับโครงสร้างตาราง customers
+    const payload = {
+      name: customerData.name,
+      address: customerData.address || null,
+      id_number: customerData.id_number || null,
+      phone: customerData.phone || null,
+      branch_type: customerData.branch_type || "Head Office",
+      branch_number:
+        customerData.branch_type === "Branch"
+          ? customerData.branch_number
+          : null,
+      credit_days: customerData.credit_days || 0,
+    };
+
+    console.log("Updating customer with payload:", payload);
+
+    const { data, error } = await supabase
+      .from("customers")
+      .update(payload)
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("Database error when updating customer:", error);
+      throw error;
+    }
+
+    return { success: true, customer: data ? data[0] : null };
+  } catch (error) {
+    console.error("Error updating customer:", error);
     return { success: false, error: error.message };
   }
 };

@@ -10,8 +10,6 @@ import {
   ChevronsUpDown,
   User,
   Plane,
-  MapPin,
-  Clock,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import DateRangeSelector from "./DateRangeSelector";
@@ -19,10 +17,20 @@ import FlightStatusFilter from "./FlightStatusFilter";
 import FlightTicketDetail from "./FlightTicketDetail";
 import { useFlightTicketsData } from "../hooks/useFlightTicketsData";
 import FlightTicketDetail_Edit from "./FlightTicketDetail_Edit";
-import { displayThaiDateTime } from "../../../utils/helpers";
 
 const FlightTicketsView = () => {
-  // สร้างฟังก์ชันเพื่อรับวันแรกและวันสุดท้ายของเดือนปัจจุบัน
+  const formatDateTime = (dateTime) => {
+    if (!dateTime || isNaN(new Date(dateTime).getTime())) return "-";
+    const dateObj = new Date(dateTime);
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const year = dateObj.getFullYear();
+    const hours = dateObj.getHours().toString().padStart(2, "0");
+    const minutes = dateObj.getMinutes().toString().padStart(2, "0");
+    const seconds = dateObj.getSeconds().toString().padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
+
   const getCurrentMonthRange = () => {
     const now = new Date();
     const firstDay = startOfMonth(now);
@@ -36,14 +44,13 @@ const FlightTicketsView = () => {
 
   const dateRange = getCurrentMonthRange();
 
-  // State สำหรับการจัดการข้อมูลและฟิลเตอร์
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState(dateRange.start);
   const [endDate, setEndDate] = useState(dateRange.end);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [sortField, setSortField] = useState("created_at");
-  const [sortDirection, setSortDirection] = useState("desc");
+  const [sortField, setSortField] = useState("created_at"); // เปลี่ยนค่าเริ่มต้นเป็น created_at
+  const [sortDirection, setSortDirection] = useState("desc"); // เรียงจากล่าสุดไปเก่าสุด
   const [filterStatus, setFilterStatus] = useState("all");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -69,7 +76,6 @@ const FlightTicketsView = () => {
   );
 
   useEffect(() => {
-    // เริ่มต้นการโหลดข้อมูลเมื่อ component ถูกโหลด
     fetchFlightTickets();
   }, [startDate, endDate, filterStatus, sortField, sortDirection]);
 
@@ -81,7 +87,6 @@ const FlightTicketsView = () => {
     setSelectedTicket(null);
   };
 
-  // คำนวณข้อมูลสำหรับการแสดงผลหน้าปัจจุบัน
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentTickets = filteredTickets.slice(
@@ -90,10 +95,8 @@ const FlightTicketsView = () => {
   );
   const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
 
-  // ฟังก์ชันเปลี่ยนหน้า
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // ฟังก์ชันเรียงลำดับข้อมูล
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -103,91 +106,24 @@ const FlightTicketsView = () => {
     }
   };
 
-  // ฟังก์ชันแสดงสถานะด้วยสี
   const getStatusBadge = (status) => {
-    switch (status) {
-      case "confirmed":
-        return (
-          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-            ยืนยันแล้ว
-          </span>
-        );
-      case "pending":
-        return (
-          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-            รอดำเนินการ
-          </span>
-        );
-      case "cancelled":
-        return (
-          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-            ยกเลิก
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  // ฟังก์ชันแสดงสถานะการชำระเงินด้วยสี
-  const getPaymentStatusBadge = (status) => {
-    switch (status) {
-      case "paid":
-        return (
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-            ชำระแล้ว
-          </span>
-        );
-      case "unpaid":
-        return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-            ยังไม่ชำระ
-          </span>
-        );
-      case "partially":
-        return (
-          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-            ชำระบางส่วน
-          </span>
-        );
-      case "refunded":
-        return (
-          <span className="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-xs font-medium">
-            คืนเงินแล้ว
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  // แสดงเส้นทางแบบมีหลายเส้นทาง
-  const displayRoutes = (routes) => {
-    if (!routes || routes.length === 0) return "-";
-
-    return routes.map((route, index) => (
-      <div key={index} className="mb-1 last:mb-0">
-        <div className="flex items-center text-xs">
-          <span className="font-medium text-gray-700">{route.origin}</span>
-          <span className="mx-1">➡️</span>
-          <span className="font-medium text-gray-700">{route.destination}</span>
-        </div>
-      </div>
-    ));
+    const isInvoiced = status === "confirmed";
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          isInvoiced
+            ? "bg-green-100 text-green-800"
+            : "bg-yellow-100 text-yellow-800"
+        }`}
+      >
+        {isInvoiced ? "Invoiced" : "Not Invoiced"}
+      </span>
+    );
   };
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="bg-white rounded-t-lg shadow-sm p-4 mb-2">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
@@ -210,7 +146,6 @@ const FlightTicketsView = () => {
           </div>
         </div>
 
-        {/* Date Range Selector */}
         <DateRangeSelector
           startDate={startDate}
           endDate={endDate}
@@ -220,7 +155,6 @@ const FlightTicketsView = () => {
           setSearchTerm={setSearchTerm}
         />
 
-        {/* Status Filter */}
         {isFilterVisible && (
           <FlightStatusFilter
             filterStatus={filterStatus}
@@ -228,7 +162,6 @@ const FlightTicketsView = () => {
           />
         )}
 
-        {/* Ticket Table */}
         <div className="bg-white shadow-sm rounded-md overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -240,17 +173,7 @@ const FlightTicketsView = () => {
                     onClick={() => handleSort("id")}
                   >
                     <div className="flex items-center">
-                      เลขที่ตั๋ว
-                      <ChevronsUpDown size={16} className="ml-1" />
-                    </div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("date")}
-                  >
-                    <div className="flex items-center">
-                      วันที่บันทึก
+                      ID
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -260,7 +183,7 @@ const FlightTicketsView = () => {
                     onClick={() => handleSort("customer")}
                   >
                     <div className="flex items-center">
-                      ลูกค้า
+                      ชื่อลูกค้า
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -278,17 +201,7 @@ const FlightTicketsView = () => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    <div className="flex items-center">เส้นทาง</div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("departureDate")}
-                  >
-                    <div className="flex items-center">
-                      วันที่เดินทาง
-                      <ChevronsUpDown size={16} className="ml-1" />
-                    </div>
+                    Code
                   </th>
                   <th
                     scope="col"
@@ -303,10 +216,10 @@ const FlightTicketsView = () => {
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("paymentStatus")}
+                    onClick={() => handleSort("created_at")}
                   >
                     <div className="flex items-center">
-                      การชำระเงิน
+                      Created At
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -322,7 +235,7 @@ const FlightTicketsView = () => {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="7"
                       className="px-6 py-4 text-center text-gray-500"
                     >
                       <div className="flex justify-center">
@@ -352,7 +265,7 @@ const FlightTicketsView = () => {
                 ) : currentTickets.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="7"
                       className="px-6 py-4 text-center text-gray-500"
                     >
                       ไม่พบข้อมูลตามเงื่อนไขที่กำหนด
@@ -367,96 +280,30 @@ const FlightTicketsView = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                         {ticket.reference_number || "-"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {ticket.tickets_detail &&
-                        ticket.tickets_detail.length > 0
-                          ? new Date(
-                              new Date(
-                                ticket.tickets_detail[0].issue_date
-                              ).getTime() +
-                                7 * 60 * 60 * 1000
-                            ).toLocaleDateString("th-TH")
-                          : "-"}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <User size={16} className="text-gray-400 mr-2" />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {ticket.customer?.name || "-"}
-                            </div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {ticket.customer?.name || "-"}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Plane size={16} className="text-gray-400 mr-2" />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {ticket.supplier?.name || "-"}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {ticket.additional_info?.code ||
-                                ticket.supplier?.code ||
-                                "-"}
-                            </div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {ticket.supplier?.name || "-"}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-start">
-                          <MapPin
-                            size={16}
-                            className="text-gray-400 mr-2 mt-0.5"
-                          />
-                          <div className="text-sm text-gray-900">
-                            {ticket.routes && ticket.routes.length > 0
-                              ? ticket.routes.map((route, index) => (
-                                  <div key={index} className="mb-1 last:mb-0">
-                                    <div className="flex items-center text-xs">
-                                      <span className="font-medium text-gray-700">
-                                        {route.origin}
-                                      </span>
-                                      <span className="mx-1">➡️</span>
-                                      <span className="font-medium text-gray-700">
-                                        {route.destination}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))
-                              : "-"}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Calendar size={16} className="text-gray-400 mr-2" />
-                          <div>
-                            {ticket.routes && ticket.routes.length > 0 ? (
-                              <div className="text-sm font-medium text-gray-900">
-                                {new Date(
-                                  new Date(ticket.routes[0].date).getTime() +
-                                    7 * 60 * 60 * 1000
-                                ).toLocaleDateString("th-TH")}
-                              </div>
-                            ) : (
-                              <div className="text-sm text-gray-500">-</div>
-                            )}
-                            {ticket.routes && ticket.routes.length > 0 && (
-                              <div className="text-sm text-gray-500 flex items-center">
-                                <Clock size={12} className="mr-1" />
-                                {ticket.routes[0].departure_time || "-"} -{" "}
-                                {ticket.routes[0].arrival_time || "-"}
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {ticket.code || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(ticket.status)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getPaymentStatusBadge(ticket.payment_status)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDateTime(ticket.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
@@ -483,7 +330,6 @@ const FlightTicketsView = () => {
             </table>
           </div>
 
-          {/* Pagination */}
           {!loading && totalPages > 1 && (
             <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
@@ -530,10 +376,7 @@ const FlightTicketsView = () => {
                       <span className="sr-only">Previous</span>
                       <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                     </button>
-
-                    {/* จะแสดงเลขหน้าตามจำนวนที่เหมาะสม */}
                     {Array.from({ length: totalPages }, (_, index) => {
-                      // แสดงแค่ 5 หน้าคั่นกลางรอบๆ หน้าปัจจุบัน
                       if (
                         index + 1 === 1 ||
                         index + 1 === totalPages ||
@@ -568,7 +411,6 @@ const FlightTicketsView = () => {
                       }
                       return null;
                     })}
-
                     <button
                       onClick={() => paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}
@@ -585,21 +427,18 @@ const FlightTicketsView = () => {
         </div>
       </div>
 
-      {/* Modal for Ticket Detail */}
       {selectedTicket && (
         <FlightTicketDetail
           ticketId={selectedTicket}
           onClose={closeTicketDetail}
         />
       )}
-      {/* Modal for Ticket Edit */}
       {selectedTicketForEdit && (
         <FlightTicketDetail_Edit
           ticketId={selectedTicketForEdit}
           onClose={closeTicketEditDetail}
           onSave={() => {
             closeTicketEditDetail();
-            // ให้โหลดข้อมูลใหม่หลังจากบันทึก
             fetchFlightTickets();
           }}
         />
