@@ -126,6 +126,7 @@ const SaleHeader = ({
     setFormData({
       ...formData,
       customer: customer.name,
+      customerCode: customer.code || "", // เพิ่มการดึงรหัสลูกค้า
       contactDetails: customer.full_address || customer.address || "",
       phone: customer.phone || "",
       id: customer.id_number || "",
@@ -139,7 +140,7 @@ const SaleHeader = ({
     setSearchTerm("");
     setShowResults(false);
     setTempDueDate(formatDate(dueDate));
-    setGlobalEditMode(false); // ล็อกทุกฟิลด์
+    setGlobalEditMode(false);
   };
 
   // ล้างข้อมูลการค้นหา
@@ -154,6 +155,7 @@ const SaleHeader = ({
     setFormData({
       ...formData,
       customer: "",
+      customerCode: "", // เพิ่มการล้างรหัสลูกค้า
       contactDetails: "",
       phone: "",
       id: "",
@@ -164,7 +166,13 @@ const SaleHeader = ({
       salesName: currentUser?.fullname || "",
     });
     setTempDueDate(formatDate(today));
-    setGlobalEditMode(true); // ปลดล็อกทุกฟิลด์
+    setGlobalEditMode(true);
+  };
+
+  const handleCustomerCodeChange = (e) => {
+    if (!globalEditMode) return;
+    const value = e.target.value.toUpperCase().substring(0, 3);
+    setFormData({ ...formData, customerCode: value });
   };
 
   // ฟังก์ชันคำนวณวันที่และเครดิต
@@ -426,7 +434,10 @@ const SaleHeader = ({
                         className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col"
                         onClick={() => selectCustomer(customer)}
                       >
-                        <span className="font-medium">{customer.name}</span>
+                        <span className="font-medium">
+                          {customer.name}{" "}
+                          {customer.code ? `[${customer.code}] ` : ""}
+                        </span>
                         <span className="text-sm text-gray-500">
                           {customer.address || "ไม่มีที่อยู่"}
                         </span>
@@ -489,7 +500,7 @@ const SaleHeader = ({
             />
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <div>
             <label className={SaleStyles.form.label}>Tax ID Number</label>
             <input
@@ -529,6 +540,19 @@ const SaleHeader = ({
               onChange={handleBranchNumberChange}
               maxLength={3}
               disabled={!globalEditMode || branchType !== "Branch"}
+            />
+          </div>
+          <div>
+            <label className={SaleStyles.form.label}>Customer Code</label>
+            <input
+              type="text"
+              className={`${SaleStyles.form.input} ${
+                !globalEditMode ? "bg-gray-100" : ""
+              }`}
+              value={formData.customerCode}
+              onChange={handleCustomerCodeChange}
+              maxLength={3}
+              disabled={!globalEditMode}
             />
           </div>
         </div>
@@ -661,10 +685,14 @@ const SaleHeader = ({
                       className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col"
                       onClick={() => selectCustomer(customer)}
                     >
-                      <span className="font-medium">{customer.name}</span>
+                      <span className="font-medium">
+                        {customer.code ? `[${customer.code}] ` : ""}
+                        {customer.name}
+                      </span>
                       <span className="text-sm text-gray-500">
                         {customer.address || "ไม่มีที่อยู่"}
                       </span>
+
                       {customer.phone && (
                         <span className="text-sm text-gray-500">
                           โทร: {customer.phone}

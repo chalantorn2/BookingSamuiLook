@@ -24,10 +24,11 @@ const SaleTicket = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [globalEditMode, setGlobalEditMode] = useState(true); // เพิ่ม globalEditMode ที่นี่
+  const [globalEditMode, setGlobalEditMode] = useState(false);
 
   const [formData, setFormData] = useState({
     customer: "",
+    customerCode: "",
     contactDetails: "",
     phone: "",
     id: "",
@@ -122,10 +123,11 @@ const SaleTicket = () => {
         console.log("Creating new customer from form submission");
         const newCustomerResult = await createCustomer({
           name: formData.customer,
+          code: formData.customerCode || null, // เพิ่มรหัสลูกค้า
           address: formData.contactDetails || "",
           id_number: formData.id || "",
           phone: formData.phone || "",
-          credit_days: parseInt(formData.creditDays) || 0, // เพิ่มการส่ง credit_days ไปด้วย
+          credit_days: parseInt(formData.creditDays) || 0,
         });
 
         if (newCustomerResult.success) {
@@ -273,6 +275,7 @@ const SaleTicket = () => {
   const resetForm = () => {
     setFormData({
       customer: "",
+      customerCode: "",
       contactDetails: "",
       phone: "",
       id: "",

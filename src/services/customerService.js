@@ -8,15 +8,15 @@ const truncateText = (text, maxLength = 50) => {
 
 export const getCustomers = async (search = "", limit = 10) => {
   try {
-    // เพิ่มการกรองเฉพาะลูกค้าที่ active = true
     let query = supabase
       .from("customers")
       .select("*")
-      .eq("active", true) // เพิ่มเงื่อนไขนี้
+      .eq("active", true)
       .order("name");
 
     if (search) {
-      query = query.ilike("name", `%${search}%`);
+      // เพิ่มการค้นหาด้วยรหัส (code)
+      query = query.or(`name.ilike.%${search}%,code.ilike.%${search}%`);
     }
 
     if (limit) {
@@ -27,13 +27,12 @@ export const getCustomers = async (search = "", limit = 10) => {
 
     if (error) throw error;
 
-    // ตัดข้อความสำหรับการแสดงผลในตาราง
     return data.map((customer) => ({
       ...customer,
-      name: truncateText(customer.name), // ตัดชื่อให้ยาวไม่เกิน 30 ตัวอักษร
-      address: truncateText(customer.address), // ตัดที่อยู่ให้ยาวไม่เกิน 40 ตัวอักษร
-      full_name: customer.name, // เก็บชื่อเต็มไว้สำหรับ tooltip
-      full_address: customer.address, // เก็บที่อยู่เต็มไว้สำหรับ tooltip
+      name: truncateText(customer.name),
+      address: truncateText(customer.address),
+      full_name: customer.name,
+      full_address: customer.address,
     }));
   } catch (error) {
     console.error("Error fetching customers:", error);
@@ -60,19 +59,32 @@ export const getCustomerById = async (id) => {
 // ในไฟล์ customerService.js
 export const createCustomer = async (customerData) => {
   try {
+    // ตรวจสอบว่ามีรหัสซ้ำหรือไม่
+    if (customerData.code) {
+      const { data: existingCustomer } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("code", customerData.code)
+        .eq("active", true);
+
+      if (existingCustomer && existingCustomer.length > 0) {
+        return { success: false, error: "รหัสลูกค้านี้มีอยู่ในระบบแล้ว" };
+      }
+    }
+
     // เตรียมข้อมูลสำหรับบันทึก
     const payload = {
       name: customerData.name,
+      code: customerData.code || null, // เพิ่มรหัสลูกค้า
       address: customerData.address || null,
       id_number: customerData.id_number || null,
       phone: customerData.phone || null,
-      credit_days: customerData.credit_days || 0, // เพิ่มบรรทัดนี้
+      credit_days: customerData.credit_days || 0,
       branch_type: customerData.branch_type || "Head Office",
       branch_number: customerData.branch_number || null,
       active: true,
     };
 
-    // บันทึกข้อมูลลงในตาราง customers
     const { data, error } = await supabase
       .from("customers")
       .insert(payload)
@@ -93,14 +105,34 @@ export const updateCustomer = async (id, customerData) => {
       throw new Error("Customer name is required");
     }
 
+    // ตรวจสอบรหัสลูกค้า
+    if (customerData.code) {
+      // ตรวจสอบว่ารหัสเป็นตัวอักษร 3 ตัวหรือไม่
+      if (customerData.code.length !== 3) {
+        throw new Error("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+      }
+
+      // ตรวจสอบว่ามีรหัสซ้ำหรือไม่
+      const { data: existingCustomer } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("code", customerData.code)
+        .eq("active", true)
+        .neq("id", id); // ไม่นับรหัสของลูกค้าคนนี้
+
+      if (existingCustomer && existingCustomer.length > 0) {
+        throw new Error("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
+      }
+    }
+
     // ตรวจสอบความถูกต้องของข้อมูลสาขา
     if (customerData.branch_type === "Branch" && !customerData.branch_number) {
       throw new Error("Branch number is required when branch type is Branch");
     }
 
-    // สร้าง payload ที่สอดคล้องกับโครงสร้างตาราง customers
     const payload = {
       name: customerData.name,
+      code: customerData.code || null, // เพิ่มรหัสลูกค้า
       address: customerData.address || null,
       id_number: customerData.id_number || null,
       phone: customerData.phone || null,
@@ -111,8 +143,6 @@ export const updateCustomer = async (id, customerData) => {
           : null,
       credit_days: customerData.credit_days || 0,
     };
-
-    console.log("Updating customer with payload:", payload);
 
     const { data, error } = await supabase
       .from("customers")

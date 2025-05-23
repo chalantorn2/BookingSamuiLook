@@ -87,11 +87,33 @@ const DataTable = ({
       return;
     }
 
+    // ตรวจสอบรหัสลูกค้า
+    if (currentEditItem.code && currentEditItem.code.length !== 3) {
+      alert("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+      return;
+    }
+
     try {
+      // ตรวจสอบว่ามีรหัสซ้ำหรือไม่ (ถ้ามีการกรอกรหัส)
+      if (currentEditItem.code) {
+        const { data: existingCode } = await supabase
+          .from("customers")
+          .select("id")
+          .eq("code", currentEditItem.code)
+          .eq("active", true)
+          .neq("id", currentEditItem.id);
+
+        if (existingCode && existingCode.length > 0) {
+          alert("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("customers")
         .update({
           name: currentEditItem.name,
+          code: currentEditItem.code || null,
           address: currentEditItem.address || null,
           id_number: currentEditItem.id_number || null,
           phone: currentEditItem.phone || null,
@@ -114,18 +136,27 @@ const DataTable = ({
 
   const handleModalInputChange = (e) => {
     const { name, value } = e.target;
-    const updatedItem = { ...currentEditItem, [name]: value };
-    if (name === "branch_type" && value === "Head Office") {
-      updatedItem.branch_number = "";
+
+    if (name === "code") {
+      // จำกัดให้เป็นตัวอักษร 3 ตัว
+      const updatedValue = value.toUpperCase().substring(0, 3);
+      setCurrentEditItem({ ...currentEditItem, [name]: updatedValue });
+    } else if (name === "branch_type" && value === "Head Office") {
+      setCurrentEditItem({
+        ...currentEditItem,
+        [name]: value,
+        branch_number: "",
+      });
+    } else {
+      setCurrentEditItem({ ...currentEditItem, [name]: value });
     }
-    setCurrentEditItem(updatedItem);
   };
 
   return (
     <div className="border rounded-md overflow-hidden">
       {/* Modal สำหรับการแก้ไข */}
       {showModal && currentEditItem && (
-        <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50">
+        <div className="fixed inset-0 modal-backdrop bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">แก้ไขข้อมูลลูกค้า</h3>
             <div className="space-y-4">
@@ -138,6 +169,19 @@ const DataTable = ({
                   name="name"
                   value={currentEditItem.name}
                   onChange={handleModalInputChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  รหัสลูกค้า (3 ตัวอักษร)
+                </label>
+                <input
+                  type="text"
+                  name="code"
+                  value={currentEditItem.code || ""}
+                  onChange={handleModalInputChange}
+                  maxLength={3}
                   className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
                 />
               </div>
@@ -251,6 +295,15 @@ const DataTable = ({
               <>
                 <th
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort("code")}
+                >
+                  <div className="flex items-center">
+                    รหัส
+                    <ChevronsUpDown size={14} className="ml-1" />
+                  </div>
+                </th>
+                <th
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center">
@@ -321,7 +374,7 @@ const DataTable = ({
           {data.length === 0 ? (
             <tr>
               <td
-                colSpan={selectedCategory === "customer" ? 4 : 4}
+                colSpan={selectedCategory === "customer" ? 5 : 4}
                 className="px-6 py-4 text-center text-gray-500"
               >
                 ไม่พบข้อมูล
@@ -332,6 +385,7 @@ const DataTable = ({
               <tr key={item.id} className="hover:bg-gray-50">
                 {selectedCategory === "customer" ? (
                   <>
+                    <td className="px-4 py-3">{item.code || "-"}</td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">
                         {item.name}
@@ -425,6 +479,23 @@ const AddEditForm = ({
               name="name"
               value={newItem.name}
               onChange={(e) => handleInputChange(e, "new")}
+              className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              รหัสลูกค้า (3 ตัวอักษร)
+            </label>
+            <input
+              type="text"
+              name="code"
+              value={newItem.code}
+              onChange={(e) => {
+                const value = e.target.value.toUpperCase().substring(0, 3);
+                handleInputChange({ target: { name: "code", value } }, "new");
+              }}
+              maxLength={3}
+              placeholder="รหัส 3 ตัวอักษร"
               className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
             />
           </div>
@@ -590,13 +661,13 @@ const Information = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [newItem, setNewItem] = useState({
     name: "",
+    code: "",
     address: "",
     id_number: "",
     phone: "",
     branch_type: "Head Office",
     branch_number: "",
     credit_days: 0,
-    code: "",
     type: "",
   });
   const [addingNew, setAddingNew] = useState(false);
@@ -670,20 +741,30 @@ const Information = () => {
     const { name, value } = e.target;
 
     if (type === "edit") {
-      const updatedItem = { ...editingItem, [name]: value };
+      const updatedItem = { ...editingItem };
 
-      // Reset branch_number if branch_type is changed to Head Office
-      if (name === "branch_type" && value === "Head Office") {
+      if (name === "code" && selectedCategory === "customer") {
+        // จำกัดให้รหัสลูกค้าเป็นตัวอักษร 3 ตัว
+        updatedItem[name] = value.toUpperCase().substring(0, 3);
+      } else if (name === "branch_type" && value === "Head Office") {
+        updatedItem[name] = value;
         updatedItem.branch_number = "";
+      } else {
+        updatedItem[name] = value;
       }
 
       setEditingItem(updatedItem);
     } else {
-      const updatedItem = { ...newItem, [name]: value };
+      const updatedItem = { ...newItem };
 
-      // Reset branch_number if branch_type is changed to Head Office
-      if (name === "branch_type" && value === "Head Office") {
+      if (name === "code" && selectedCategory === "customer") {
+        // จำกัดให้รหัสลูกค้าเป็นตัวอักษร 3 ตัว
+        updatedItem[name] = value.toUpperCase().substring(0, 3);
+      } else if (name === "branch_type" && value === "Head Office") {
+        updatedItem[name] = value;
         updatedItem.branch_number = "";
+      } else {
+        updatedItem[name] = value;
       }
 
       setNewItem(updatedItem);
@@ -697,17 +778,39 @@ const Information = () => {
         return;
       }
 
-      // Validate branch_number when branch_type is "Branch"
+      // ตรวจสอบรหัสลูกค้า
+      if (editingItem.code && editingItem.code.length !== 3) {
+        alert("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+        return;
+      }
+
+      // ตรวจสอบความถูกต้องของข้อมูลสาขา
       if (editingItem.branch_type === "Branch" && !editingItem.branch_number) {
         alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
         return;
       }
 
       try {
+        // ตรวจสอบว่ามีรหัสซ้ำหรือไม่ (ถ้ามีการกรอกรหัส)
+        if (editingItem.code) {
+          const { data: existingCode } = await supabase
+            .from("customers")
+            .select("id")
+            .eq("code", editingItem.code)
+            .eq("active", true)
+            .neq("id", editingItem.id);
+
+          if (existingCode && existingCode.length > 0) {
+            alert("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
+            return;
+          }
+        }
+
         const { error } = await supabase
           .from("customers")
           .update({
             name: editingItem.name,
+            code: editingItem.code || null,
             address: editingItem.address || null,
             id_number: editingItem.id_number || null,
             phone: editingItem.phone || null,
@@ -771,13 +874,13 @@ const Information = () => {
     setEditingItem(null);
     setNewItem({
       name: "",
+      code: "",
       address: "",
       id_number: "",
       phone: "",
       branch_type: "Head Office",
       branch_number: "",
       credit_days: 0,
-      code: "",
       type: "",
     });
   };
@@ -793,15 +896,35 @@ const Information = () => {
         return;
       }
 
-      // Validate branch_number when branch_type is "Branch"
+      // ตรวจสอบรหัสลูกค้า
+      if (newItem.code && newItem.code.length !== 3) {
+        alert("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+        return;
+      }
+
       if (newItem.branch_type === "Branch" && !newItem.branch_number) {
         alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
         return;
       }
 
       try {
+        // ตรวจสอบว่ามีรหัสซ้ำหรือไม่ (ถ้ามีการกรอกรหัส)
+        if (newItem.code) {
+          const { data: existingCode } = await supabase
+            .from("customers")
+            .select("id")
+            .eq("code", newItem.code)
+            .eq("active", true);
+
+          if (existingCode && existingCode.length > 0) {
+            alert("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
+            return;
+          }
+        }
+
         const { error } = await supabase.from("customers").insert({
           name: newItem.name,
+          code: newItem.code || null,
           address: newItem.address || null,
           id_number: newItem.id_number || null,
           phone: newItem.phone || null,
@@ -809,6 +932,7 @@ const Information = () => {
           branch_number:
             newItem.branch_type === "Branch" ? newItem.branch_number : null,
           credit_days: newItem.credit_days || 0,
+          active: true,
         });
 
         if (error) throw error;
@@ -816,6 +940,7 @@ const Information = () => {
         setAddingNew(false);
         setNewItem({
           name: "",
+          code: "",
           address: "",
           id_number: "",
           phone: "",
@@ -895,7 +1020,9 @@ const Information = () => {
     if (searchTerm) {
       filteredData = informationData.filter((item) =>
         selectedCategory === "customer"
-          ? item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ? (item.code &&
+              item.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.address &&
               item.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
             (item.id_number &&
@@ -957,24 +1084,18 @@ const Information = () => {
       
     }
     .table-customer th:nth-child(1), .table-customer td:nth-child(1) {
-      max-width: 200px; /* ชื่อ */
+      max-width: 80px; /* รหัส */
     }
     .table-customer th:nth-child(2), .table-customer td:nth-child(2) {
-      max-width: 200px; /* ที่อยู่ */
+      max-width: 200px; /* ชื่อ */
     }
     .table-customer th:nth-child(3), .table-customer td:nth-child(3) {
-      max-width: 120px; /* เลขผู้เสียภาษี */
-    }
-    .table-customer th:nth-child(4), .table-customer td:nth-child(4) {
       max-width: 100px; /* สาขา */
     }
-    .table-customer th:nth-child(5), .table-customer td:nth-child(5) {
+    .table-customer th:nth-child(4), .table-customer td:nth-child(4) {
       max-width: 80px; /* เครดิต */
     }
-    .table-customer th:nth-child(6), .table-customer td:nth-child(6) {
-      max-width: 120px; /* เบอร์โทรศัพท์ */
-    }
-    .table-customer th:nth-child(7), .table-customer td:nth-child(7) {
+    .table-customer th:nth-child(5), .table-customer td:nth-child(5) {
       max-width: 80px; /* จัดการ */
     }
   `}
