@@ -10,7 +10,7 @@ const PassengerSection = ({
 }) => {
   // เพิ่มประเภทผู้โดยสาร
   const passengerTypes = [
-    { value: "ADL", label: "ผู้ใหญ่ (ADL)", priceField: "adult" },
+    { value: "ADT", label: "ผู้ใหญ่ (ADT)", priceField: "adult" },
     { value: "CHD", label: "เด็ก (CHD)", priceField: "child" },
     { value: "INF", label: "ทารก (INF)", priceField: "infant" },
   ];
@@ -18,7 +18,7 @@ const PassengerSection = ({
   // ฟังก์ชันอัพเดทจำนวนผู้โดยสารแต่ละประเภท
   const updatePassengerCount = (passengersList) => {
     // นับจำนวนผู้โดยสารแต่ละประเภท
-    const adultCount = passengersList.filter((p) => p.type === "ADL").length;
+    const adultCount = passengersList.filter((p) => p.type === "ADT").length;
     const childCount = passengersList.filter((p) => p.type === "CHD").length;
     const infantCount = passengersList.filter((p) => p.type === "INF").length;
 
@@ -60,7 +60,7 @@ const PassengerSection = ({
     const newPassenger = {
       id: passengers.length + 1,
       name: "",
-      type: "ADL", // ค่าเริ่มต้นเป็น ADL
+      type: "ADT", // ค่าเริ่มต้นเป็น ADT
       ticketNumber: "",
       ticketCode: "", // เพิ่มฟิลด์ ticketCode
     };
@@ -152,7 +152,7 @@ const PassengerSection = ({
                     SaleStyles.form.select,
                     "text-center w-full px-0 passenger-type-select"
                   )}
-                  value={passenger.type || "ADL"}
+                  value={passenger.type || "ADT"}
                   onChange={(e) => handleTypeChange(index, e.target.value)}
                 >
                   {passengerTypes.map((type) => (

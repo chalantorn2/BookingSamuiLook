@@ -24,6 +24,7 @@ const SaleTicket = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [globalEditMode, setGlobalEditMode] = useState(true); // เพิ่ม globalEditMode ที่นี่
 
   const [formData, setFormData] = useState({
     customer: "",
@@ -58,7 +59,7 @@ const SaleTicket = () => {
     usePricing();
 
   const [passengers, setPassengers] = useState([
-    { id: 1, name: "", type: "ADL", ticketNumber: "", ticketCode: "" },
+    { id: 1, name: "", type: "ADT", ticketNumber: "", ticketCode: "" },
   ]);
 
   const [routes, setRoutes] = useState([
@@ -77,8 +78,6 @@ const SaleTicket = () => {
   const [extras, setExtras] = useState([
     { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
   ]);
-
-  // แก้ไขส่วนฟอร์มการรวบรวมข้อมูลเพื่อส่งไปบันทึกใน handleSubmit ของ SaleTicket.jsx
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,11 +108,9 @@ const SaleTicket = () => {
     }
 
     try {
-      // ใช้ข้อมูลจาก currentUser แทนการเรียก supabase.auth.getUser()
       let userId = currentUser?.id;
       let userFullname = currentUser?.fullname;
 
-      // กรณีที่ไม่มี currentUser (เช่น ถ้าโค้ดเดิมทำงานได้ดีแล้ว)
       if (!userId) {
         const userData = await supabase.auth.getUser();
         userId = userData.data?.user?.id;
@@ -128,6 +125,7 @@ const SaleTicket = () => {
           address: formData.contactDetails || "",
           id_number: formData.id || "",
           phone: formData.phone || "",
+          credit_days: parseInt(formData.creditDays) || 0, // เพิ่มการส่ง credit_days ไปด้วย
         });
 
         if (newCustomerResult.success) {
@@ -140,6 +138,18 @@ const SaleTicket = () => {
           setLoading(false);
           return;
         }
+      } else if (customerId && formData.creditDays) {
+        // อัพเดทค่า credit_days ในตาราง customers สำหรับลูกค้าที่มีอยู่แล้ว
+        try {
+          await supabase
+            .from("customers")
+            .update({ credit_days: parseInt(formData.creditDays) || 0 })
+            .eq("id", customerId);
+          console.log("Updated customer credit days:", formData.creditDays);
+        } catch (updateError) {
+          console.error("Error updating customer credit days:", updateError);
+          // ไม่ต้อง return เพื่อให้การบันทึก Booking ยังดำเนินต่อไปได้
+        }
       }
 
       const subtotalAmount = calculateSubtotal();
@@ -150,10 +160,9 @@ const SaleTicket = () => {
       const validTicketTypes = ["bsp", "airline", "web", "tg", "b2b", "other"];
       let ticketTypeFixed = formData.ticketType.toLowerCase();
       if (!validTicketTypes.includes(ticketTypeFixed)) {
-        ticketTypeFixed = "bsp"; // ใช้ค่าเริ่มต้นถ้าไม่ตรงกับค่าที่กำหนด
+        ticketTypeFixed = "bsp";
       }
 
-      // กำหนด ticket_type_details ให้รองรับทุกประเภทตั๋ว
       let ticketTypeDetails = null;
       if (ticketTypeFixed === "b2b") {
         ticketTypeDetails = formData.b2bDetails;
@@ -198,7 +207,7 @@ const SaleTicket = () => {
             name: p.name,
             age: p.type,
             ticketNumber: p.ticketNumber,
-            ticket_code: p.ticketCode || "", // เพิ่ม ticket_code จาก supplier code
+            ticket_code: p.ticketCode || "",
           })),
         routes: routes
           .filter((r) => r.origin || r.destination)
@@ -206,7 +215,7 @@ const SaleTicket = () => {
             flight: r.flight,
             flight_number: formData.supplier
               ? `${formData.supplier}${r.flight}`
-              : r.flight, // สร้าง flight_number ที่ถูกต้อง
+              : r.flight,
             rbd: r.rbd,
             date: r.date,
             origin: r.origin,
@@ -292,7 +301,7 @@ const SaleTicket = () => {
     updatePricing("infant", "pax", 0, 0);
 
     setPassengers([
-      { id: 1, name: "", type: "ADL", ticketNumber: "", ticketCode: "" },
+      { id: 1, name: "", type: "ADT", ticketNumber: "", ticketCode: "" },
     ]);
     setRoutes([
       {
@@ -311,6 +320,7 @@ const SaleTicket = () => {
     ]);
     setSelectedCustomer(null);
     setValidationErrors({});
+    setGlobalEditMode(true); // รีเซ็ต globalEditMode
   };
 
   const calculatedSubtotal =
@@ -362,6 +372,8 @@ const SaleTicket = () => {
                   section="customer"
                   selectedCustomer={selectedCustomer}
                   setSelectedCustomer={setSelectedCustomer}
+                  globalEditMode={globalEditMode}
+                  setGlobalEditMode={setGlobalEditMode}
                 />
               </div>
               <div>
@@ -378,9 +390,10 @@ const SaleTicket = () => {
                   setFormData={setFormData}
                   section="price"
                   totalAmount={calculatedTotal}
-                  vatPercent={formData.vatPercent}
                   subtotalAmount={calculatedSubtotal}
                   vatAmount={calculatedVatAmount}
+                  globalEditMode={globalEditMode}
+                  setGlobalEditMode={setGlobalEditMode}
                 />
               </div>
             </div>

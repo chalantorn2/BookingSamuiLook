@@ -30,8 +30,8 @@ export const getCustomers = async (search = "", limit = 10) => {
     // ตัดข้อความสำหรับการแสดงผลในตาราง
     return data.map((customer) => ({
       ...customer,
-      name: truncateText(customer.name, 30), // ตัดชื่อให้ยาวไม่เกิน 30 ตัวอักษร
-      address: truncateText(customer.address, 40), // ตัดที่อยู่ให้ยาวไม่เกิน 40 ตัวอักษร
+      name: truncateText(customer.name), // ตัดชื่อให้ยาวไม่เกิน 30 ตัวอักษร
+      address: truncateText(customer.address), // ตัดที่อยู่ให้ยาวไม่เกิน 40 ตัวอักษร
       full_name: customer.name, // เก็บชื่อเต็มไว้สำหรับ tooltip
       full_address: customer.address, // เก็บที่อยู่เต็มไว้สำหรับ tooltip
     }));
@@ -57,54 +57,29 @@ export const getCustomerById = async (id) => {
   }
 };
 
+// ในไฟล์ customerService.js
 export const createCustomer = async (customerData) => {
   try {
-    // ตรวจสอบว่ามีข้อมูลที่จำเป็นหรือไม่
-    if (!customerData.name) {
-      throw new Error("Customer name is required");
-    }
-
-    // ตรวจสอบความถูกต้องของข้อมูลสาขา
-    if (customerData.branch_type === "Branch" && !customerData.branch_number) {
-      throw new Error("Branch number is required when branch type is Branch");
-    }
-
-    // สร้าง payload ที่สอดคล้องกับโครงสร้างตาราง customers
+    // เตรียมข้อมูลสำหรับบันทึก
     const payload = {
       name: customerData.name,
       address: customerData.address || null,
-      id_number:
-        customerData.idNumber ||
-        customerData.id_number ||
-        customerData.id ||
-        null,
+      id_number: customerData.id_number || null,
       phone: customerData.phone || null,
+      credit_days: customerData.credit_days || 0, // เพิ่มบรรทัดนี้
       branch_type: customerData.branch_type || "Head Office",
-      branch_number:
-        customerData.branch_type === "Branch"
-          ? customerData.branch_number
-          : null,
-      credit_days: customerData.credit_days || 0,
+      branch_number: customerData.branch_number || null,
+      active: true,
     };
 
-    console.log("Creating customer with payload:", payload);
-
-    // ใช้ .insert() โดยตรงแทนการใช้ insertData เพื่อให้มั่นใจว่าใช้งานได้
+    // บันทึกข้อมูลลงในตาราง customers
     const { data, error } = await supabase
       .from("customers")
       .insert(payload)
       .select();
 
-    if (error) {
-      console.error("Database error when creating customer:", error);
-      throw error;
-    }
-
-    if (!data || data.length === 0) {
-      throw new Error("Failed to create customer: No data returned");
-    }
-
-    return { success: true, customerId: data[0].id, customer: data[0] };
+    if (error) throw error;
+    return { success: true, customerId: data[0].id };
   } catch (error) {
     console.error("Error creating customer:", error);
     return { success: false, error: error.message };
