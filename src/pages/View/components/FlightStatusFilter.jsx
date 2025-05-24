@@ -11,7 +11,7 @@ const FlightStatusFilter = ({ filterStatus, setFilterStatus }) => {
   // สถานะทั้งหมดที่สามารถกรองได้
   const statuses = [
     { id: "all", name: "ทั้งหมด", icon: null, color: "gray" },
-    { id: "confirmed", name: "Invoiced", icon: CheckCircle, color: "green" },
+    { id: "invoiced", name: "Invoiced", icon: CheckCircle, color: "green" },
     { id: "not_invoiced", name: "Not Invoiced", icon: Clock, color: "yellow" },
   ];
 

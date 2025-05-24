@@ -134,6 +134,18 @@ export const useFlightTicketsData = ({
       );
     }
 
+    // กรองตามสถานะ
+    if (filterStatus && filterStatus !== "all") {
+      filtered = filtered.filter((ticket) => {
+        if (filterStatus === "invoiced") {
+          return ticket.status === "confirmed" || ticket.status === "invoiced";
+        } else if (filterStatus === "not_invoiced") {
+          return ticket.status !== "confirmed" && ticket.status !== "invoiced";
+        }
+        return true;
+      });
+    }
+
     filtered = sortTickets(filtered, sortField, sortDirection);
     setFilteredTickets(filtered);
   };
@@ -159,6 +171,7 @@ export const useFlightTicketsData = ({
         valueA = a.supplier?.name || "";
         valueB = b.supplier?.name || "";
       } else if (field === "status") {
+        // แปลงสถานะให้เป็นมาตรฐาน
         valueA = a.status === "confirmed" ? "invoiced" : "not_invoiced";
         valueB = b.status === "confirmed" ? "invoiced" : "not_invoiced";
       } else if (field === "created_at") {

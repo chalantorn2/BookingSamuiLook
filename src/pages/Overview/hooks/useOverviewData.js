@@ -1,3 +1,4 @@
+// src/pages/Overview/hooks/useOverviewData.js
 import { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabase";
 import { toThaiTimeZone } from "../../../utils/helpers";
@@ -14,10 +15,11 @@ export const serviceTypes = [
   { id: "other", name: "Other Services", icon: "AlertCircle" },
 ];
 
+// อัปเดต statusMap ให้แสดงเฉพาะ Not Invoiced และ Invoiced
 export const statusMap = {
   not_invoiced: { label: "Not Invoiced", color: "yellow" },
   invoiced: { label: "Invoiced", color: "green" },
-  cancelled: { label: "ยกเลิก", color: "red" },
+  // ลบ cancelled และ pending ออก
 };
 
 export const useOverviewData = ({
@@ -38,7 +40,7 @@ export const useOverviewData = ({
     totalAmount: 0,
     not_invoiced: 0,
     invoiced: 0,
-    cancelled: 0,
+    // ลบ cancelled และ pending
     flight: 0,
     boat: 0,
     bus: 0,
@@ -123,14 +125,24 @@ export const useOverviewData = ({
           new Date(item.created_at).getTime() + 7 * 60 * 60 * 1000
         );
 
+        // ปรับสถานะให้เป็น not_invoiced หรือ invoiced เท่านั้น
+        let normalizedStatus = "not_invoiced"; // ค่าเริ่มต้น
+
+        if (item.status === "confirmed" || item.status === "invoiced") {
+          normalizedStatus = "invoiced";
+        } else {
+          // สำหรับ pending, draft, หรือสถานะอื่นๆ ให้เป็น not_invoiced
+          normalizedStatus = "not_invoiced";
+        }
+
         return {
           id: item.id,
           referenceNumber: item.reference_number,
           date: issueDate || timestamp,
           customer: item.customer?.name || "N/A",
           supplier: item.supplier?.name || "N/A",
-          status: item.status || "not_invoiced",
-          createdBy: item.user?.fullname || "System", // ใช้ fullname จากตาราง users
+          status: normalizedStatus, // ใช้สถานะที่ normalize แล้ว
+          createdBy: item.user?.fullname || "System",
           timestamp: timestamp,
           serviceType: serviceType,
           amount: amount,
@@ -184,7 +196,7 @@ export const useOverviewData = ({
         totalAmount: 0,
         not_invoiced: 0,
         invoiced: 0,
-        cancelled: 0,
+        // ลบ cancelled และ pending
         flight: 0,
         boat: 0,
         bus: 0,
@@ -201,9 +213,9 @@ export const useOverviewData = ({
         summary.total++;
         summary.totalAmount += parseFloat(item.amount || 0);
 
+        // นับเฉพาะสถานะ not_invoiced และ invoiced
         if (item.status === "not_invoiced") summary.not_invoiced++;
         else if (item.status === "invoiced") summary.invoiced++;
-        else if (item.status === "cancelled") summary.cancelled++;
 
         if (
           item.serviceType &&
@@ -219,7 +231,7 @@ export const useOverviewData = ({
         totalAmount: 0,
         not_invoiced: 0,
         invoiced: 0,
-        cancelled: 0,
+        // ลบ cancelled และ pending
         flight: 0,
         boat: 0,
         bus: 0,

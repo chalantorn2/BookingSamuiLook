@@ -1,3 +1,4 @@
+// src/pages/Overview/components/StatusBadges.jsx
 import React from "react";
 import {
   Activity,
@@ -10,7 +11,6 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
-  XCircle,
   Clock,
 } from "lucide-react";
 import { statusMap, serviceTypes } from "../hooks/useOverviewData";
@@ -31,10 +31,8 @@ export const StatusBadge = ({ status }) => {
         return <CheckCircle size={14} className="mr-1" />;
       case "not_invoiced":
         return <Clock size={14} className="mr-1" />;
-      case "cancelled":
-        return <XCircle size={14} className="mr-1" />;
       default:
-        return null;
+        return <Clock size={14} className="mr-1" />; // Default เป็น Clock สำหรับ not_invoiced
     }
   };
 

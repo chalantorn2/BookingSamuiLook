@@ -106,8 +106,21 @@ const FlightTicketsView = () => {
     }
   };
 
+  // ในไฟล์ FlightTicketsView.jsx ให้แก้ไขฟังก์ชัน getStatusBadge
+
   const getStatusBadge = (status) => {
-    const isInvoiced = status === "confirmed";
+    // แปลงสถานะให้เป็น invoiced หรือ not_invoiced
+    let normalizedStatus = "not_invoiced";
+
+    if (status === "confirmed" || status === "invoiced") {
+      normalizedStatus = "invoiced";
+    } else {
+      // สำหรับ pending, draft, หรือสถานะอื่นๆ ให้เป็น not_invoiced
+      normalizedStatus = "not_invoiced";
+    }
+
+    const isInvoiced = normalizedStatus === "invoiced";
+
     return (
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${

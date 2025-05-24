@@ -33,9 +33,11 @@ export const getSuppliers = async (
       );
     }
 
-    // ค้นหาตามชื่อหรือรหัส
+    // ค้นหาตามชื่อ, รหัส, หรือ numeric_code
     if (search) {
-      query = query.or(`code.ilike.%${search}%,name.ilike.%${search}%`);
+      query = query.or(
+        `code.ilike.%${search}%,name.ilike.%${search}%,numeric_code.ilike.%${search}%`
+      );
     }
 
     // จำกัดจำนวนผลลัพธ์
@@ -90,6 +92,7 @@ export const createSupplier = async (supplierData) => {
       code: supplierData.code,
       name: supplierData.name,
       type: supplierData.type || "Other",
+      numeric_code: supplierData.numeric_code || null,
       active: true,
     };
 

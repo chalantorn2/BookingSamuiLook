@@ -38,15 +38,15 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
   };
 
   // ฟังก์ชันสำหรับจัดการการย้าย focus
+  // ในฟังก์ชัน handleInputChange
   const handleInputChange = (e, index, field, maxLength, nextField) => {
     const value = e.target.value;
     const updatedRoutes = [...routes];
 
     // อัปเดตค่าใน state
     if (field === "flight") {
-      updatedRoutes[index].flight = supplierCode
-        ? value.replace(supplierCode, "").toUpperCase()
-        : value.toUpperCase();
+      // ยกเลิกการเชื่อมโยงกับ supplierCode
+      updatedRoutes[index].flight = value.toUpperCase();
     } else if (field === "rbd") {
       updatedRoutes[index].rbd = value.toUpperCase().substring(0, 1);
     } else if (field === "departure" || field === "arrival") {
@@ -107,11 +107,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                 <input
                   type="text"
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500 text-transform uppercase"
-                  value={
-                    supplierCode
-                      ? `${supplierCode}${route.flight || ""}`
-                      : route.flight || ""
-                  }
+                  value={route.flight || ""}
                   onChange={(e) =>
                     handleInputChange(e, index, "flight", 6, "rbd")
                   }

@@ -38,6 +38,7 @@ const SaleTicket = () => {
     salesName: "",
     supplier: "",
     supplierName: "",
+    supplierNumericCode: "", // เพิ่มฟิลด์นี้
     ticketType: "bsp",
     paymentMethod: "",
     companyPaymentDetails: "",
@@ -448,11 +449,7 @@ const SaleTicket = () => {
                 </h2>
               </div>
               <div className="grid grid-cols-10 gap-2">
-                <RouteSection
-                  routes={routes}
-                  setRoutes={setRoutes}
-                  supplierCode={formData.supplier}
-                />
+                <RouteSection routes={routes} setRoutes={setRoutes} />
                 <TicketTypeSection
                   formData={formData}
                   setFormData={setFormData}
