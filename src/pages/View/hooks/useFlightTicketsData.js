@@ -7,8 +7,8 @@ export const useFlightTicketsData = ({
   endDate,
   searchTerm = "",
   filterStatus = "all",
-  sortField = "created_at", // เปลี่ยนค่าเริ่มต้นเป็น created_at
-  sortDirection = "desc", // เรียงจากล่าสุดไปเก่าสุด
+  sortField = "created_at",
+  sortDirection = "desc",
 }) => {
   const [loading, setLoading] = useState(true);
   const [allTickets, setAllTickets] = useState([]);
@@ -35,8 +35,10 @@ export const useFlightTicketsData = ({
         payment_status,
         created_at,
         updated_at,
-        customer:customer_id(name),
-        supplier:information_id(name)
+        po_number,
+        po_generated_at,
+        customer:customer_id(name, code),
+        supplier:information_id(name, code)
       `
         )
         .gte("created_at", start.toISOString())
@@ -59,7 +61,7 @@ export const useFlightTicketsData = ({
       // ปรับ created_at ให้อยู่ใน timezone +07:00
       const adjustedTickets = tickets.map((ticket) => {
         const createdAt = new Date(ticket.created_at);
-        createdAt.setHours(createdAt.getHours() + 7); // ปรับเป็น +07:00
+        createdAt.setHours(createdAt.getHours() + 7);
         return {
           ...ticket,
           created_at: createdAt.toISOString(),
@@ -81,17 +83,90 @@ export const useFlightTicketsData = ({
         );
       }
 
+      // ดึงข้อมูลผู้โดยสาร
+      const { data: passengers, error: passengersError } = await supabase
+        .from("tickets_passengers")
+        .select("bookings_ticket_id, passenger_name")
+        .in("bookings_ticket_id", ticketIds);
+
+      if (passengersError) {
+        console.error("Error fetching passengers:", passengersError);
+      }
+
+      // ดึงข้อมูลเส้นทาง
+      const { data: routes, error: routesError } = await supabase
+        .from("tickets_routes")
+        .select("bookings_ticket_id, origin, destination")
+        .in("bookings_ticket_id", ticketIds)
+        .order("id");
+
+      if (routesError) {
+        console.error("Error fetching routes:", routesError);
+      }
+
+      // สร้าง Maps สำหรับจับคู่ข้อมูล
       const additionalInfoMap = new Map(
         additionalInfo?.map((info) => [info.bookings_ticket_id, info.code]) ||
           []
       );
 
-      const processedData = adjustedTickets.map((ticket) => ({
-        ...ticket,
-        code: additionalInfoMap.get(ticket.id) || null,
-      }));
+      const passengersMap = new Map();
+      passengers?.forEach((passenger) => {
+        if (!passengersMap.has(passenger.bookings_ticket_id)) {
+          passengersMap.set(passenger.bookings_ticket_id, []);
+        }
+        passengersMap.get(passenger.bookings_ticket_id).push(passenger);
+      });
 
-      console.log("Processed tickets with code:", processedData);
+      const routesMap = new Map();
+      routes?.forEach((route) => {
+        if (!routesMap.has(route.bookings_ticket_id)) {
+          routesMap.set(route.bookings_ticket_id, []);
+        }
+        routesMap.get(route.bookings_ticket_id).push(route);
+      });
+
+      // รวมข้อมูลทั้งหมด
+      const processedData = adjustedTickets.map((ticket) => {
+        const ticketPassengers = passengersMap.get(ticket.id) || [];
+        const ticketRoutes = routesMap.get(ticket.id) || [];
+
+        // สร้างชื่อผู้โดยสาร
+        let passengersDisplay = "";
+        if (ticketPassengers.length > 0) {
+          const firstName = ticketPassengers[0].passenger_name || "Unknown";
+          if (ticketPassengers.length === 1) {
+            passengersDisplay = firstName;
+          } else {
+            const additionalCount = ticketPassengers.length - 1;
+            passengersDisplay = `${firstName}...+${additionalCount}`;
+          }
+        }
+
+        // สร้างเส้นทาง (แสดงเฉพาะ 2 เส้นทางแรก)
+        let routingDisplay = "";
+        if (ticketRoutes.length > 0) {
+          if (ticketRoutes.length === 1) {
+            routingDisplay = ticketRoutes[0].origin || "";
+          } else {
+            const firstRoute = ticketRoutes[0];
+            const secondRoute = ticketRoutes[1];
+            routingDisplay = `${firstRoute.origin || ""}-${
+              secondRoute.origin || ""
+            }`;
+          }
+        }
+
+        return {
+          ...ticket,
+          code: additionalInfoMap.get(ticket.id) || null,
+          passengersDisplay,
+          routingDisplay,
+          passengersCount: ticketPassengers.length,
+        };
+      });
+
+      console.log("Processed tickets with additional data:", processedData);
 
       setAllTickets(processedData);
       filterData(processedData, searchTerm);
@@ -122,9 +197,19 @@ export const useFlightTicketsData = ({
             ticket.reference_number.toLowerCase().includes(searchLower)) ||
           (ticket.customer?.name &&
             ticket.customer.name.toLowerCase().includes(searchLower)) ||
+          (ticket.customer?.code &&
+            ticket.customer.code.toLowerCase().includes(searchLower)) ||
           (ticket.supplier?.name &&
             ticket.supplier.name.toLowerCase().includes(searchLower)) ||
+          (ticket.supplier?.code &&
+            ticket.supplier.code.toLowerCase().includes(searchLower)) ||
           (ticket.code && ticket.code.toLowerCase().includes(searchLower)) ||
+          (ticket.passengersDisplay &&
+            ticket.passengersDisplay.toLowerCase().includes(searchLower)) ||
+          (ticket.routingDisplay &&
+            ticket.routingDisplay.toLowerCase().includes(searchLower)) ||
+          (ticket.po_number &&
+            ticket.po_number.toLowerCase().includes(searchLower)) ||
           (ticket.status &&
             (ticket.status.toLowerCase().includes(searchLower) ||
               (ticket.status === "confirmed" &&
@@ -155,8 +240,8 @@ export const useFlightTicketsData = ({
 
     const fieldMap = {
       id: "reference_number",
-      customer: "customer.name",
-      supplier: "supplier.name",
+      customer: "customer.code", // เปลี่ยนจาก name เป็น code
+      supplier: "supplier.code", // เปลี่ยนจาก name เป็น code
       status: "status",
       created_at: "created_at",
     };
@@ -165,11 +250,11 @@ export const useFlightTicketsData = ({
       let valueA, valueB;
 
       if (field === "customer") {
-        valueA = a.customer?.name || "";
-        valueB = b.customer?.name || "";
+        valueA = a.customer?.code || a.customer?.name || "";
+        valueB = b.customer?.code || b.customer?.name || "";
       } else if (field === "supplier") {
-        valueA = a.supplier?.name || "";
-        valueB = b.supplier?.name || "";
+        valueA = a.supplier?.code || a.supplier?.name || "";
+        valueB = b.supplier?.code || b.supplier?.name || "";
       } else if (field === "status") {
         // แปลงสถานะให้เป็นมาตรฐาน
         valueA = a.status === "confirmed" ? "invoiced" : "not_invoiced";

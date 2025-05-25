@@ -3,10 +3,15 @@ import { supabase } from "./supabase";
 /**
  * สร้างเลขอ้างอิงสำหรับเอกสาร
  * @param {string} table - ชื่อตารางในฐานข้อมูล
- * @param {string} prefix - คำนำหน้าเลขอ้างอิง (เช่น FT สำหรับ Flight Ticket)
+ * @param {string} prefix - คำนำหน้าเลขอ้างอิง (เช่น FT สำหรับ Flight Ticket, PO สำหรับ Purchase Order)
+ * @param {string} column - ชื่อคอลัมน์ที่เก็บเลขอ้างอิง (default: reference_number)
  * @returns {Promise<string>} - เลขอ้างอิงที่สร้างขึ้น
  */
-export const generateReferenceNumber = async (table, prefix = "FT") => {
+export const generateReferenceNumber = async (
+  table,
+  prefix = "FT",
+  column = "reference_number"
+) => {
   // สร้างส่วนของปี (YY)
   const now = new Date();
   const year = now.getFullYear().toString().slice(-2); // ใช้เฉพาะ 2 หลักสุดท้ายของปี
@@ -15,9 +20,9 @@ export const generateReferenceNumber = async (table, prefix = "FT") => {
     // ดึงข้อมูลเลขอ้างอิงล่าสุดจากฐานข้อมูล
     const { data, error } = await supabase
       .from(table)
-      .select("reference_number")
-      .ilike("reference_number", `${prefix}-%`)
-      .order("reference_number", { ascending: false })
+      .select(column)
+      .ilike(column, `${prefix}-%`)
+      .order(column, { ascending: false })
       .limit(1);
 
     if (error) throw error;
@@ -27,7 +32,7 @@ export const generateReferenceNumber = async (table, prefix = "FT") => {
 
     if (data && data.length > 0) {
       // แยกส่วนประกอบของเลขอ้างอิงล่าสุด
-      const lastRef = data[0].reference_number;
+      const lastRef = data[0][column];
       const parts = lastRef.split("-");
 
       if (parts.length >= 4) {
@@ -63,6 +68,14 @@ export const generateReferenceNumber = async (table, prefix = "FT") => {
     const randomPart = Math.floor(1000 + Math.random() * 9000);
     return `${prefix}-${year}-1-${String(randomPart).padStart(4, "0")}`;
   }
+};
+
+/**
+ * สร้าง PO Number สำหรับ bookings_ticket
+ * @returns {Promise<string>} - PO Number ที่สร้างขึ้น
+ */
+export const generatePONumber = async () => {
+  return await generateReferenceNumber("bookings_ticket", "PO", "po_number");
 };
 
 /**

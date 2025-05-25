@@ -10,6 +10,8 @@ import {
   ChevronsUpDown,
   User,
   Plane,
+  Users,
+  MapPin,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import DateRangeSelector from "./DateRangeSelector";
@@ -49,8 +51,8 @@ const FlightTicketsView = () => {
   const [endDate, setEndDate] = useState(dateRange.end);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [sortField, setSortField] = useState("created_at"); // เปลี่ยนค่าเริ่มต้นเป็น created_at
-  const [sortDirection, setSortDirection] = useState("desc"); // เรียงจากล่าสุดไปเก่าสุด
+  const [sortField, setSortField] = useState("created_at");
+  const [sortDirection, setSortDirection] = useState("desc");
   const [filterStatus, setFilterStatus] = useState("all");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -106,32 +108,23 @@ const FlightTicketsView = () => {
     }
   };
 
-  // ในไฟล์ FlightTicketsView.jsx ให้แก้ไขฟังก์ชัน getStatusBadge
-
-  const getStatusBadge = (status) => {
-    // แปลงสถานะให้เป็น invoiced หรือ not_invoiced
-    let normalizedStatus = "not_invoiced";
-
-    if (status === "confirmed" || status === "invoiced") {
-      normalizedStatus = "invoiced";
+  // ฟังก์ชันแสดงสถานะ - แสดง PO Number หรือ Not Invoiced
+  const getStatusDisplay = (ticket) => {
+    if (ticket.po_number) {
+      return (
+        <div className="flex items-center">
+          <span className="text-sm font-medium text-gray-900">
+            {ticket.po_number}
+          </span>
+        </div>
+      );
     } else {
-      // สำหรับ pending, draft, หรือสถานะอื่นๆ ให้เป็น not_invoiced
-      normalizedStatus = "not_invoiced";
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          Not Invoiced
+        </span>
+      );
     }
-
-    const isInvoiced = normalizedStatus === "invoiced";
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          isInvoiced
-            ? "bg-green-100 text-green-800"
-            : "bg-yellow-100 text-yellow-800"
-        }`}
-      >
-        {isInvoiced ? "Invoiced" : "Not Invoiced"}
-      </span>
-    );
   };
 
   return (
@@ -196,7 +189,7 @@ const FlightTicketsView = () => {
                     onClick={() => handleSort("customer")}
                   >
                     <div className="flex items-center">
-                      ชื่อลูกค้า
+                      Customer
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -206,9 +199,21 @@ const FlightTicketsView = () => {
                     onClick={() => handleSort("supplier")}
                   >
                     <div className="flex items-center">
-                      ซัพพลายเออร์
+                      Supplier
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Pax's Name
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Routing
                   </th>
                   <th
                     scope="col"
@@ -222,7 +227,7 @@ const FlightTicketsView = () => {
                     onClick={() => handleSort("status")}
                   >
                     <div className="flex items-center">
-                      สถานะ
+                      Status
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
@@ -240,7 +245,7 @@ const FlightTicketsView = () => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    ดำเนินการ
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -248,7 +253,7 @@ const FlightTicketsView = () => {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="9"
                       className="px-6 py-4 text-center text-gray-500"
                     >
                       <div className="flex justify-center">
@@ -278,7 +283,7 @@ const FlightTicketsView = () => {
                 ) : currentTickets.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="9"
                       className="px-6 py-4 text-center text-gray-500"
                     >
                       ไม่พบข้อมูลตามเงื่อนไขที่กำหนด
@@ -297,7 +302,9 @@ const FlightTicketsView = () => {
                         <div className="flex items-center">
                           <User size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
-                            {ticket.customer?.name || "-"}
+                            {ticket.customer?.code ||
+                              ticket.customer?.name ||
+                              "-"}
                           </div>
                         </div>
                       </td>
@@ -305,7 +312,25 @@ const FlightTicketsView = () => {
                         <div className="flex items-center">
                           <Plane size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
-                            {ticket.supplier?.name || "-"}
+                            {ticket.supplier?.code ||
+                              ticket.supplier?.name ||
+                              "-"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Users size={16} className="text-gray-400 mr-2" />
+                          <div className="text-sm font-medium text-gray-900">
+                            {ticket.passengersDisplay || "-"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <MapPin size={16} className="text-gray-400 mr-2" />
+                          <div className="text-sm font-medium text-gray-900">
+                            {ticket.routingDisplay || "-"}
                           </div>
                         </div>
                       </td>
@@ -313,7 +338,7 @@ const FlightTicketsView = () => {
                         {ticket.code || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(ticket.status)}
+                        {getStatusDisplay(ticket)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDateTime(ticket.created_at)}
@@ -323,14 +348,14 @@ const FlightTicketsView = () => {
                           <button
                             className="text-blue-600 hover:text-blue-900"
                             onClick={() => openTicketDetail(ticket.id)}
-                            title="ดูรายละเอียด"
+                            title="View Details"
                           >
                             <Eye size={18} />
                           </button>
                           <button
                             className="text-yellow-600 hover:text-yellow-900"
                             onClick={() => openTicketEditDetail(ticket.id)}
-                            title="แก้ไข"
+                            title="Edit"
                           >
                             <Edit2 size={18} />
                           </button>
@@ -444,6 +469,7 @@ const FlightTicketsView = () => {
         <FlightTicketDetail
           ticketId={selectedTicket}
           onClose={closeTicketDetail}
+          onPOGenerated={fetchFlightTickets} // เพิ่ม callback สำหรับรีเฟรชข้อมูล
         />
       )}
       {selectedTicketForEdit && (

@@ -1,7 +1,70 @@
 // src/services/ticketService.js
 import { supabase } from "./supabase";
-import { generateReferenceNumber } from "./referencesService";
+import { generateReferenceNumber, generatePONumber } from "./referencesService";
 import { toThaiTimeZone } from "../utils/helpers"; // เพิ่มการ import
+
+/**
+ * สร้างและบันทึก PO Number สำหรับ booking ticket
+ * @param {number} ticketId - ID ของ booking ticket
+ * @returns {Promise<Object>} - ผลลัพธ์การสร้าง PO
+ */
+export const generatePOForTicket = async (ticketId) => {
+  try {
+    // ตรวจสอบว่า ticket นี้มี PO Number แล้วหรือยัง
+    const { data: existingTicket, error: checkError } = await supabase
+      .from("bookings_ticket")
+      .select("po_number, po_generated_at")
+      .eq("id", ticketId)
+      .single();
+
+    if (checkError) throw checkError;
+
+    // ถ้ามี PO Number แล้ว ให้ return PO Number เดิม
+    if (existingTicket.po_number) {
+      return {
+        success: true,
+        poNumber: existingTicket.po_number,
+        isNew: false,
+        message: "PO Number already exists",
+      };
+    }
+
+    // สร้าง PO Number ใหม่
+    const poNumber = await generatePONumber();
+
+    if (!poNumber) {
+      throw new Error("ไม่สามารถสร้าง PO Number ได้");
+    }
+
+    // บันทึก PO Number ลงในฐานข้อมูล
+    const now = new Date();
+    const thaiTime = toThaiTimeZone(now, false);
+
+    const { error: updateError } = await supabase
+      .from("bookings_ticket")
+      .update({
+        po_number: poNumber,
+        po_generated_at: thaiTime,
+      })
+      .eq("id", ticketId);
+
+    if (updateError) throw updateError;
+
+    return {
+      success: true,
+      poNumber: poNumber,
+      isNew: true,
+      message: "PO Number generated successfully",
+    };
+  } catch (error) {
+    console.error("Error generating PO Number:", error);
+    return {
+      success: false,
+      error: error.message,
+      poNumber: null,
+    };
+  }
+};
 
 /**
  * สร้าง Flight Ticket ใหม่
@@ -20,7 +83,22 @@ export const createFlightTicket = async (ticketData) => {
       throw new Error("ไม่สามารถสร้างเลขอ้างอิงได้");
     }
 
-    console.log("Generated reference number:", referenceNumber);
+    // คำนวณยอดรวมที่ถูกต้อง
+    const pricingSubtotal = Object.values(ticketData.pricing).reduce(
+      (sum, item) => sum + parseFloat(item.total || 0),
+      0
+    );
+
+    const extrasSubtotal =
+      ticketData.extras?.reduce(
+        (sum, item) => sum + parseFloat(item.total_amount || 0),
+        0
+      ) || 0;
+
+    const subtotalBeforeVat = pricingSubtotal + extrasSubtotal;
+    const vatAmount =
+      (subtotalBeforeVat * parseFloat(ticketData.vatPercent || 0)) / 100;
+    const grandTotal = subtotalBeforeVat + vatAmount;
 
     // 1. บันทึกข้อมูลหลักลงในตาราง bookings_ticket
     const { data: bookingTicket, error: bookingTicketError } = await supabase
@@ -31,8 +109,10 @@ export const createFlightTicket = async (ticketData) => {
         information_id: ticketData.supplierId,
         status: ticketData.status || "pending",
         payment_status: ticketData.paymentStatus || "unpaid",
-        created_by: ticketData.createdBy, // บันทึก user ID
-        updated_by: ticketData.updatedBy, // บันทึก user ID
+        created_by: ticketData.createdBy,
+        updated_by: ticketData.updatedBy,
+        po_number: null,
+        po_generated_at: null,
       })
       .select("id, reference_number")
       .single();
@@ -51,12 +131,18 @@ export const createFlightTicket = async (ticketData) => {
       dueDate = toThaiTimeZone(new Date(dueDate), false);
     }
 
-    // 2. บันทึกข้อมูลรายละเอียดตั๋ว
+    // 2. บันทึกข้อมูลรายละเอียดตั๋ว (แก้ไขให้รวม extras)
     const { data: ticketDetail, error: ticketDetailError } = await supabase
       .from("tickets_detail")
       .insert({
         bookings_ticket_id: bookingTicket.id,
-        total_price: ticketData.totalAmount,
+        total_price: grandTotal, // ยอดรวมสุดท้าย
+        pricing_total: pricingSubtotal, // ยอดรวมจาก pricing
+        extras_total: extrasSubtotal, // ยอดรวมจาก extras
+        subtotal_before_vat: subtotalBeforeVat, // ยอดรวมก่อน VAT
+        vat_percent: parseFloat(ticketData.vatPercent || 0),
+        vat_amount: vatAmount, // จำนวน VAT
+        grand_total: grandTotal, // ยอดรวมสุดท้าย
         issue_date: bookingDate,
         due_date: dueDate,
         credit_days: ticketData.creditDays,
@@ -65,11 +151,6 @@ export const createFlightTicket = async (ticketData) => {
       .single();
 
     if (ticketDetailError) throw ticketDetailError;
-
-    console.log(
-      "About to insert into ticket_additional_info with ticket_type:",
-      ticketData.ticketType
-    );
 
     // 3. บันทึกข้อมูลเพิ่มเติมของตั๋ว
     const { data: additionalInfoData, error: additionalInfoError } =
@@ -90,7 +171,7 @@ export const createFlightTicket = async (ticketData) => {
 
     if (additionalInfoError) throw additionalInfoError;
 
-    // 4. บันทึกข้อมูลผู้โดยสาร (อาจมีหลายคน)
+    // 4. บันทึกข้อมูลผู้โดยสาร
     const passengersToInsert = ticketData.passengers.map((passenger) => ({
       bookings_ticket_id: bookingTicket.id,
       passenger_name: passenger.name,
@@ -107,7 +188,7 @@ export const createFlightTicket = async (ticketData) => {
       if (passengersError) throw passengersError;
     }
 
-    // 5. บันทึกข้อมูลราคา
+    // 5. บันทึกข้อมูลราคา (ไม่รวม VAT ในตารางนี้)
     const { data: pricingData, error: pricingError } = await supabase
       .from("tickets_pricing")
       .insert({
@@ -124,17 +205,17 @@ export const createFlightTicket = async (ticketData) => {
         infant_sale_price: ticketData.pricing.infant?.sale || 0,
         infant_pax: ticketData.pricing.infant?.pax || 0,
         infant_total: ticketData.pricing.infant?.total || 0,
-        subtotal_amount: ticketData.subtotalAmount,
-        vat_percent: ticketData.vatPercent,
-        vat_amount: ticketData.vatAmount,
-        total_amount: ticketData.totalAmount,
+        subtotal_amount: pricingSubtotal, // เฉพาะยอดรวม pricing
+        vat_percent: parseFloat(ticketData.vatPercent || 0),
+        vat_amount: vatAmount,
+        total_amount: pricingSubtotal, // เฉพาะยอดรวม pricing (ไม่รวม extras)
       })
       .select("id")
       .single();
 
     if (pricingError) throw pricingError;
 
-    // 6. บันทึกข้อมูลเส้นทาง (อาจมีหลายเส้นทาง)
+    // 6. บันทึกข้อมูลเส้นทาง
     const routesToInsert = ticketData.routes.map((route) => ({
       bookings_ticket_id: bookingTicket.id,
       flight_number: route.flight_number || route.flight,
@@ -154,7 +235,7 @@ export const createFlightTicket = async (ticketData) => {
       if (routesError) throw routesError;
     }
 
-    // 7. บันทึกข้อมูลรายการเพิ่มเติม (extras) ถ้ามี
+    // 7. บันทึกข้อมูลรายการเพิ่มเติม (extras)
     if (ticketData.extras && ticketData.extras.length > 0) {
       const extrasToInsert = ticketData.extras
         .filter((extra) => extra.description && extra.description.trim())
@@ -176,10 +257,24 @@ export const createFlightTicket = async (ticketData) => {
       }
     }
 
+    // 8. เรียก stored procedure เพื่อคำนวณยอดรวมใหม่ (ถ้ามี)
+    try {
+      await supabase.rpc("update_ticket_totals", {
+        ticket_id: bookingTicket.id,
+      });
+    } catch (procError) {
+      console.warn(
+        "Stored procedure not available, totals calculated manually"
+      );
+    }
+
     return {
       success: true,
       referenceNumber: bookingTicket.reference_number,
       ticketId: bookingTicket.id,
+      grandTotal: grandTotal,
+      subtotal: subtotalBeforeVat,
+      vatAmount: vatAmount,
     };
   } catch (error) {
     console.error("Error creating flight ticket:", error);
