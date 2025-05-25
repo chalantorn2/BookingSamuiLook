@@ -22,8 +22,9 @@ import {
   Phone,
   DollarSign,
   CheckCircle,
+  X,
+  Package,
 } from "lucide-react";
-import { formatCurrency } from "../../../utils/helpers";
 import PrintConfirmModal from "./PrintConfirmModal";
 
 const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
@@ -55,8 +56,8 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
           cancel_reason,
           po_number,
           po_generated_at,
-          customer:customer_id(name, address, id_number, phone, credit_days, branch_type, branch_number),
-          supplier:information_id(name, code)
+          customer:customer_id(name, address, id_number, phone, credit_days, branch_type, branch_number, code),
+          supplier:information_id(name, code, type)
         `
           )
           .eq("id", ticketId)
@@ -253,6 +254,15 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   };
 
+  const formatDate = (dateTime) => {
+    if (!dateTime || isNaN(new Date(dateTime).getTime())) return "-";
+    const dateObj = new Date(dateTime);
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const formatRouteDate = (dateTime) => {
     if (!dateTime || isNaN(new Date(dateTime).getTime())) return "-";
     const dateObj = new Date(dateTime);
@@ -275,31 +285,62 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     return `${day}${month}`;
   };
 
+  const formatCurrency = (amount) => {
+    if (amount === null || amount === undefined || isNaN(amount)) return "0";
+    return Math.floor(parseFloat(amount)).toLocaleString("th-TH");
+  };
+
   const getStatusBadge = (status, poNumber) => {
     if (poNumber) {
       return (
         <div className="flex items-center">
-          <CheckCircle className="text-green-500 mr-1" size={16} />
-          <span className="text-sm font-medium text-gray-900">{poNumber}</span>
+          <CheckCircle className="text-green-500 mr-2" size={18} />
+          <div>
+            <div className="text-base font-medium text-gray-900">
+              {poNumber}
+            </div>
+            <div className="text-sm text-gray-600">
+              {formatDateTime(ticketData.po_generated_at)}
+            </div>
+          </div>
         </div>
       );
     } else {
       return (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
           Not Invoiced
         </span>
       );
     }
   };
 
+  const getTicketTypeDisplay = (ticketType, ticketTypeDetails) => {
+    const typeMap = {
+      bsp: "BSP",
+      airline: "Airline Direct",
+      web: "Web Booking",
+      tg: "Thai Airways",
+      b2b: "B2B",
+      other: "Other",
+    };
+
+    const displayType = typeMap[ticketType] || ticketType || "-";
+
+    if (ticketTypeDetails && ticketTypeDetails.trim()) {
+      return `${displayType} (${ticketTypeDetails})`;
+    }
+
+    return displayType;
+  };
+
   if (loading) {
     return (
-      <div className="fixed inset-0 modal-backdrop bg-black  flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+      <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl">
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
-          <p className="text-center mt-4">กำลังโหลดข้อมูล...</p>
+          <p className="text-center mt-4 text-base">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
     );
@@ -308,15 +349,15 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   if (error) {
     return (
       <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl">
           <div className="text-center text-red-500 mb-4">
             <AlertTriangle className="h-12 w-12 mx-auto" />
           </div>
-          <p className="text-center text-red-600">{error}</p>
-          <div className="flex justify-center mt-4">
+          <p className="text-center text-red-600 text-base">{error}</p>
+          <div className="flex justify-center mt-6">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-base"
             >
               ปิด
             </button>
@@ -331,131 +372,144 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   return (
     <>
       <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="bg-blue-600 p-3 text-white flex justify-between items-center">
-            <h1 className="text-lg font-bold">
+          <div className="bg-blue-600 px-6 py-4 text-white flex justify-between items-center">
+            <h1 className="text-xl font-bold">
               รายละเอียดตั๋วเครื่องบิน:{" "}
               {ticketData.reference_number || `#${ticketData.id}`}
             </h1>
-            <div className="flex space-x-1">
+            <div className="flex items-center space-x-2">
               <button
-                className="p-1 hover:bg-blue-700 rounded-full"
+                className="p-2 hover:bg-blue-700 rounded-md transition-colors"
                 title="พิมพ์"
                 onClick={handlePrintClick}
               >
-                <Printer size={16} />
+                <Printer size={20} />
               </button>
+
               <button
-                className="p-1 hover:bg-blue-700 rounded-full"
-                title="ดาวน์โหลด PDF"
-              >
-                <Download size={16} />
-              </button>
-              <button
-                className="p-1 hover:bg-blue-700 rounded-full"
+                className="p-2 hover:bg-blue-700 rounded-md transition-colors"
                 title="ส่งอีเมล"
               >
-                <Mail size={16} />
+                <Mail size={20} />
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-blue-700 rounded-md transition-colors"
+                title="ปิด"
+              >
+                <X size={20} />
               </button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Section: Customer & Dates */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-3 rounded-md">
-                <h2 className="text-base font-semibold mb-2 flex items-center">
-                  <User className="text-blue-500 mr-1" size={18} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h2 className="text-lg font-semibold mb-3 flex items-center">
+                  <User className="text-blue-500 mr-2" size={20} />
                   ข้อมูลลูกค้า
                 </h2>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-start">
-                    <User className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium">
-                        {ticketData.customer?.name || "-"}
+                <div className="space-y-3">
+                  {/* แถวที่ 1: ชื่อลูกค้า | รหัสลูกค้า | ที่อยู่ */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="flex items-start">
+                      <User className="text-gray-500 mr-2 mt-1" size={16} />
+                      <div>
+                        <div className="font-medium text-base">
+                          {ticketData.customer?.name || "-"}
+                        </div>
+                        <div className="text-gray-600 text-sm">ชื่อลูกค้า</div>
                       </div>
-                      <div className="text-gray-600">ชื่อลูกค้า</div>
+                    </div>
+                    <div className="flex items-start">
+                      <Tag className="text-gray-500 mr-2 mt-1" size={16} />
+                      <div>
+                        <div className="font-medium text-base">
+                          {ticketData.customer?.code || "-"}
+                        </div>
+                        <div className="text-gray-600 text-sm">รหัสลูกค้า</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <MapPin className="text-gray-500 mr-2 mt-1" size={16} />
+                      <div>
+                        <div className="font-medium text-base">
+                          {ticketData.customer?.address || "-"}
+                        </div>
+                        <div className="text-gray-600 text-sm">ที่อยู่</div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start">
-                    <MapPin className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium">
-                        {ticketData.customer?.address || "-"}
+
+                  {/* แถวที่ 2: เบอร์โทร | เลขผู้เสียภาษี | ประเภทสาขา */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="flex items-start">
+                      <Phone className="text-gray-500 mr-2 mt-1" size={16} />
+                      <div>
+                        <div className="font-medium text-base">
+                          {ticketData.customer?.phone || "-"}
+                        </div>
+                        <div className="text-gray-600 text-sm">เบอร์โทร</div>
                       </div>
-                      <div className="text-gray-600">ที่อยู่</div>
                     </div>
-                  </div>
-                  <div className="flex items-start">
-                    <FileText className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium">
-                        {ticketData.customer?.id_number || "-"}
+                    <div className="flex items-start">
+                      <FileText className="text-gray-500 mr-2 mt-1" size={16} />
+                      <div>
+                        <div className="font-medium text-base">
+                          {ticketData.customer?.id_number || "-"}
+                        </div>
+                        <div className="text-gray-600 text-sm">
+                          เลขผู้เสียภาษี
+                        </div>
                       </div>
-                      <div className="text-gray-600">เลขผู้เสียภาษี</div>
                     </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Tag className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium">
-                        {ticketData.customer?.branch_type || "-"}
+                    <div className="flex items-start">
+                      <Tag className="text-gray-500 mr-2 mt-1" size={16} />
+                      <div>
+                        <div className="font-medium text-base">
+                          {ticketData.customer?.branch_type || "-"}
+                          {ticketData.customer?.branch_number &&
+                            ` ${ticketData.customer.branch_number}`}
+                        </div>
+                        <div className="text-gray-600 text-sm">ประเภทสาขา</div>
                       </div>
-                      <div className="text-gray-600">ประเภทสาขา</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Tag className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium">
-                        {ticketData.customer?.branch_number || "-"}
-                      </div>
-                      <div className="text-gray-600">หมายเลขสาขา</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Phone className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium">
-                        {ticketData.customer?.phone || "-"}
-                      </div>
-                      <div className="text-gray-600">เบอร์โทร</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-3 rounded-md">
-                <h2 className="text-base font-semibold mb-2 flex items-center">
-                  <Calendar className="text-blue-500 mr-1" size={18} />
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h2 className="text-lg font-semibold mb-3 flex items-center">
+                  <Calendar className="text-blue-500 mr-2" size={20} />
                   ราคาและวันที่
                 </h2>
-                <div className="bg-blue-50 p-3 rounded-md mb-2">
+                <div className="bg-blue-50 p-4 rounded-lg mb-4">
                   <div className="text-sm text-gray-600">ราคารวมทั้งสิ้น</div>
-                  <div className="text-lg font-bold text-blue-600">
-                    {formatCurrency(ticketData.pricing?.total_amount || 0)}
+                  <div className="text-2xl font-bold text-blue-600">
+                    ฿{formatCurrency(ticketData.detail?.grand_total || 0)}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="flex items-start">
-                    <Calendar className="text-gray-500 mr-1" size={14} />
+                    <Calendar className="text-gray-500 mr-2 mt-1" size={16} />
                     <div>
-                      <div className="font-medium">
-                        {formatDateTime(ticketData.detail?.issue_date)}
+                      <div className="font-medium text-base">
+                        {formatDate(ticketData.detail?.issue_date)}
                       </div>
-                      <div className="text-gray-600">วันที่บันทึก</div>
+                      <div className="text-gray-600 text-sm">วันที่บันทึก</div>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <Calendar className="text-gray-500 mr-1" size={14} />
+                    <Calendar className="text-gray-500 mr-2 mt-1" size={16} />
                     <div>
-                      <div className="font-medium">
-                        {formatDateTime(ticketData.detail?.due_date)}
+                      <div className="font-medium text-base">
+                        {formatDate(ticketData.detail?.due_date)}
                       </div>
-                      <div className="text-gray-600">
+                      <div className="text-gray-600 text-sm">
                         วันครบกำหนด ({ticketData.detail?.credit_days || "0"}{" "}
                         วัน)
                       </div>
@@ -465,79 +519,32 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               </div>
             </div>
 
-            {/* Section: PO Number */}
-            {ticketData.po_number && (
-              <div className="bg-green-50 p-3 rounded-md border border-green-200">
-                <h2 className="text-base font-semibold mb-2 flex items-center">
-                  <CheckCircle className="text-green-500 mr-1" size={18} />
-                  ข้อมูล PO Number
-                </h2>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-start">
-                    <FileText className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium text-green-700">
-                        {ticketData.po_number}
-                      </div>
-                      <div className="text-gray-600">PO Number</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Clock className="text-gray-500 mr-1" size={14} />
-                    <div>
-                      <div className="font-medium">
-                        {formatDateTime(ticketData.po_generated_at)}
-                      </div>
-                      <div className="text-gray-600">วันที่สร้าง PO</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ส่วนอื่นๆ ของ Modal ยังคงเหมือนเดิม... */}
-            {/* (คัดลอกจาก FlightTicketDetail.jsx เดิม) */}
-
-            {/* Section: Supplier & Passengers */}
-            <div className="bg-gray-50 p-3 rounded-md">
-              <h2 className="text-base font-semibold mb-2 flex items-center">
-                <Users className="text-blue-500 mr-1" size={18} />
-                ข้อมูลซัพพลายเออร์และผู้โดยสาร
+            {/* Section: Passengers & Supplier */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h2 className="text-lg font-semibold mb-4 flex items-center">
+                <Users className="text-blue-500 mr-2" size={20} />
+                ข้อมูลผู้โดยสารและซัพพลายเออร์
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <h3 className="font-medium text-sm mb-1 flex items-center">
-                    <Plane className="text-gray-500 mr-1" size={14} />
-                    ข้อมูลซัพพลายเออร์
-                  </h3>
-                  <div className="text-sm">
-                    <div className="font-medium">
-                      {ticketData.supplier?.name || "-"}
-                    </div>
-                    <div className="text-gray-600">
-                      รหัส: {ticketData.supplier?.code || "-"}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium text-sm mb-1 flex items-center">
-                    <Users className="text-gray-500 mr-1" size={14} />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-8">
+                  <h3 className="font-medium text-base mb-3 flex items-center">
+                    <Users className="text-gray-500 mr-2" size={18} />
                     ข้อมูลผู้โดยสาร
                   </h3>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
+                    <table className="min-w-full divide-y divide-gray-200 text-sm border border-gray-200 rounded-md">
                       <thead className="bg-gray-100">
                         <tr>
-                          <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
                             ชื่อ
                           </th>
-                          <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
                             อายุ
                           </th>
-                          <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
                             เลขตั๋ว
                           </th>
-                          <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
                             รหัส
                           </th>
                         </tr>
@@ -546,16 +553,16 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                         {ticketData.passengers.length > 0 ? (
                           ticketData.passengers.map((passenger, index) => (
                             <tr key={index}>
-                              <td className="px-2 py-1 whitespace-nowrap">
+                              <td className="px-3 py-2 whitespace-nowrap text-sm">
                                 {passenger.passenger_name || "-"}
                               </td>
-                              <td className="px-2 py-1 whitespace-nowrap">
+                              <td className="px-3 py-2 whitespace-nowrap text-sm">
                                 {passenger.age || "-"}
                               </td>
-                              <td className="px-2 py-1 whitespace-nowrap">
+                              <td className="px-3 py-2 whitespace-nowrap text-sm">
                                 {passenger.ticket_number || "-"}
                               </td>
-                              <td className="px-2 py-1 whitespace-nowrap">
+                              <td className="px-3 py-2 whitespace-nowrap text-sm">
                                 {passenger.ticket_code || "-"}
                               </td>
                             </tr>
@@ -564,7 +571,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                           <tr>
                             <td
                               colSpan="4"
-                              className="px-2 py-1 text-center text-gray-500"
+                              className="px-3 py-2 text-center text-gray-500 text-sm"
                             >
                               ไม่พบข้อมูลผู้โดยสาร
                             </td>
@@ -574,38 +581,100 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     </table>
                   </div>
                 </div>
+                <div className="lg:col-span-4">
+                  <h3 className="font-medium text-base mb-3 flex items-center">
+                    <Plane className="text-gray-500 mr-2" size={18} />
+                    ข้อมูลซัพพลายเออร์
+                  </h3>
+                  <div className="space-y-3">
+                    {/* แถวที่ 1: รหัสตัวเลข | สายการบิน */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-start">
+                        <Tag className="text-gray-500 mr-2 mt-1" size={16} />
+                        <div>
+                          <div className="font-medium text-base">
+                            {ticketData.supplier?.numeric_code || "-"}
+                          </div>
+                          <div className="text-gray-600 text-sm">
+                            รหัสตัวเลข
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <Plane className="text-gray-500 mr-2 mt-1" size={16} />
+                        <div>
+                          <div className="font-medium text-base">
+                            {ticketData.supplier?.code || "-"}{" "}
+                            {ticketData.supplier?.name || ""}
+                          </div>
+                          <div className="text-gray-600 text-sm">สายการบิน</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* แถวที่ 2: Code | ประเภทตั๋ว */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-start">
+                        <Tag className="text-gray-500 mr-2 mt-1" size={16} />
+                        <div>
+                          <div className="font-medium text-base">
+                            {ticketData.additionalInfo?.code || "-"}
+                          </div>
+                          <div className="text-gray-600 text-sm">Code</div>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <FileText
+                          className="text-gray-500 mr-2 mt-1"
+                          size={16}
+                        />
+                        <div>
+                          <div className="font-medium text-base">
+                            {getTicketTypeDisplay(
+                              ticketData.additionalInfo?.ticket_type,
+                              ticketData.additionalInfo?.ticket_type_details
+                            )}
+                          </div>
+                          <div className="text-gray-600 text-sm">
+                            ประเภทตั๋ว
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Section: Routes */}
-            <div className="bg-gray-50 p-3 rounded-md">
-              <h2 className="text-base font-semibold mb-2 flex items-center">
-                <MapPin className="text-blue-500 mr-1" size={18} />
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h2 className="text-lg font-semibold mb-4 flex items-center">
+                <MapPin className="text-blue-500 mr-2" size={20} />
                 เส้นทางการเดินทาง
               </h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <table className="min-w-full divide-y divide-gray-200 text-sm border border-gray-200 rounded-md">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         เที่ยวบิน
                       </th>
-                      <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         RBD
                       </th>
-                      <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         วันที่
                       </th>
-                      <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         ต้นทาง
                       </th>
-                      <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         ปลายทาง
                       </th>
-                      <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         เวลาออก
                       </th>
-                      <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         เวลาถึง
                       </th>
                     </tr>
@@ -614,25 +683,25 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     {ticketData.routes.length > 0 ? (
                       ticketData.routes.map((route, index) => (
                         <tr key={index}>
-                          <td className="px-2 py-1 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm">
                             {route.flight_number || "-"}
                           </td>
-                          <td className="px-2 py-1 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm">
                             {route.rbd || "-"}
                           </td>
-                          <td className="px-2 py-1 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm">
                             {formatRouteDate(route.date)}
                           </td>
-                          <td className="px-2 py-1 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm">
                             {route.origin || "-"}
                           </td>
-                          <td className="px-2 py-1 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm">
                             {route.destination || "-"}
                           </td>
-                          <td className="px-2 py-1 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm">
                             {route.departure_time || "-"}
                           </td>
-                          <td className="px-2 py-1 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm">
                             {route.arrival_time || "-"}
                           </td>
                         </tr>
@@ -641,7 +710,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                       <tr>
                         <td
                           colSpan="7"
-                          className="px-2 py-1 text-center text-gray-500"
+                          className="px-3 py-2 text-center text-gray-500 text-sm"
                         >
                           ไม่พบข้อมูลเส้นทางการเดินทาง
                         </td>
@@ -652,67 +721,310 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               </div>
             </div>
 
-            {/* Section: Status & Management */}
-            <div className="bg-gray-50 p-3 rounded-md">
-              <h2 className="text-base font-semibold mb-2 flex items-center">
-                <Info className="text-blue-500 mr-1" size={18} />
-                สถานะและการจัดการ
+            {/* Section: Extras & Pricing */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h2 className="text-lg font-semibold mb-4 flex items-center">
+                <Package className="text-blue-500 mr-2" size={20} />
+                รายการเพิ่มเติม และ ตารางราคาและยอดรวม
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                <div>
-                  <div className="text-gray-600 mb-1">สถานะรายการ</div>
-                  {getStatusBadge(ticketData.status, ticketData.po_number)}
+              <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+                {/* Extras */}
+                <div className="lg:col-span-4">
+                  <h3 className="font-medium text-base mb-3">
+                    รายการเพิ่มเติม
+                  </h3>
+                  {ticketData.extras && ticketData.extras.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 text-sm border border-gray-200 rounded-md">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-3 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                              รายละเอียด
+                            </th>
+                            <th className="px-3 py-2 text-right text-sm font-medium text-gray-500 uppercase tracking-wider">
+                              ราคาขาย
+                            </th>
+                            <th className="px-3 py-2 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
+                              จำนวน
+                            </th>
+                            <th className="px-3 py-2 text-right text-sm font-medium text-gray-500 uppercase tracking-wider">
+                              รวม
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {ticketData.extras.map((extra, index) => (
+                            <tr key={index}>
+                              <td className="px-3 py-2 text-sm">
+                                {extra.description || "-"}
+                              </td>
+                              <td className="px-3 py-2 text-right text-sm">
+                                ฿{formatCurrency(extra.sale_price)}
+                              </td>
+                              <td className="px-3 py-2 text-center text-sm">
+                                {extra.quantity || 0}
+                              </td>
+                              <td className="px-3 py-2 text-right text-sm font-medium">
+                                ฿{formatCurrency(extra.total_amount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 text-sm py-8 border border-gray-200 rounded-md">
+                      ไม่มีรายการเพิ่มเติม
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <div className="text-gray-600">สร้างโดย</div>
-                  <div className="font-medium">{ticketData.createdByName}</div>
-                  <div className="text-gray-600">
-                    {formatDateTime(ticketData.created_at)}
+
+                {/* Pricing Table */}
+                <div className="lg:col-span-4">
+                  <h3 className="font-medium text-base mb-3">ตารางราคา</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 text-sm border border-gray-200 rounded-md">
+                      <thead className="bg-blue-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-sm font-medium text-blue-700 uppercase tracking-wider">
+                            ประเภท
+                          </th>
+                          <th className="px-3 py-2 text-right text-sm font-medium text-blue-700 uppercase tracking-wider">
+                            Sale
+                          </th>
+                          <th className="px-3 py-2 text-center text-sm font-medium text-blue-700 uppercase tracking-wider">
+                            Pax
+                          </th>
+                          <th className="px-3 py-2 text-right text-sm font-medium text-blue-700 uppercase tracking-wider">
+                            Total
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        <tr>
+                          <td className="px-3 py-2 text-sm font-medium">
+                            Adult
+                          </td>
+                          <td className="px-3 py-2 text-right text-sm">
+                            ฿
+                            {formatCurrency(
+                              ticketData.pricing?.adult_sale_price
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center text-sm">
+                            {ticketData.pricing?.adult_pax || 0}
+                          </td>
+                          <td className="px-3 py-2 text-right text-sm font-medium">
+                            ฿{formatCurrency(ticketData.pricing?.adult_total)}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2 text-sm font-medium">
+                            Child
+                          </td>
+                          <td className="px-3 py-2 text-right text-sm">
+                            ฿
+                            {formatCurrency(
+                              ticketData.pricing?.child_sale_price
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center text-sm">
+                            {ticketData.pricing?.child_pax || 0}
+                          </td>
+                          <td className="px-3 py-2 text-right text-sm font-medium">
+                            ฿{formatCurrency(ticketData.pricing?.child_total)}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2 text-sm font-medium">
+                            Infant
+                          </td>
+                          <td className="px-3 py-2 text-right text-sm">
+                            ฿
+                            {formatCurrency(
+                              ticketData.pricing?.infant_sale_price
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center text-sm">
+                            {ticketData.pricing?.infant_pax || 0}
+                          </td>
+                          <td className="px-3 py-2 text-right text-sm font-medium">
+                            ฿{formatCurrency(ticketData.pricing?.infant_total)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-                <div>
-                  <div className="text-gray-600">อัปเดตโดย</div>
-                  <div className="font-medium">{ticketData.updatedByName}</div>
-                  <div className="text-gray-600">
-                    {formatDateTime(ticketData.updated_at)}
+
+                {/* Summary */}
+                <div className="lg:col-span-2">
+                  <h3 className="font-medium text-base mb-3">ยอดรวม</h3>
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">
+                          ยอดรวมเป็นเงิน
+                        </span>
+                        <span className="font-bold text-gray-700">
+                          ฿
+                          {formatCurrency(
+                            ticketData.detail?.subtotal_before_vat
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">
+                          ภาษีมูลค่าเพิ่ม {ticketData.detail?.vat_percent || 0}%
+                        </span>
+                        <span className="text-gray-700">
+                          ฿{formatCurrency(ticketData.detail?.vat_amount)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center border-t border-blue-200 pt-2">
+                        <span className="text-base font-semibold">
+                          ยอดรวมทั้งสิ้น
+                        </span>
+                        <span className="font-bold text-blue-600 text-lg">
+                          ฿{formatCurrency(ticketData.detail?.grand_total)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {ticketData.cancelled_at && (
-                  <div>
-                    <div className="text-gray-600">ยกเลิกโดย</div>
-                    <div className="font-medium">
-                      {ticketData.cancelledByName}
+              </div>
+            </div>
+
+            {/* Section: Payment & Status */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h2 className="text-lg font-semibold mb-4 flex items-center">
+                <CreditCard className="text-blue-500 mr-2" size={20} />
+                การชำระเงิน และ สถานะและการจัดการ
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Payment Methods */}
+                <div>
+                  <h3 className="font-medium text-base mb-3">การชำระเงิน</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <h4 className="font-medium text-sm mb-2 flex items-center">
+                        <CreditCard className="text-gray-500 mr-2" size={16} />
+                        การชำระเงินของบริษัท
+                      </h4>
+                      <div className="space-y-1 text-sm">
+                        <div>
+                          <span className="text-gray-600">วิธีการ:</span>
+                          <div className="font-medium">
+                            {ticketData.additionalInfo
+                              ?.company_payment_method || "-"}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">รายละเอียด:</span>
+                          <div className="font-medium">
+                            {ticketData.additionalInfo
+                              ?.company_payment_details || "-"}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-gray-600">
-                      {formatDateTime(ticketData.cancelled_at)}
-                    </div>
-                    <div className="text-gray-600">
-                      เหตุผล: {ticketData.cancel_reason || "-"}
+                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <h4 className="font-medium text-sm mb-2 flex items-center">
+                        <CreditCard className="text-gray-500 mr-2" size={16} />
+                        การชำระเงินของลูกค้า
+                      </h4>
+                      <div className="space-y-1 text-sm">
+                        <div>
+                          <span className="text-gray-600">วิธีการ:</span>
+                          <div className="font-medium">
+                            {ticketData.additionalInfo
+                              ?.customer_payment_method || "-"}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">รายละเอียด:</span>
+                          <div className="font-medium">
+                            {ticketData.additionalInfo
+                              ?.customer_payment_details || "-"}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
+                </div>
+
+                {/* Status & Management */}
+                <div>
+                  <h3 className="font-medium text-base mb-3">
+                    สถานะและการจัดการ
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-gray-600 mb-1 text-sm">
+                        สถานะรายการ
+                      </div>
+                      {getStatusBadge(ticketData.status, ticketData.po_number)}
+                    </div>
+                    <div>
+                      <div className="text-gray-600 mb-1 text-sm">สร้างโดย</div>
+                      <div className="font-medium text-sm">
+                        {ticketData.createdByName}
+                      </div>
+                      <div className="text-gray-600 text-sm">
+                        {formatDateTime(ticketData.created_at)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 mb-1 text-sm">
+                        อัปเดตโดย
+                      </div>
+                      <div className="font-medium text-sm">
+                        {ticketData.updatedByName}
+                      </div>
+                      <div className="text-gray-600 text-sm">
+                        {formatDateTime(ticketData.updated_at)}
+                      </div>
+                    </div>
+                    {ticketData.cancelled_at && (
+                      <div className="md:col-span-3">
+                        <div className="text-gray-600 mb-1 text-sm">
+                          ยกเลิกโดย
+                        </div>
+                        <div className="font-medium text-sm">
+                          {ticketData.cancelledByName}
+                        </div>
+                        <div className="text-gray-600 text-sm">
+                          {formatDateTime(ticketData.cancelled_at)}
+                        </div>
+                        <div className="text-gray-600 text-sm">
+                          เหตุผล: {ticketData.cancel_reason || "-"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 p-3 border-t flex justify-between">
+          <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
             <div>
               {onEdit && (
                 <button
                   onClick={() => onEdit(ticketData.id)}
-                  className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors flex items-center text-sm mr-1"
+                  className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors flex items-center text-sm font-medium"
                 >
-                  <Edit2 size={14} className="mr-1" />
+                  <Edit2 size={16} className="mr-2" />
                   แก้ไข
                 </button>
               )}
             </div>
             <button
               onClick={onClose}
-              className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors flex items-center text-sm"
+              className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors flex items-center text-sm font-medium"
             >
-              <ChevronLeft size={14} className="mr-1" />
+              <ChevronLeft size={16} className="mr-2" />
               กลับ
             </button>
           </div>
