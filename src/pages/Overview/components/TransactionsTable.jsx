@@ -73,101 +73,54 @@ const TransactionsTable = ({
                 <tr>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("reference_number")}
                   >
-                    <div className="flex items-center">
-                      ID
-                      {sortField === "reference_number" && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+                    <div className="flex items-center">ID</div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("created_at")}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort("date")}
                   >
-                    <div className="flex items-center">
-                      วันที่
-                      {sortField === "created_at" && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+                    <div className="flex items-center">วันที่</div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("customer")}
                   >
-                    <div className="flex items-center">
-                      ลูกค้า
-                      {sortField === "customer" && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+                    <div className="flex items-center">ลูกค้า</div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("supplier")}
                   >
-                    <div className="flex items-center">
-                      ซัพพลายเออร์
-                      {sortField === "supplier" && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+                    <div className="flex items-center">ซัพพลายเออร์</div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("status")}
                   >
                     <div className="flex items-center justify-center">
                       สถานะ
-                      {sortField === "status" && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
                     </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("created_by")}
                   >
-                    <div className="flex items-center">
-                      Create By
-                      {sortField === "created_by" && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+                    <div className="flex items-center">CREATE BY</div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort("created_at")}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort("timestamp")}
                   >
-                    <div className="flex items-center">
-                      Timestamp
-                      {sortField === "created_at" && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+                    <div className="flex items-center">TIMESTAMP</div>
                   </th>
                 </tr>
               </thead>
@@ -178,7 +131,7 @@ const TransactionsTable = ({
                       colSpan="7"
                       className="px-6 py-4 text-center text-gray-500"
                     >
-                      ไม่พบข้อมูลในช่วงเวลที่เลือก
+                      ไม่พบข้อมูลในช่วงเวลาที่เลือก
                     </td>
                   </tr>
                 ) : (

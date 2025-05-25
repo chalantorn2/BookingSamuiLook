@@ -227,7 +227,7 @@ const DataTable = ({
       {/* Modal สำหรับการแก้ไขลูกค้า */}
       {showModal && currentEditItem && (
         <div className="fixed inset-0 modal-backdrop bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md information-modal">
             <h3 className="text-lg font-semibold mb-4">แก้ไขข้อมูลลูกค้า</h3>
             <div className="space-y-4">
               <div>
@@ -357,7 +357,7 @@ const DataTable = ({
       {/* Modal สำหรับการแก้ไข Supplier */}
       {showSupplierModal && currentEditSupplier && (
         <div className="fixed inset-0 modal-backdrop bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md information-modal">
             <h3 className="text-lg font-semibold mb-4">
               แก้ไขข้อมูลซัพพลายเออร์
             </h3>
@@ -443,7 +443,7 @@ const DataTable = ({
       )}
 
       <table
-        className={`min-w-full divide-y divide-gray-200 ${
+        className={`min-w-full divide-y divide-gray-200 information-table ${
           selectedCategory === "customer" ? "table-customer" : ""
         }`}
       >

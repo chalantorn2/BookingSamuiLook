@@ -421,7 +421,7 @@ const SaleHeader = ({
               </button>
             )}
             {showResults && searchResults.length > 0 && (
-              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto">
+              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
                 {isLoading ? (
                   <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
                 ) : error ? (
@@ -465,15 +465,14 @@ const SaleHeader = ({
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
+        <div className="grid grid-cols-5 gap-2">
+          <div className="col-span-2">
             <label className={SaleStyles.form.labelRequired}>Address</label>
             <textarea
               ref={textareaRef}
               className={`${SaleStyles.form.input} ${
                 !globalEditMode ? "bg-gray-100" : ""
               } resize-none`}
-              placeholder="ที่อยู่"
               value={formData.contactDetails}
               onChange={handleContactDetailsChange}
               required
@@ -486,21 +485,33 @@ const SaleHeader = ({
               }}
             ></textarea>
           </div>
-          <div>
+          <div className="col-span-2">
             <label className={SaleStyles.form.label}>Phone Number</label>
             <input
               type="text"
               className={`${SaleStyles.form.inputNoUppercase} ${
                 !globalEditMode ? "bg-gray-100" : ""
               }`}
-              placeholder="เบอร์โทรศัพท์"
               value={formData.phone}
               onChange={handlePhoneChange}
               disabled={!globalEditMode}
             />
           </div>
+          <div className="col-span-1">
+            <label className={SaleStyles.form.label}>Customer Code</label>
+            <input
+              type="text"
+              className={`${SaleStyles.form.input} ${
+                !globalEditMode ? "bg-gray-100" : ""
+              }`}
+              value={formData.customerCode}
+              onChange={handleCustomerCodeChange}
+              maxLength={3}
+              disabled={!globalEditMode}
+            />
+          </div>
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <div>
             <label className={SaleStyles.form.label}>Tax ID Number</label>
             <input
@@ -508,7 +519,6 @@ const SaleHeader = ({
               className={`${SaleStyles.form.input} ${
                 !globalEditMode ? "bg-gray-100" : ""
               }`}
-              placeholder="เลขผู้เสียภาษี"
               value={formData.id}
               onChange={handleIdNumberChange}
               disabled={!globalEditMode}
@@ -535,24 +545,10 @@ const SaleHeader = ({
               className={`${SaleStyles.form.input} ${
                 !globalEditMode || branchType !== "Branch" ? "bg-gray-100" : ""
               }`}
-              placeholder="หมายเลขสาขา"
               value={branchNumber}
               onChange={handleBranchNumberChange}
               maxLength={3}
               disabled={!globalEditMode || branchType !== "Branch"}
-            />
-          </div>
-          <div>
-            <label className={SaleStyles.form.label}>Customer Code</label>
-            <input
-              type="text"
-              className={`${SaleStyles.form.input} ${
-                !globalEditMode ? "bg-gray-100" : ""
-              }`}
-              value={formData.customerCode}
-              onChange={handleCustomerCodeChange}
-              maxLength={3}
-              disabled={!globalEditMode}
             />
           </div>
         </div>
@@ -672,7 +668,7 @@ const SaleHeader = ({
             </button>
           )}
           {showResults && searchResults.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto">
+            <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
               {isLoading ? (
                 <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
               ) : error ? (

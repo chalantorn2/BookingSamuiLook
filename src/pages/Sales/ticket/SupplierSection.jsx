@@ -177,7 +177,7 @@ const SupplierSection = ({ formData, setFormData }) => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               {/* รหัสสายการบิน (ตัวเลข 3 ตัว) */}
               <div className="relative">
-                <label className={SaleStyles.form.label}>รหัส</label>
+                <label className={SaleStyles.form.label}>รหัสตัวเลข</label>
                 <div className="relative">
                   <input
                     ref={numericInputRef}
@@ -204,15 +204,6 @@ const SupplierSection = ({ formData, setFormData }) => {
                         <FiX size={18} />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowNumericDropdown(!showNumericDropdown)
-                      }
-                      className="text-gray-400 hover:text-gray-600 ml-1"
-                    >
-                      <FiChevronDown size={18} />
-                    </button>
                   </div>
                 </div>
 
@@ -270,13 +261,6 @@ const SupplierSection = ({ formData, setFormData }) => {
                         <FiX size={18} />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      className="text-gray-400 hover:text-gray-600 ml-1"
-                    >
-                      <FiChevronDown size={18} />
-                    </button>
                   </div>
                 </div>
 

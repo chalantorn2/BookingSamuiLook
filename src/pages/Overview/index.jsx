@@ -24,8 +24,8 @@ const Overview = () => {
   const [endDate, setEndDate] = useState(dateRange.end);
   const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("created_at");
-  const [sortDirection, setSortDirection] = useState("desc");
+  const [sortField, setSortField] = useState("timestamp"); // เปลี่ยนจาก "created_at" เป็น "timestamp"
+  const [sortDirection, setSortDirection] = useState("desc"); // ให้ล่าสุดขึ้นก่อน
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [isFilterVisible, setIsFilterVisible] = useState(false);

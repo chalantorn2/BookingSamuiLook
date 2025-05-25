@@ -10,3 +10,38 @@
     font-family: "Prompt", sans-serif;
   }
 }
+/* เพิ่มใน style.css หรือ index.css */
+
+/* CSS สำหรับให้ข้อมูลใน Information Module แสดงเป็นตัวพิมพ์ใหญ่ */
+
+/* สำหรับตารางข้อมูล Supplier และ Customer */
+.information-table tbody td,
+.information-table thead th {
+  text-transform: uppercase !important;
+}
+
+/* สำหรับฟอร์มการเพิ่ม/แก้ไขข้อมูล */
+.information-form input[type="text"],
+.information-form select,
+.information-form textarea {
+  text-transform: uppercase !important;
+}
+
+/* สำหรับ Modal แก้ไขข้อมูล */
+.information-modal input[type="text"],
+.information-modal select,
+.information-modal textarea {
+  text-transform: uppercase !important;
+}
+
+/* สำหรับ dropdown และ search results */
+.information-dropdown .dropdown-item,
+.information-search-results li {
+  text-transform: uppercase !important;
+}
+
+/* สำหรับ Badge และ Status */
+.information-badge,
+.information-status {
+  text-transform: uppercase !important;
+}

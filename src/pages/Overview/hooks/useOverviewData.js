@@ -5,13 +5,13 @@ import { toThaiTimeZone } from "../../../utils/helpers";
 
 export const serviceTypes = [
   { id: "all", name: "All Services", icon: "Activity" },
+  { id: "deposit", name: "Deposits", icon: "Database" },
+  { id: "voucher", name: "Vouchers", icon: "Voucher" },
   { id: "flight", name: "Flight Tickets", icon: "Plane" },
   { id: "boat", name: "Boat Tickets", icon: "Ship" },
   { id: "bus", name: "Bus Tickets", icon: "Bus" },
   { id: "hotel", name: "Hotel Bookings", icon: "Hotel" },
   { id: "tour", name: "Tour Packages", icon: "Package" },
-  { id: "deposit", name: "Deposits", icon: "Database" },
-  { id: "voucher", name: "Vouchers", icon: "Voucher" },
   { id: "other", name: "Other Services", icon: "AlertCircle" },
 ];
 
@@ -26,8 +26,8 @@ export const useOverviewData = ({
   startDate,
   endDate,
   serviceTypeFilter,
-  sortField,
-  sortDirection,
+  sortField = "timestamp", // เปลี่ยนค่าเริ่มต้นเป็น timestamp
+  sortDirection = "desc", // เปลี่ยนเป็น desc เพื่อให้ล่าสุดขึ้นก่อน
   searchTerm,
   currentPage,
   itemsPerPage,
@@ -51,6 +51,86 @@ export const useOverviewData = ({
     other: 0,
   });
 
+  // เพิ่มฟังก์ชัน sortData ที่ครบถ้วน
+  const sortData = (data, field, direction) => {
+    if (!data || data.length === 0) return data;
+
+    const sortedData = [...data].sort((a, b) => {
+      let aValue, bValue;
+
+      // กำหนดค่าสำหรับการ sort ตาม field ต่างๆ
+      switch (field) {
+        case "reference_number":
+          aValue = a.referenceNumber || "";
+          bValue = b.referenceNumber || "";
+          break;
+        case "date":
+          aValue = a.date ? new Date(a.date) : new Date(0);
+          bValue = b.date ? new Date(b.date) : new Date(0);
+          break;
+        case "customer":
+          aValue = a.customer || "";
+          bValue = b.customer || "";
+          break;
+        case "supplier":
+          aValue = a.supplier || "";
+          bValue = b.supplier || "";
+          break;
+        case "status":
+          aValue = a.status || "";
+          bValue = b.status || "";
+          break;
+        case "created_by":
+          aValue = a.createdBy || "";
+          bValue = b.createdBy || "";
+          break;
+        case "timestamp":
+          aValue = a.timestamp ? new Date(a.timestamp) : new Date(0);
+          bValue = b.timestamp ? new Date(b.timestamp) : new Date(0);
+          break;
+        default:
+          aValue = a[field] || "";
+          bValue = b[field] || "";
+      }
+
+      // สำหรับ Date objects
+      if (aValue instanceof Date && bValue instanceof Date) {
+        if (direction === "asc") {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      }
+
+      // สำหรับ String values
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const comparison = aValue.localeCompare(bValue, "th", {
+          numeric: true,
+          sensitivity: "base",
+        });
+        return direction === "asc" ? comparison : -comparison;
+      }
+
+      // สำหรับ Number values
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        if (direction === "asc") {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      }
+
+      // Default comparison
+      if (direction === "asc") {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+
+    return sortedData;
+  };
+
   const fetchData = async () => {
     setLoading(true);
 
@@ -63,6 +143,7 @@ export const useOverviewData = ({
       end.setHours(23, 59, 59, 999);
       const endISO = toThaiTimeZone(end, false);
 
+      // ลบการ order ออกจาก query เพราะเราจะ sort ใน frontend
       let query = supabase
         .from("bookings_ticket")
         .select(
@@ -81,8 +162,6 @@ export const useOverviewData = ({
         )
         .gte("created_at", startISO)
         .lte("created_at", endISO);
-
-      query = query.order(sortField, { ascending: sortDirection === "asc" });
 
       const { data, error } = await query;
 
@@ -150,8 +229,12 @@ export const useOverviewData = ({
       });
 
       setActivities(processedData);
+
+      // ใช้ฟังก์ชัน getFilteredData แล้วค่อย sort
       const filtered = getFilteredData(processedData, searchTerm);
-      setFilteredData(filtered);
+      const sorted = sortData(filtered, sortField, sortDirection);
+      setFilteredData(sorted);
+
       const summaryData = calculateSummary(filtered);
       setSummary(summaryData);
     } catch (error) {
@@ -176,7 +259,11 @@ export const useOverviewData = ({
         (item) =>
           (item.referenceNumber &&
             item.referenceNumber.toLowerCase().includes(searchLower)) ||
-          (item.customer && item.customer.toLowerCase().includes(searchLower))
+          (item.customer &&
+            item.customer.toLowerCase().includes(searchLower)) ||
+          (item.supplier &&
+            item.supplier.toLowerCase().includes(searchLower)) ||
+          (item.createdBy && item.createdBy.toLowerCase().includes(searchLower))
       );
     }
 
@@ -246,16 +333,25 @@ export const useOverviewData = ({
     return result;
   };
 
+  // เรียกข้อมูลใหม่เมื่อ dependencies เปลี่ยน
   useEffect(() => {
     fetchData();
-  }, [startDate, endDate, serviceTypeFilter, sortField, sortDirection]);
+  }, [startDate, endDate, serviceTypeFilter]);
 
+  // จัดการ search term แยกต่างหาก
   useEffect(() => {
     const filtered = getFilteredData();
-    setFilteredData(filtered);
+    const sorted = sortData(filtered, sortField, sortDirection);
+    setFilteredData(sorted);
     const summaryData = calculateSummary(filtered);
     setSummary(summaryData);
   }, [searchTerm, activities]);
+
+  // จัดการ sort แยกต่างหาก
+  useEffect(() => {
+    const sorted = sortData(filteredData, sortField, sortDirection);
+    setFilteredData(sorted);
+  }, [sortField, sortDirection]);
 
   return {
     loading,

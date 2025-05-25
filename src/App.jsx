@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Overview from "./pages/Overview";
@@ -16,6 +16,79 @@ import { AlertDialogProvider } from "./contexts/AlertDialogContext";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
+
+  // เพิ่ม Global Handler สำหรับแปลงข้อมูลเป็นตัวใหญ่
+  useEffect(() => {
+    // ฟิลด์ที่ไม่ต้องการให้เป็นตัวใหญ่
+    const excludeFields = [
+      "email",
+      "password",
+      "confirmPassword",
+      "phone",
+      "contactDetails",
+      "address",
+      "remarks",
+    ];
+
+    const handleInputChange = (event) => {
+      const input = event.target;
+
+      // ตรวจสอบว่าเป็น input, textarea, หรือ select
+      if (!["INPUT", "TEXTAREA", "SELECT"].includes(input.tagName)) return;
+
+      // ตรวจสอบ type ของ input
+      if (
+        ["email", "password", "tel", "number", "date", "time"].includes(
+          input.type
+        )
+      )
+        return;
+
+      // ตรวจสอบ name หรือ class ที่ไม่ต้องการ
+      const inputName = input.name || "";
+      const inputClass = input.className || "";
+
+      // ข้ามฟิลด์ที่ไม่ต้องการแปลง
+      if (
+        excludeFields.some(
+          (field) =>
+            inputName.toLowerCase().includes(field.toLowerCase()) ||
+            inputClass.toLowerCase().includes(field.toLowerCase())
+        )
+      )
+        return;
+
+      // ข้ามถ้ามี class ที่บอกว่าไม่ต้องแปลง
+      if (
+        inputClass.includes("no-uppercase") ||
+        inputClass.includes("inputNoUppercase")
+      )
+        return;
+
+      // แปลงเป็นตัวใหญ่
+      const cursorPosition = input.selectionStart;
+      const uppercaseValue = input.value.toUpperCase();
+
+      if (input.value !== uppercaseValue) {
+        input.value = uppercaseValue;
+
+        // คืนค่า cursor position
+        input.setSelectionRange(cursorPosition, cursorPosition);
+
+        // สร้าง event ใหม่เพื่อให้ React รับรู้การเปลี่ยนแปลง
+        const event = new Event("input", { bubbles: true });
+        input.dispatchEvent(event);
+      }
+    };
+
+    // เพิ่ม event listener
+    document.addEventListener("input", handleInputChange);
+
+    // ทำความสะอาดเมื่อ component unmount
+    return () => {
+      document.removeEventListener("input", handleInputChange);
+    };
+  }, []);
 
   return (
     <AuthProvider>

@@ -28,6 +28,11 @@ const UserPermissionsTable = ({ role = "viewer" }) => {
         return false;
       }
 
+      // ไม่สามารถเข้าถึง Admin ทั้งหมด
+      if (moduleId === "admin") {
+        return false;
+      }
+
       // สำหรับ Refund ทำได้แค่ดูและสร้าง
       if (moduleId === "refund" && (action === "edit" || action === "delete")) {
         return false;
@@ -37,8 +42,14 @@ const UserPermissionsTable = ({ role = "viewer" }) => {
       return true;
     }
 
-    // Viewer ทำได้แค่ดูอย่างเดียว
+    // Viewer มีสิทธิ์เฉพาะบางโมดูล
     if (role === "viewer") {
+      // สำหรับ Sale และ Information ทำได้ทุกอย่าง
+      if (moduleId === "sale" || moduleId === "information") {
+        return true;
+      }
+
+      // สำหรับโมดูลอื่นๆ ทำได้แค่ดูอย่างเดียว
       return action === "view";
     }
 

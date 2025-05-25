@@ -188,7 +188,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500"
                   value={route.departure || ""}
                   onChange={(e) =>
-                    handleInputChange(e, index, "departure", 5, "arrival")
+                    handleInputChange(e, index, "departure", 4, "arrival")
                   }
                   pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
                   ref={(el) => (inputRefs.current[`${index}-departure`] = el)}
@@ -205,7 +205,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   className="w-full border border-gray-400 rounded-md p-2 text-center focus:ring-blue-500 focus:border-blue-500"
                   value={route.arrival || ""}
                   onChange={(e) =>
-                    handleInputChange(e, index, "arrival", 5, null)
+                    handleInputChange(e, index, "arrival", 4, null)
                   }
                   pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
                   ref={(el) => (inputRefs.current[`${index}-arrival`] = el)}

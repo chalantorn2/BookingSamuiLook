@@ -11,7 +11,7 @@ const AddEditForm = ({
   handleSaveNew,
 }) => {
   return (
-    <div className="mb-6 bg-blue-50 p-4 rounded-md">
+    <div className="mb-6 bg-blue-50 p-4 rounded-md information-form">
       <h3 className="font-semibold mb-2">เพิ่มข้อมูลใหม่</h3>
 
       {selectedCategory === "customer" ? (
