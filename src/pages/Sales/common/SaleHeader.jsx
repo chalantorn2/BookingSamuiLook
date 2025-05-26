@@ -171,7 +171,7 @@ const SaleHeader = ({
 
   const handleCustomerCodeChange = (e) => {
     if (!globalEditMode) return;
-    const value = e.target.value.toUpperCase().substring(0, 3);
+    const value = e.target.value.toUpperCase().substring(0, 5);
     setFormData({ ...formData, customerCode: value });
   };
 
@@ -506,7 +506,7 @@ const SaleHeader = ({
               }`}
               value={formData.customerCode}
               onChange={handleCustomerCodeChange}
-              maxLength={3}
+              maxLength={5}
               disabled={!globalEditMode}
             />
           </div>

@@ -133,7 +133,7 @@ const DataTable = ({
 
     if (name === "numeric_code") {
       // จำกัดให้เป็นตัวเลข 3 ตัว
-      const updatedValue = value.replace(/\D/g, "").substring(0, 3);
+      const updatedValue = value.replace(/\D/g, "").substring(0, 5);
       setCurrentEditSupplier({ ...currentEditSupplier, [name]: updatedValue });
     } else {
       setCurrentEditSupplier({ ...currentEditSupplier, [name]: value });
@@ -154,8 +154,8 @@ const DataTable = ({
     }
 
     // ตรวจสอบรหัสลูกค้า
-    if (currentEditItem.code && currentEditItem.code.length !== 3) {
-      alert("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+    if (currentEditItem.code && currentEditItem.code.length !== 5) {
+      alert("รหัสลูกค้าต้องเป็นตัวอักษร 3-5 ตัว");
       return;
     }
 
@@ -205,7 +205,7 @@ const DataTable = ({
 
     if (name === "code") {
       // จำกัดให้เป็นตัวอักษร 3 ตัว
-      const updatedValue = value.toUpperCase().substring(0, 3);
+      const updatedValue = value.toUpperCase().substring(0, 5);
       setCurrentEditItem({ ...currentEditItem, [name]: updatedValue });
     } else if (name === "numeric_code") {
       // จำกัดให้เป็นตัวเลข 3 ตัว
@@ -244,14 +244,14 @@ const DataTable = ({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  รหัสลูกค้า (3 ตัวอักษร)
+                  รหัสลูกค้า (3-5 ตัวอักษร)
                 </label>
                 <input
                   type="text"
                   name="code"
                   value={currentEditItem.code || ""}
                   onChange={handleModalInputChange}
-                  maxLength={3}
+                  maxLength={5}
                   className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
                 />
               </div>

@@ -17,15 +17,15 @@ const CustomerForm = ({ item, handleInputChange }) => {
       </div>
       <div>
         <label className="block text-sm font-medium mb-1">
-          รหัสลูกค้า (3 ตัวอักษร)
+          รหัสลูกค้า (3-5 ตัวอักษร)
         </label>
         <input
           type="text"
           name="code"
           value={item.code}
           onChange={handleInputChange}
-          maxLength={3}
-          placeholder="รหัส 3 ตัวอักษร"
+          maxLength={5}
+          placeholder="รหัส 3-5 ตัวอักษร"
           className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>

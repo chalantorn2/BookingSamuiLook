@@ -59,8 +59,14 @@ export const getCustomerById = async (id) => {
 // ในไฟล์ customerService.js
 export const createCustomer = async (customerData) => {
   try {
-    // ตรวจสอบว่ามีรหัสซ้ำหรือไม่
+    // ตรวจสอบรหัสลูกค้า
     if (customerData.code) {
+      // ตรวจสอบความยาว 3-5 ตัว
+      if (customerData.code.length < 3 || customerData.code.length > 5) {
+        return { success: false, error: "รหัสลูกค้าต้องเป็น 3-5 ตัวอักษร" };
+      }
+
+      // ตรวจสอบว่ามีรหัสซ้ำหรือไม่
       const { data: existingCustomer } = await supabase
         .from("customers")
         .select("*")
@@ -75,7 +81,7 @@ export const createCustomer = async (customerData) => {
     // เตรียมข้อมูลสำหรับบันทึก
     const payload = {
       name: customerData.name,
-      code: customerData.code || null, // เพิ่มรหัสลูกค้า
+      code: customerData.code || null,
       address: customerData.address || null,
       id_number: customerData.id_number || null,
       phone: customerData.phone || null,
@@ -100,16 +106,16 @@ export const createCustomer = async (customerData) => {
 
 export const updateCustomer = async (id, customerData) => {
   try {
-    // ตรวจสอบว่ามีข้อมูลที่จำเป็นหรือไม่
+    // ตรวจสอบข้อมูลที่จำเป็น
     if (!customerData.name) {
       throw new Error("Customer name is required");
     }
 
     // ตรวจสอบรหัสลูกค้า
     if (customerData.code) {
-      // ตรวจสอบว่ารหัสเป็นตัวอักษร 3 ตัวหรือไม่
-      if (customerData.code.length !== 3) {
-        throw new Error("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+      // ตรวจสอบความยาว 3-5 ตัว
+      if (customerData.code.length < 3 || customerData.code.length > 5) {
+        throw new Error("รหัสลูกค้าต้องเป็น 3-5 ตัวอักษร");
       }
 
       // ตรวจสอบว่ามีรหัสซ้ำหรือไม่
@@ -132,7 +138,7 @@ export const updateCustomer = async (id, customerData) => {
 
     const payload = {
       name: customerData.name,
-      code: customerData.code || null, // เพิ่มรหัสลูกค้า
+      code: customerData.code || null,
       address: customerData.address || null,
       id_number: customerData.id_number || null,
       phone: customerData.phone || null,
