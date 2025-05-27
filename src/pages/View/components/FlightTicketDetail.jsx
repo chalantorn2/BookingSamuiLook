@@ -290,7 +290,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     return Math.floor(parseFloat(amount)).toLocaleString("th-TH");
   };
 
-  const getStatusBadge = (status, poNumber) => {
+  const getStatusBadge = (status, poNumber, poGeneratedAt) => {
     if (poNumber) {
       return (
         <div className="flex items-center">
@@ -300,7 +300,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               {poNumber}
             </div>
             <div className="text-sm text-gray-600">
-              {formatDateTime(ticketData.po_generated_at)}
+              {formatDateTime(poGeneratedAt)}
             </div>
           </div>
         </div>
@@ -963,7 +963,11 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                       <div className="text-gray-600 mb-1 text-sm">
                         สถานะรายการ
                       </div>
-                      {getStatusBadge(ticketData.status, ticketData.po_number)}
+                      {getStatusBadge(
+                        ticketData.status,
+                        ticketData.po_number,
+                        ticketData.po_generated_at
+                      )}
                     </div>
                     <div>
                       <div className="text-gray-600 mb-1 text-sm">สร้างโดย</div>

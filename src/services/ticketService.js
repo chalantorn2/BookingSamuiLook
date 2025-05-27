@@ -13,7 +13,7 @@ export const generatePOForTicket = async (ticketId) => {
     // ตรวจสอบว่า ticket นี้มี PO Number แล้วหรือยัง
     const { data: existingTicket, error: checkError } = await supabase
       .from("bookings_ticket")
-      .select("po_number, po_generated_at")
+      .select("po_number, po_generated_at, status")
       .eq("id", ticketId)
       .single();
 
@@ -36,7 +36,7 @@ export const generatePOForTicket = async (ticketId) => {
       throw new Error("ไม่สามารถสร้าง PO Number ได้");
     }
 
-    // บันทึก PO Number ลงในฐานข้อมูล
+    // บันทึก PO Number และอัปเดต status เป็น invoiced
     const now = new Date();
     const thaiTime = toThaiTimeZone(now, false);
 
@@ -45,6 +45,7 @@ export const generatePOForTicket = async (ticketId) => {
       .update({
         po_number: poNumber,
         po_generated_at: thaiTime,
+        status: "invoiced", // เพิ่มการอัปเดต status
       })
       .eq("id", ticketId);
 
@@ -107,7 +108,7 @@ export const createFlightTicket = async (ticketData) => {
         reference_number: referenceNumber,
         customer_id: ticketData.customerId,
         information_id: ticketData.supplierId,
-        status: ticketData.status || "pending",
+        status: "not_invoiced", // เปลี่ยนจาก "pending" เป็น "not_invoiced"
         payment_status: ticketData.paymentStatus || "unpaid",
         created_by: ticketData.createdBy,
         updated_by: ticketData.updatedBy,

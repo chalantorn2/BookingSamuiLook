@@ -210,12 +210,12 @@ export const useFlightTicketsData = ({
             ticket.routingDisplay.toLowerCase().includes(searchLower)) ||
           (ticket.po_number &&
             ticket.po_number.toLowerCase().includes(searchLower)) ||
-          (ticket.status &&
-            (ticket.status.toLowerCase().includes(searchLower) ||
-              (ticket.status === "confirmed" &&
-                "invoiced".includes(searchLower)) ||
-              (ticket.status !== "confirmed" &&
-                "not invoiced".includes(searchLower))))
+          // เพิ่มการค้นหาด้วยสถานะที่แปลงแล้ว
+          (ticket.po_number &&
+            ticket.po_number.trim() !== "" &&
+            "invoiced".includes(searchLower)) ||
+          ((!ticket.po_number || ticket.po_number.trim() === "") &&
+            "not invoiced".includes(searchLower))
       );
     }
 
@@ -223,9 +223,9 @@ export const useFlightTicketsData = ({
     if (filterStatus && filterStatus !== "all") {
       filtered = filtered.filter((ticket) => {
         if (filterStatus === "invoiced") {
-          return ticket.status === "confirmed" || ticket.status === "invoiced";
+          return ticket.status === "invoiced";
         } else if (filterStatus === "not_invoiced") {
-          return ticket.status !== "confirmed" && ticket.status !== "invoiced";
+          return ticket.status === "not_invoiced";
         }
         return true;
       });
@@ -238,14 +238,6 @@ export const useFlightTicketsData = ({
   const sortTickets = (tickets, field, direction) => {
     const sorted = [...tickets];
 
-    const fieldMap = {
-      id: "reference_number",
-      customer: "customer.code", // เปลี่ยนจาก name เป็น code
-      supplier: "supplier.code", // เปลี่ยนจาก name เป็น code
-      status: "status",
-      created_at: "created_at",
-    };
-
     sorted.sort((a, b) => {
       let valueA, valueB;
 
@@ -256,15 +248,15 @@ export const useFlightTicketsData = ({
         valueA = a.supplier?.code || a.supplier?.name || "";
         valueB = b.supplier?.code || b.supplier?.name || "";
       } else if (field === "status") {
-        // แปลงสถานะให้เป็นมาตรฐาน
-        valueA = a.status === "confirmed" ? "invoiced" : "not_invoiced";
-        valueB = b.status === "confirmed" ? "invoiced" : "not_invoiced";
+        // ใช้ status field โดยตรง
+        valueA = a.status || "not_invoiced";
+        valueB = b.status || "not_invoiced";
       } else if (field === "created_at") {
         valueA = a.created_at ? new Date(a.created_at) : new Date(0);
         valueB = b.created_at ? new Date(b.created_at) : new Date(0);
       } else {
-        valueA = a[fieldMap[field] || field] || "";
-        valueB = b[fieldMap[field] || field] || "";
+        valueA = a[field] || "";
+        valueB = b[field] || "";
       }
 
       if (direction === "asc") {

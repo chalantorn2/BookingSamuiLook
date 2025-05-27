@@ -110,7 +110,8 @@ const FlightTicketsView = () => {
 
   // ฟังก์ชันแสดงสถานะ - แสดง PO Number หรือ Not Invoiced
   const getStatusDisplay = (ticket) => {
-    if (ticket.po_number) {
+    // แสดง PO Number ถ้ามี หรือแสดง Not Invoiced ถ้าไม่มี
+    if (ticket.po_number && ticket.po_number.trim() !== "") {
       return (
         <div className="flex items-center">
           <span className="text-sm font-medium text-gray-900">
@@ -233,6 +234,12 @@ const FlightTicketsView = () => {
                   </th>
                   <th
                     scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort("created_at")}
                   >
@@ -240,12 +247,6 @@ const FlightTicketsView = () => {
                       Created At
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Actions
                   </th>
                 </tr>
               </thead>
@@ -340,9 +341,6 @@ const FlightTicketsView = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusDisplay(ticket)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDateTime(ticket.created_at)}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
@@ -360,6 +358,9 @@ const FlightTicketsView = () => {
                             <Edit2 size={18} />
                           </button>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDateTime(ticket.created_at)}
                       </td>
                     </tr>
                   ))
