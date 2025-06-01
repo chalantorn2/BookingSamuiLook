@@ -8,7 +8,6 @@ import ViewModule from "./pages/View";
 import Information from "./pages/Information";
 import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
-
 import ActivityLog from "./pages/Admin/ActivityLog";
 import PrivateRoute from "./pages/Login/PrivateRoute";
 import { AuthProvider } from "./pages/Login/AuthContext";
@@ -17,7 +16,7 @@ import { AlertDialogProvider } from "./contexts/AlertDialogContext";
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
 
-  // เพิ่ม Global Handler สำหรับแปลงข้อมูลเป็นตัวใหญ่
+  // Global Handler สำหรับแปลงข้อมูลเป็นตัวใหญ่
   useEffect(() => {
     // ฟิลด์ที่ไม่ต้องการให้เป็นตัวใหญ่
     const excludeFields = [
@@ -33,8 +32,8 @@ const App = () => {
     const handleInputChange = (event) => {
       const input = event.target;
 
-      // ตรวจสอบว่าเป็น input, textarea, หรือ select
-      if (!["INPUT", "TEXTAREA", "SELECT"].includes(input.tagName)) return;
+      // ตรวจสอบว่าเป็น input หรือ textarea เท่านั้น (ข้าม select)
+      if (!["INPUT", "TEXTAREA"].includes(input.tagName)) return;
 
       // ตรวจสอบ type ของ input
       if (
@@ -72,8 +71,10 @@ const App = () => {
       if (input.value !== uppercaseValue) {
         input.value = uppercaseValue;
 
-        // คืนค่า cursor position
-        input.setSelectionRange(cursorPosition, cursorPosition);
+        // ตรวจสอบว่า element รองรับ setSelectionRange
+        if (typeof input.setSelectionRange === "function") {
+          input.setSelectionRange(cursorPosition, cursorPosition);
+        }
 
         // สร้าง event ใหม่เพื่อให้ React รับรู้การเปลี่ยนแปลง
         const event = new Event("input", { bubbles: true });

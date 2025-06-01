@@ -18,6 +18,7 @@ const SupplierSection = ({ formData, setFormData }) => {
   const numericDropdownRef = useRef(null);
   const inputRef = useRef(null);
   const numericInputRef = useRef(null);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -46,9 +47,41 @@ const SupplierSection = ({ formData, setFormData }) => {
     fetchSuppliers();
   }, []);
 
+  // Initialize search terms from formData on first load
+  useEffect(() => {
+    if (isInitialLoad.current && formData.supplierId) {
+      setSearchTerm(formData.supplier || "");
+      setNumericSearchTerm(formData.supplierNumericCode || "");
+      isInitialLoad.current = false;
+    }
+  }, [formData.supplierId]); // เปลี่ยนจากหลายตัวแปรเป็นแค่ supplierId
+
+  useEffect(() => {
+    console.log("FormData changed:", {
+      supplier: formData.supplier,
+      supplierName: formData.supplierName,
+      supplierId: formData.supplierId,
+      supplierNumericCode: formData.supplierNumericCode,
+    });
+  }, [
+    formData.supplier,
+    formData.supplierName,
+    formData.supplierId,
+    formData.supplierNumericCode,
+  ]);
+
   // ฟังก์ชันสำหรับกรองซัพพลายเออร์ตามคำค้นหา
   const handleSearch = (term) => {
     setSearchTerm(term);
+
+    // เพิ่มบรรทัดนี้เพื่ออัปเดต formData ทันที
+    setFormData((prev) => ({
+      ...prev,
+      supplier: term,
+      // ถ้าไม่ได้เลือกจาก dropdown ให้เคลียร์ name และ id
+      supplierName: term === prev.supplier ? prev.supplierName : "",
+      supplierId: term === prev.supplier ? prev.supplierId : null,
+    }));
 
     if (term === "") {
       setFilteredSuppliers(suppliers);
@@ -67,6 +100,12 @@ const SupplierSection = ({ formData, setFormData }) => {
   // ฟังก์ชันสำหรับกรองซัพพลายเออร์ตามรหัสตัวเลข
   const handleNumericSearch = (term) => {
     setNumericSearchTerm(term);
+
+    // เพิ่มบรรทัดนี้เพื่ออัปเดต formData ทันที
+    setFormData((prev) => ({
+      ...prev,
+      supplierNumericCode: term,
+    }));
 
     if (term === "") {
       setFilteredNumericSuppliers(suppliers);
@@ -109,23 +148,27 @@ const SupplierSection = ({ formData, setFormData }) => {
     };
   }, []);
 
-  // เลือกซัพพลายเออร์
+  // เพิ่มใน function selectSupplier
   const selectSupplier = (supplier) => {
-    setFormData({
+    console.log("Selecting supplier:", supplier);
+    isInitialLoad.current = false;
+    const newFormData = {
       ...formData,
       supplier: supplier.code,
       supplierName: supplier.name,
       supplierId: supplier.id,
       supplierNumericCode: supplier.numeric_code || "",
-    });
+    };
+    console.log("Setting formData to:", newFormData);
+    setFormData(newFormData);
     setSearchTerm(supplier.code);
     setNumericSearchTerm(supplier.numeric_code || "");
     setShowDropdown(false);
     setShowNumericDropdown(false);
   };
-
   // เลือกซัพพลายเออร์จากรหัสตัวเลข
   const selectSupplierByNumericCode = (supplier) => {
+    isInitialLoad.current = false; // เพิ่มบรรทัดนี้
     setFormData({
       ...formData,
       supplier: supplier.code,

@@ -539,7 +539,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                             ชื่อ
                           </th>
                           <th className="px-3 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                            อายุ
+                            ประเภท
                           </th>
                           <th className="px-3 py-2 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
                             เลขตั๋ว

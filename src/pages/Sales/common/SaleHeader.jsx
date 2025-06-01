@@ -6,7 +6,6 @@ import SaleStyles from "../common/SaleStyles";
 import { useAuth } from "../../../pages/Login/AuthContext";
 import { debounce } from "lodash";
 
-// ตัวแปร global เพื่อตรวจสอบจำนวน instance (ใช้ใน warning)
 let instanceCount = 0;
 
 const SaleHeader = ({
@@ -18,8 +17,8 @@ const SaleHeader = ({
   subtotalAmount = 0,
   vatAmount = 0,
   section,
-  globalEditMode, // รับ globalEditMode จาก props
-  setGlobalEditMode, // รับ setGlobalEditMode จาก props
+  globalEditMode,
+  setGlobalEditMode,
 }) => {
   const { user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,12 +29,9 @@ const SaleHeader = ({
   const [dueDateError, setDueDateError] = useState("");
   const [tempDueDate, setTempDueDate] = useState("");
   const today = new Date().toISOString().split("T")[0];
-  const [branchType, setBranchType] = useState("Head Office");
-  const [branchNumber, setBranchNumber] = useState("");
   const textareaRef = useRef(null);
   const isMountedRef = useRef(false);
 
-  // ตรวจสอบจำนวน instance เพื่อป้องกัน UI ซ้ำ
   useEffect(() => {
     instanceCount += 1;
     isMountedRef.current = true;
@@ -52,7 +48,6 @@ const SaleHeader = ({
     };
   }, []);
 
-  // ฟังก์ชันช่วยจัดการวันที่
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -86,7 +81,6 @@ const SaleHeader = ({
     return "";
   };
 
-  // ฟังก์ชันค้นหาลูกค้า
   const debouncedSearch = useCallback(
     debounce(async (term) => {
       if (term.length >= 1) {
@@ -115,18 +109,15 @@ const SaleHeader = ({
     debouncedSearch(term);
   };
 
-  // เมื่อเลือกลูกค้าจากผลการค้นหา
   const selectCustomer = (customer) => {
     setSelectedCustomer(customer);
     const creditDays = customer.credit_days?.toString() || "0";
     const dueDate = calculateDueDate(today, creditDays);
 
-    setBranchType(customer.branch_type || "Head Office");
-    setBranchNumber(customer.branch_number || "");
     setFormData({
       ...formData,
       customer: customer.name,
-      customerCode: customer.code || "", // เพิ่มการดึงรหัสลูกค้า
+      customerCode: customer.code || "",
       contactDetails: customer.full_address || customer.address || "",
       phone: customer.phone || "",
       id: customer.id_number || "",
@@ -143,19 +134,17 @@ const SaleHeader = ({
     setGlobalEditMode(false);
   };
 
-  // ล้างข้อมูลการค้นหา
   const clearSearch = (e) => {
     e.preventDefault();
     setSearchTerm("");
     setShowResults(false);
     setSearchResults([]);
     setSelectedCustomer(null);
-    setBranchType("Head Office");
-    setBranchNumber("");
+
     setFormData({
       ...formData,
       customer: "",
-      customerCode: "", // เพิ่มการล้างรหัสลูกค้า
+      customerCode: "",
       contactDetails: "",
       phone: "",
       id: "",
@@ -175,7 +164,6 @@ const SaleHeader = ({
     setFormData({ ...formData, customerCode: value });
   };
 
-  // ฟังก์ชันคำนวณวันที่และเครดิต
   const calculateDueDate = (baseDate, creditDays) => {
     if (!baseDate) return today;
     const date = new Date(baseDate);
@@ -193,7 +181,6 @@ const SaleHeader = ({
     return Math.max(0, diffDays).toString();
   };
 
-  // ฟังก์ชันจัดการรูปแบบตัวเลข
   const formatCurrencyLocal = (amount) => {
     if (amount === null || amount === undefined || isNaN(amount)) return "0.00";
     return parseFloat(amount).toLocaleString("th-TH", {
@@ -217,7 +204,6 @@ const SaleHeader = ({
     return limitedDigits;
   };
 
-  // Event handlers
   const handleCustomerNameChange = (e) => {
     const value = e.target.value;
     setFormData({ ...formData, customer: value });
@@ -243,12 +229,8 @@ const SaleHeader = ({
   };
 
   const handleBranchTypeChange = (e) => {
-    if (!globalEditMode) return;
     const newBranchType = e.target.value;
-    setBranchType(newBranchType);
-    if (newBranchType !== "Branch") {
-      setBranchNumber("");
-    }
+    console.log("Branch type changed to:", newBranchType);
     setFormData({
       ...formData,
       branchType: newBranchType,
@@ -257,10 +239,12 @@ const SaleHeader = ({
   };
 
   const handleBranchNumberChange = (e) => {
-    if (!globalEditMode) return;
     const value = e.target.value.replace(/\D/g, "").substring(0, 3);
-    setBranchNumber(value);
-    setFormData({ ...formData, branchNumber: value });
+    console.log("Branch number changed to:", value);
+    setFormData({
+      ...formData,
+      branchNumber: value,
+    });
   };
 
   const handleDueDateChange = (e) => {
@@ -319,7 +303,8 @@ const SaleHeader = ({
   };
 
   const toggleEditMode = () => {
-    if (globalEditMode) {
+    console.log("Toggling edit mode, current globalEditMode:", globalEditMode);
+    if (!globalEditMode) {
       setShowResults(true);
       if (formData.customer && formData.customer.length > 1) {
         handleSearchCustomer(formData.customer);
@@ -330,6 +315,7 @@ const SaleHeader = ({
       setFormData({
         ...formData,
         customer: "",
+        customerCode: "",
         contactDetails: "",
         phone: "",
         id: "",
@@ -344,7 +330,6 @@ const SaleHeader = ({
     setGlobalEditMode(!globalEditMode);
   };
 
-  // Effects
   useEffect(() => {
     if (currentUser?.fullname && !formData.salesName) {
       setFormData((prev) => ({ ...prev, salesName: currentUser.fullname }));
@@ -358,21 +343,7 @@ const SaleHeader = ({
       }));
       setTempDueDate(formatDate(today));
     }
-    if (formData.branchType !== undefined) {
-      setBranchType(formData.branchType);
-    }
-    if (formData.branchNumber !== undefined) {
-      setBranchNumber(formData.branchNumber);
-    }
-  }, [
-    currentUser,
-    formData.salesName,
-    formData.date,
-    formData.branchType,
-    formData.branchNumber,
-    setFormData,
-    today,
-  ]);
+  }, [currentUser, formData.salesName, formData.date, setFormData, today]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -382,11 +353,9 @@ const SaleHeader = ({
     }
   }, [formData.contactDetails]);
 
-  // แยกการเรนเดอร์ตาม section
   if (section === "customer") {
     return (
       <div className="space-y-4">
-        {/* Customer Section */}
         <div>
           <div className="flex justify-between">
             <label className={SaleStyles.form.labelRequired}>
@@ -400,7 +369,6 @@ const SaleHeader = ({
               {globalEditMode ? "ค้นหาลูกค้าที่มีอยู่" : "กรอกข้อมูลเอง"}
             </button>
           </div>
-
           <div className="relative">
             <input
               type="text"
@@ -409,7 +377,7 @@ const SaleHeader = ({
               onChange={handleCustomerNameChange}
               required
               placeholder="ชื่อลูกค้า"
-              disabled={false} // อนุญาตให้พิมพ์เพื่อค้นหา
+              disabled={false}
             />
             {formData.customer && (
               <button
@@ -530,7 +498,7 @@ const SaleHeader = ({
               className={`${SaleStyles.form.select} ${
                 !globalEditMode ? "bg-gray-100" : ""
               }`}
-              value={branchType}
+              value={formData.branchType || "Head Office"}
               onChange={handleBranchTypeChange}
               disabled={!globalEditMode}
             >
@@ -543,12 +511,14 @@ const SaleHeader = ({
             <input
               type="text"
               className={`${SaleStyles.form.input} ${
-                !globalEditMode || branchType !== "Branch" ? "bg-gray-100" : ""
+                !globalEditMode || formData.branchType !== "Branch"
+                  ? "bg-gray-100"
+                  : ""
               }`}
-              value={branchNumber}
+              value={formData.branchNumber || ""}
               onChange={handleBranchNumberChange}
               maxLength={3}
-              disabled={!globalEditMode || branchType !== "Branch"}
+              disabled={!globalEditMode || formData.branchType !== "Branch"}
             />
           </div>
         </div>
@@ -559,7 +529,6 @@ const SaleHeader = ({
   if (section === "price") {
     return (
       <div className="space-y-4">
-        {/* Price Section */}
         <div className="bg-blue-50 p-3 rounded-md">
           <div className="text-sm text-gray-600">ราคารวมทั้งสิ้น</div>
           <div className="text-xl font-bold text-blue-600">
@@ -642,10 +611,8 @@ const SaleHeader = ({
     );
   }
 
-  // Fallback: ถ้าไม่มี section หรือ section ไม่ถูกต้อง แสดงทุกฟิลด์
   return (
     <div className="space-y-4">
-      {/* Customer Section */}
       <div>
         <label className={SaleStyles.form.labelRequired}>Customer Name</label>
         <div className="relative">
@@ -688,7 +655,6 @@ const SaleHeader = ({
                       <span className="text-sm text-gray-500">
                         {customer.address || "ไม่มีที่อยู่"}
                       </span>
-
                       {customer.phone && (
                         <span className="text-sm text-gray-500">
                           โทร: {customer.phone}
@@ -777,7 +743,7 @@ const SaleHeader = ({
             className={`${SaleStyles.form.select} ${
               !globalEditMode ? "bg-gray-100" : ""
             }`}
-            value={branchType}
+            value={formData.branchType || "Head Office"}
             onChange={handleBranchTypeChange}
             disabled={!globalEditMode}
           >
@@ -790,18 +756,17 @@ const SaleHeader = ({
           <input
             type="text"
             className={`${SaleStyles.form.input} ${
-              !globalEditMode || branchType !== "Branch" ? "bg-gray-100" : ""
+              !globalEditMode || formData.branchType !== "Branch"
+                ? "bg-gray-100"
+                : ""
             }`}
-            placeholder="หมายเลขสาขา"
-            value={branchNumber}
+            value={formData.branchNumber || ""}
             onChange={handleBranchNumberChange}
             maxLength={3}
-            disabled={!globalEditMode || branchType !== "Branch"}
+            disabled={!globalEditMode || formData.branchType !== "Branch"}
           />
         </div>
       </div>
-
-      {/* Price Section */}
       <div className="bg-blue-50 p-3 rounded-md">
         <div className="text-sm text-gray-600">ราคารวมทั้งสิ้น</div>
         <div className="text-xl font-bold text-blue-600">

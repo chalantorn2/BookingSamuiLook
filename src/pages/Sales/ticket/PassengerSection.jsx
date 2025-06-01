@@ -115,7 +115,7 @@ const PassengerSection = ({
             >
               ชื่อผู้โดยสาร
             </div>
-            <div className="col-span-3 text-center">อายุ</div>
+            <div className="col-span-3 text-center">ประเภท</div>
             <div className="col-span-3 text-center">เลขที่ตั๋ว</div>
           </div>
           {passengers.map((passenger, index) => (

@@ -97,9 +97,8 @@ const CustomerForm = ({ item, handleInputChange }) => {
         <input
           type="number"
           name="credit_days"
-          value={item.credit_days || 0}
+          value={item.credit_days}
           onChange={handleInputChange}
-          min="0"
           className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
