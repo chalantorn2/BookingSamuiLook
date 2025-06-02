@@ -220,10 +220,8 @@ const SaleTicket = () => {
         routes: routes
           .filter((r) => r.origin || r.destination)
           .map((r) => ({
-            flight: r.flight,
-            flight_number: formData.supplier
-              ? `${formData.supplier}${r.flight}`
-              : r.flight,
+            flight: r.flight, // ใช้ flight number ที่ user กรอกโดยตรง
+            flight_number: r.flight, // ไม่ต้องเชื่อมโยงกับ supplier code
             rbd: r.rbd,
             date: r.date,
             origin: r.origin,

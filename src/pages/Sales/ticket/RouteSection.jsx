@@ -45,7 +45,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
 
     // อัปเดตค่าใน state
     if (field === "flight") {
-      // ยกเลิกการเชื่อมโยงกับ supplierCode
+      // ลบการเชื่อมโยงกับ supplierCode - ให้เป็น flight number ที่ user พิมพ์เท่านั้น
       updatedRoutes[index].flight = value.toUpperCase();
     } else if (field === "rbd") {
       updatedRoutes[index].rbd = value.toUpperCase().substring(0, 1);
