@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { X, Printer, AlertTriangle } from "lucide-react";
+import { X, Printer, AlertTriangle, Loader2 } from "lucide-react";
 import logo from "../../../assets/logo-print.png";
 import { getInvoiceData, formatCurrency } from "./documentDataMapper";
 
@@ -612,6 +612,13 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     },
   };
 
+  const styles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
   if (loading) {
     return (
       <div style={modalStyles.backdrop} onClick={(e) => e.stopPropagation()}>
@@ -622,8 +629,9 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
               <button
                 style={{ ...modalStyles.button, ...modalStyles.primaryButton }}
                 onClick={handlePrint}
+                disabled
               >
-                <Printer size={16} />
+                <Printer size={18} />
                 พิมพ์
               </button>
               <button
@@ -633,18 +641,33 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
                 }}
                 onClick={onClose}
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
           </div>
+
           <div style={modalStyles.content}>
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <AlertTriangle size={40} color="#f4bb19" />
-              <p
-                style={{ marginTop: "16px", fontFamily: "Prompt, sans-serif" }}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                gap: "16px",
+              }}
+            >
+              <Loader2
+                size={48}
+                style={{
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+              <span
+                style={{ fontSize: "16px", fontFamily: "Prompt, sans-serif" }}
               >
                 กำลังสร้าง PO Number และเตรียมข้อมูล...
-              </p>
+              </span>
             </div>
           </div>
         </div>
