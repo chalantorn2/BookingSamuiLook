@@ -8,7 +8,7 @@ import { useOverviewData } from "./hooks/useOverviewData";
 
 const Overview = () => {
   const getCurrentMonthRange = () => {
-    const now = new Date("2025-05-04T00:00:00Z");
+    const now = new Date();
     const firstDay = startOfMonth(now);
     const lastDay = endOfMonth(now);
 

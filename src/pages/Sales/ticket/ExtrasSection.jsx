@@ -129,8 +129,7 @@ const ExtrasSection = ({ extras, setExtras }) => {
                     // คำนวณยอดรวมใหม่
                     const salePrice =
                       parseInt(updatedExtras[index].sale_price) || 0;
-                    const quantity =
-                      parseInt(updatedExtras[index].quantity) || 1;
+                    const quantity = parseInt(updatedExtras[index].quantity);
                     updatedExtras[index].total_amount = calculateItemTotal(
                       salePrice,
                       quantity
@@ -149,7 +148,7 @@ const ExtrasSection = ({ extras, setExtras }) => {
                     "text-center"
                   )}
                   placeholder="1"
-                  value={item.quantity || 1}
+                  value={item.quantity}
                   onChange={(e) => {
                     const updatedExtras = [...extras];
                     updatedExtras[index].quantity = e.target.value;
@@ -157,7 +156,7 @@ const ExtrasSection = ({ extras, setExtras }) => {
                     // คำนวณยอดรวมใหม่
                     const salePrice =
                       parseInt(updatedExtras[index].sale_price) || 0;
-                    const quantity = parseInt(e.target.value) || 1;
+                    const quantity = parseInt(e.target.value);
                     updatedExtras[index].total_amount = calculateItemTotal(
                       salePrice,
                       quantity

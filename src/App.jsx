@@ -27,6 +27,8 @@ const App = () => {
       "contactDetails",
       "address",
       "remarks",
+      "username", // เพิ่ม username
+      "fullname", // เพิ่ม fullname
     ];
 
     const handleInputChange = (event) => {
@@ -42,6 +44,16 @@ const App = () => {
         )
       )
         return;
+
+      // ตรวจสอบว่าอยู่ในหน้า Login หรือ User Management หรือไม่
+      const currentPath = window.location.pathname;
+      if (
+        currentPath === "/login" ||
+        currentPath.includes("/user-management") ||
+        currentPath.includes("/admin/")
+      ) {
+        return; // ข้ามการแปลงตัวใหญ่สำหรับหน้าเหล่านี้
+      }
 
       // ตรวจสอบ name หรือ class ที่ไม่ต้องการ
       const inputName = input.name || "";
@@ -60,9 +72,17 @@ const App = () => {
       // ข้ามถ้ามี class ที่บอกว่าไม่ต้องแปลง
       if (
         inputClass.includes("no-uppercase") ||
-        inputClass.includes("inputNoUppercase")
+        inputClass.includes("inputNoUppercase") ||
+        inputClass.includes("login-input") || // เพิ่ม class สำหรับ login
+        inputClass.includes("user-management-input") // เพิ่ม class สำหรับ user management
       )
         return;
+
+      // ข้ามถ้า input อยู่ใน container ที่มี class login หรือ user-management
+      const loginContainer = input.closest(
+        ".login-container, .user-management-container"
+      );
+      if (loginContainer) return;
 
       // แปลงเป็นตัวใหญ่
       const cursorPosition = input.selectionStart;

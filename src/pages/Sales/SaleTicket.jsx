@@ -38,7 +38,7 @@ const SaleTicket = () => {
     salesName: "",
     supplier: "",
     supplierName: "",
-    supplierNumericCode: "", // เพิ่มฟิลด์นี้
+    supplierNumericCode: "",
     ticketType: "bsp",
     paymentMethod: "",
     companyPaymentDetails: "",
@@ -78,7 +78,14 @@ const SaleTicket = () => {
   ]);
 
   const [extras, setExtras] = useState([
-    { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
+    {
+      id: 1,
+      description: "",
+      net_price: "",
+      sale_price: "",
+      quantity: 1,
+      total_amount: "",
+    },
   ]);
 
   const handleSubmit = async (e) => {
@@ -124,7 +131,7 @@ const SaleTicket = () => {
         console.log("Creating new customer from form submission");
         const newCustomerResult = await createCustomer({
           name: formData.customer,
-          code: formData.customerCode || null, // เพิ่มรหัสลูกค้า
+          code: formData.customerCode || null,
           address: formData.contactDetails || "",
           id_number: formData.id || "",
           phone: formData.phone || "",
@@ -142,7 +149,6 @@ const SaleTicket = () => {
           return;
         }
       } else if (customerId && formData.creditDays) {
-        // อัพเดทค่า credit_days ในตาราง customers สำหรับลูกค้าที่มีอยู่แล้ว
         try {
           await supabase
             .from("customers")
@@ -151,7 +157,6 @@ const SaleTicket = () => {
           console.log("Updated customer credit days:", formData.creditDays);
         } catch (updateError) {
           console.error("Error updating customer credit days:", updateError);
-          // ไม่ต้อง return เพื่อให้การบันทึก Booking ยังดำเนินต่อไปได้
         }
       }
 
@@ -230,10 +235,10 @@ const SaleTicket = () => {
           .filter((e) => e.description)
           .map((e) => ({
             description: e.description,
-            net_price: e.net || 0,
-            sale_price: e.sale || 0,
-            quantity: e.pax || 1,
-            total_amount: e.total || 0,
+            net_price: e.net_price || 0,
+            sale_price: e.sale_price || 0,
+            quantity: e.quantity || 1,
+            total_amount: e.total_amount || 0,
           })),
         remarks: formData.remarks || "",
         salesName: userFullname || formData.salesName,
@@ -320,11 +325,18 @@ const SaleTicket = () => {
       },
     ]);
     setExtras([
-      { id: 1, description: "", net: "", sale: "", pax: 1, total: "" },
+      {
+        id: 1,
+        description: "",
+        net_price: "",
+        sale_price: "",
+        quantity: 1,
+        total_amount: "",
+      },
     ]);
     setSelectedCustomer(null);
     setValidationErrors({});
-    setGlobalEditMode(true); // รีเซ็ต globalEditMode
+    setGlobalEditMode(true);
   };
 
   const calculatedSubtotal =

@@ -25,6 +25,7 @@ import {
   X,
   Package,
 } from "lucide-react";
+import PrintDocument from "../common/PrintDocument";
 import PrintConfirmModal from "./PrintConfirmModal";
 
 const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
@@ -32,7 +33,8 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [printLoading, setPrintLoading] = useState(false);
+  const [showPrintConfirm, setShowPrintConfirm] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     const fetchTicketDetails = async () => {
@@ -65,7 +67,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
 
         if (ticketError) throw ticketError;
 
-        // ปรับ timezone สำหรับ created_at, updated_at, cancelled_at และ po_generated_at
         const adjustedTicket = {
           ...ticket,
           created_at: ticket.created_at
@@ -114,7 +115,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
           throw detailError;
         }
 
-        // ปรับ timezone สำหรับ issue_date และ due_date
         const adjustedDetail = {
           ...detail,
           issue_date: detail?.issue_date
@@ -200,46 +200,80 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   }, [ticketId]);
 
   const handlePrintClick = () => {
-    setShowPrintModal(true);
+    if (ticketData.po_number) {
+      setShowPrintModal(true);
+    } else {
+      setShowPrintConfirm(true);
+    }
   };
 
-  const handlePrintConfirm = async () => {
-    setPrintLoading(true);
-    try {
-      const result = await generatePOForTicket(ticketId);
+  const handleClosePrintModal = () => {
+    setShowPrintModal(false);
+  };
 
-      if (result.success) {
-        // อัปเดต ticketData ด้วย PO Number ใหม่
+  const handlePOGenerated = () => {
+    if (onPOGenerated) {
+      onPOGenerated();
+    }
+
+    if (ticketId) {
+      const fetchUpdatedData = async () => {
+        try {
+          const { data: updatedTicket, error } = await supabase
+            .from("bookings_ticket")
+            .select("po_number, po_generated_at, status")
+            .eq("id", ticketId)
+            .single();
+
+          if (!error && updatedTicket) {
+            setTicketData((prev) => ({
+              ...prev,
+              po_number: updatedTicket.po_number,
+              po_generated_at: updatedTicket.po_generated_at,
+              status: updatedTicket.status,
+            }));
+          }
+        } catch (err) {
+          console.error("Error refreshing ticket data:", err);
+        }
+      };
+      fetchUpdatedData();
+    }
+  };
+
+  const handleConfirmPrint = async () => {
+    setGenerating(true);
+
+    try {
+      const poResult = await generatePOForTicket(ticketId);
+
+      if (poResult.success) {
         setTicketData((prev) => ({
           ...prev,
-          po_number: result.poNumber,
+          po_number: poResult.poNumber,
           po_generated_at: new Date().toISOString(),
+          status: "invoiced",
         }));
 
-        // เรียก callback เพื่อรีเฟรชข้อมูลในหน้าหลัก
         if (onPOGenerated) {
           onPOGenerated();
         }
 
-        // แสดงข้อความสำเร็จ
-        if (result.isNew) {
-          alert(`สร้าง PO Number สำเร็จ: ${result.poNumber}`);
-        } else {
-          alert(`PO Number: ${result.poNumber} (มีอยู่แล้ว)`);
-        }
-
-        // จำลองการพิมพ์ (ในอนาคตจะเป็นการเปิด PDF หรือหน้าต่างพิมพ์จริง)
-        console.log(`Printing document with PO: ${result.poNumber}`);
+        setShowPrintConfirm(false);
+        setShowPrintModal(true);
       } else {
-        alert(`เกิดข้อผิดพลาด: ${result.error}`);
+        alert("ไม่สามารถสร้าง PO Number ได้: " + poResult.error);
       }
     } catch (error) {
       console.error("Error generating PO:", error);
-      alert("เกิดข้อผิดพลาดในการสร้าง PO Number");
+      alert("เกิดข้อผิดพลาด: " + error.message);
     } finally {
-      setPrintLoading(false);
-      setShowPrintModal(false);
+      setGenerating(false);
     }
+  };
+
+  const handleCancelPrint = () => {
+    setShowPrintConfirm(false);
   };
 
   const formatDateTime = (dateTime) => {
@@ -373,7 +407,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     <>
       <div className="fixed inset-0 modal-backdrop bg-black flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
-          {/* Header */}
           <div className="bg-blue-600 px-6 py-4 text-white flex justify-between items-center">
             <h1 className="text-xl font-bold">
               รายละเอียดตั๋วเครื่องบิน:{" "}
@@ -387,7 +420,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               >
                 <Printer size={20} />
               </button>
-
               <button
                 className="p-2 hover:bg-blue-700 rounded-md transition-colors"
                 title="ส่งอีเมล"
@@ -403,10 +435,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               </button>
             </div>
           </div>
-
-          {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Section: Customer & Dates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h2 className="text-lg font-semibold mb-3 flex items-center">
@@ -414,7 +443,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                   ข้อมูลลูกค้า
                 </h2>
                 <div className="space-y-3">
-                  {/* แถวที่ 1: ชื่อลูกค้า | รหัสลูกค้า | ที่อยู่ */}
                   <div className="grid grid-cols-3 gap-3">
                     <div className="flex items-start">
                       <User className="text-gray-500 mr-2 mt-1" size={16} />
@@ -444,8 +472,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                       </div>
                     </div>
                   </div>
-
-                  {/* แถวที่ 2: เบอร์โทร | เลขผู้เสียภาษี | ประเภทสาขา */}
                   <div className="grid grid-cols-3 gap-3">
                     <div className="flex items-start">
                       <Phone className="text-gray-500 mr-2 mt-1" size={16} />
@@ -481,7 +507,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                   </div>
                 </div>
               </div>
-
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h2 className="text-lg font-semibold mb-3 flex items-center">
                   <Calendar className="text-blue-500 mr-2" size={20} />
@@ -518,8 +543,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                 </div>
               </div>
             </div>
-
-            {/* Section: Passengers & Supplier */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h2 className="text-lg font-semibold mb-4 flex items-center">
                 <Users className="text-blue-500 mr-2" size={20} />
@@ -587,7 +610,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     ข้อมูลซัพพลายเออร์
                   </h3>
                   <div className="space-y-3">
-                    {/* แถวที่ 1: รหัสตัวเลข | สายการบิน */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-start">
                         <Tag className="text-gray-500 mr-2 mt-1" size={16} />
@@ -604,15 +626,13 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                         <Plane className="text-gray-500 mr-2 mt-1" size={16} />
                         <div>
                           <div className="font-medium text-base">
-                            {ticketData.supplier?.code || "-"}{" "}
+                            {ticketData.supplier?.code || "-"}
                             {ticketData.supplier?.name || ""}
                           </div>
                           <div className="text-gray-600 text-sm">สายการบิน</div>
                         </div>
                       </div>
                     </div>
-
-                    {/* แถวที่ 2: Code | ประเภทตั๋ว */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-start">
                         <Tag className="text-gray-500 mr-2 mt-1" size={16} />
@@ -645,8 +665,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                 </div>
               </div>
             </div>
-
-            {/* Section: Routes */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h2 className="text-lg font-semibold mb-4 flex items-center">
                 <MapPin className="text-blue-500 mr-2" size={20} />
@@ -720,15 +738,12 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                 </table>
               </div>
             </div>
-
-            {/* Section: Extras & Pricing */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h2 className="text-lg font-semibold mb-4 flex items-center">
                 <Package className="text-blue-500 mr-2" size={20} />
                 รายการเพิ่มเติม และ ตารางราคาและยอดรวม
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-                {/* Extras */}
                 <div className="lg:col-span-4">
                   <h3 className="font-medium text-base mb-3">
                     รายการเพิ่มเติม
@@ -778,8 +793,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     </div>
                   )}
                 </div>
-
-                {/* Pricing Table */}
                 <div className="lg:col-span-4">
                   <h3 className="font-medium text-base mb-3">ตารางราคา</h3>
                   <div className="overflow-x-auto">
@@ -856,8 +869,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     </table>
                   </div>
                 </div>
-
-                {/* Summary */}
                 <div className="lg:col-span-2">
                   <h3 className="font-medium text-base mb-3">ยอดรวม</h3>
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -894,15 +905,12 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                 </div>
               </div>
             </div>
-
-            {/* Section: Payment & Status */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h2 className="text-lg font-semibold mb-4 flex items-center">
                 <CreditCard className="text-blue-500 mr-2" size={20} />
                 การชำระเงิน และ สถานะและการจัดการ
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Payment Methods */}
                 <div>
                   <h3 className="font-medium text-base mb-3">การชำระเงิน</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -952,8 +960,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     </div>
                   </div>
                 </div>
-
-                {/* Status & Management */}
                 <div>
                   <h3 className="font-medium text-base mb-3">
                     สถานะและการจัดการ
@@ -1010,8 +1016,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               </div>
             </div>
           </div>
-
-          {/* Footer */}
           <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
             <div>
               {onEdit && (
@@ -1034,13 +1038,18 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
           </div>
         </div>
       </div>
-
-      {/* Print Confirmation Modal */}
-      <PrintConfirmModal
+      <PrintDocument
         isOpen={showPrintModal}
-        onClose={() => setShowPrintModal(false)}
-        onConfirm={handlePrintConfirm}
-        loading={printLoading}
+        onClose={handleClosePrintModal}
+        documentType="invoice"
+        ticketId={ticketId}
+        onPOGenerated={handlePOGenerated}
+      />
+      <PrintConfirmModal
+        isOpen={showPrintConfirm}
+        onClose={handleCancelPrint}
+        onConfirm={handleConfirmPrint}
+        loading={generating}
       />
     </>
   );

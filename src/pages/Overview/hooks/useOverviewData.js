@@ -154,6 +154,7 @@ export const useOverviewData = ({
           created_at,
           updated_at,
           created_by,
+          po_number,
           user:created_by(fullname),
           customer:customer_id(name),
           supplier:information_id(name),
@@ -220,11 +221,13 @@ export const useOverviewData = ({
           date: issueDate || timestamp,
           customer: item.customer?.name || "N/A",
           supplier: item.supplier?.name || "N/A",
-          status: normalizedStatus, // ใช้สถานะที่ normalize แล้ว
+          status: normalizedStatus,
           createdBy: item.user?.fullname || "System",
           timestamp: timestamp,
           serviceType: serviceType,
           amount: amount,
+          po_number: item.po_number, // เพิ่มบรรทัดนี้
+          po_generated_at: item.po_generated_at, // เพิ่มบรรทัดนี้
         };
       });
 

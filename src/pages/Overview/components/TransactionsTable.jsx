@@ -1,6 +1,6 @@
 import React from "react";
 import { Activity, Clock, User, Building, Shield } from "lucide-react";
-import { StatusBadge } from "./StatusBadges";
+// import { StatusBadge } from "./StatusBadges";
 import Pagination from "./Pagination";
 
 const TransactionsTable = ({
@@ -46,6 +46,24 @@ const TransactionsTable = ({
     const minutes = dateObj.getMinutes().toString().padStart(2, "0");
     const seconds = dateObj.getSeconds().toString().padStart(2, "0");
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const getStatusDisplay = (item) => {
+    if (item.po_number && item.po_number.trim() !== "") {
+      return (
+        <div className="flex items-center justify-center">
+          <span className="text-sm font-medium text-gray-900">
+            {item.po_number}
+          </span>
+        </div>
+      );
+    } else {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          Not Invoiced
+        </span>
+      );
+    }
   };
 
   return (
@@ -159,7 +177,7 @@ const TransactionsTable = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <StatusBadge status={item.status} />
+                        {getStatusDisplay(item)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="flex items-center">
