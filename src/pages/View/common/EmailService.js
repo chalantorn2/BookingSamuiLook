@@ -2,8 +2,7 @@ import SibApiV3Sdk from "sib-api-v3-sdk";
 
 // Brevo Configuration
 const BREVO_CONFIG = {
-  API_KEY:
-    "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", // แทนที่ด้วย API Key จาก Brevo
+  API_KEY: import.meta.env.VITE_SENDINBLUE_API_KEY,
   FROM_EMAIL: "chalantorn2@gmail.com",
   DEFAULT_TO_EMAIL: "chalantorn.work@gmail.com",
 };
@@ -12,6 +11,11 @@ const BREVO_CONFIG = {
  * Initialize Brevo
  */
 export function initializeBrevo() {
+  if (!BREVO_CONFIG.API_KEY) {
+    throw new Error(
+      "Sendinblue API Key is not defined in environment variables"
+    );
+  }
   SibApiV3Sdk.ApiClient.instance.authentications["api-key"].apiKey =
     BREVO_CONFIG.API_KEY;
 }

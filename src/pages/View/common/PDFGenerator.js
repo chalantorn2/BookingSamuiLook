@@ -50,7 +50,7 @@ export const generateInvoicePDF = async (invoiceData, ticketId) => {
 
     // สร้าง canvas จาก HTML
     const canvas = await html2canvas(printWrapper, {
-      scale: 3.0, // เพิ่มจาก 2.0 เป็น 3.0
+      scale: 4.0, // เพิ่มจาก 2.0 เป็น 3.0
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
