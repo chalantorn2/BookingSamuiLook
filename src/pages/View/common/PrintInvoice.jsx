@@ -217,7 +217,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
           }
           
           .print-summary-section {
-            border-top: 2px solid #000 !important;
+            border-top: 1px solid #000 !important;
           }
           
           .print-summary-section td {
@@ -227,8 +227,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
           
           .print-summary-total {
             background-color: #e5e7eb !important;
-            border-top: 3px solid #000 !important;
-            border-bottom: 3px solid #000 !important;
+            border-top: 1px solid #000 !important;
+            border-bottom: 1px solid #000 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -499,8 +499,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     table: {
       width: "100%",
       borderCollapse: "collapse",
-      borderTop: "4px solid #000",
-      borderBottom: "4px solid #000",
+      borderTop: "1px solid #000",
+      borderBottom: "1px solid #000",
       fontFamily: "Prompt, sans-serif",
       margin: "5px 0",
       display: "table",
@@ -512,8 +512,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     },
     th: {
       backgroundColor: "#e5e7eb",
-      borderTop: "2px solid #000",
-      borderBottom: "2px solid #000",
+      borderTop: "1px solid #000",
+      borderBottom: "1px solid #000",
       fontWeight: "bold",
       textAlign: "center",
       padding: "5px 5px",
@@ -523,8 +523,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     },
     thQuantity: {
       backgroundColor: "#e5e7eb",
-      borderTop: "2px solid #000",
-      borderBottom: "2px solid #000",
+      borderTop: "1px solid #000",
+      borderBottom: "1px solid #000",
       borderLeft: "1px solid #000",
       fontWeight: "bold",
       textAlign: "center",
@@ -535,8 +535,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     },
     thPrice: {
       backgroundColor: "#e5e7eb",
-      borderTop: "2px solid #000",
-      borderBottom: "2px solid #000",
+      borderTop: "1px solid #000",
+      borderBottom: "1px solid #000",
       borderLeft: "1px solid #000",
       fontWeight: "bold",
       textAlign: "center",
@@ -547,8 +547,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     },
     thTotal: {
       backgroundColor: "#e5e7eb",
-      borderTop: "2px solid #000",
-      borderBottom: "2px solid #000",
+      borderTop: "1px solid #000",
+      borderBottom: "1px solid #000",
       borderLeft: "1px solid #000",
       fontWeight: "bold",
       textAlign: "center",
@@ -599,14 +599,14 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
       padding: "3px 3px 3px 40px", // top right bottom left
     },
     summaryRow: {
-      borderTop: "2px solid #000",
+      borderTop: "1px solid #000",
       fontWeight: "bold",
       fontFamily: "Prompt, sans-serif",
     },
     totalRow: {
       backgroundColor: "#e5e7eb",
-      borderTop: "3px solid #000",
-      borderBottom: "3px solid #000",
+      borderTop: "1px solid #000",
+      borderBottom: "1px solid #000",
       fontWeight: "bold",
       fontFamily: "Prompt, sans-serif",
     },

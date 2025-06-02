@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabase";
 import { generatePOForTicket } from "../../../services/ticketService";
+import EmailInvoice from "../common/EmailInvoice";
 import {
   User,
   Plane,
@@ -35,6 +36,8 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showPrintConfirm, setShowPrintConfirm] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailNotification, setEmailNotification] = useState(null);
 
   useEffect(() => {
     const fetchTicketDetails = async () => {
@@ -297,10 +300,20 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     return `${day}/${month}/${year}`;
   };
 
-  const formatRouteDate = (dateTime) => {
-    if (!dateTime || isNaN(new Date(dateTime).getTime())) return "-";
-    const dateObj = new Date(dateTime);
-    const day = dateObj.getDate().toString().padStart(2, "0");
+  // เพิ่มฟังก์ชันช่วยเหลือ
+  const getBranchDisplay = (branchType, branchNumber) => {
+    if (branchType === "Branch" && branchNumber) {
+      return `${branchType} ${branchNumber}`;
+    }
+    return branchType || "Head Office";
+  };
+
+  const formatRouteDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+
+    const day = date.getDate().toString().padStart(2, "0");
     const monthNames = [
       "JAN",
       "FEB",
@@ -315,8 +328,44 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
       "NOV",
       "DEC",
     ];
-    const month = monthNames[dateObj.getMonth()];
+    const month = monthNames[date.getMonth()];
+
     return `${day}${month}`;
+  };
+
+  const getPassengerTypes = (pricing) => {
+    if (!pricing) return [];
+
+    const types = [];
+
+    if (pricing.adult_pax > 0) {
+      types.push({
+        type: "Adult",
+        quantity: pricing.adult_pax,
+        unitPrice: pricing.adult_sale_price || 0,
+        amount: pricing.adult_total || 0,
+      });
+    }
+
+    if (pricing.child_pax > 0) {
+      types.push({
+        type: "Child",
+        quantity: pricing.child_pax,
+        unitPrice: pricing.child_sale_price || 0,
+        amount: pricing.child_total || 0,
+      });
+    }
+
+    if (pricing.infant_pax > 0) {
+      types.push({
+        type: "Infant",
+        quantity: pricing.infant_pax,
+        unitPrice: pricing.infant_sale_price || 0,
+        amount: pricing.infant_total || 0,
+      });
+    }
+
+    return types;
   };
 
   const formatCurrency = (amount) => {
@@ -365,6 +414,30 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     }
 
     return displayType;
+  };
+
+  // เพิ่มฟังก์ชันจัดการอีเมล
+  const handleEmailClick = () => {
+    // ตรวจสอบว่ามี PO Number หรือไม่
+    if (!ticketData.po_number || ticketData.po_number.trim() === "") {
+      alert("ไม่สามารถส่งอีเมลได้ กรุณาออกเลข PO ก่อน");
+      return;
+    }
+
+    setShowEmailModal(true);
+  };
+
+  const handleCloseEmailModal = () => {
+    setShowEmailModal(false);
+    setEmailNotification(null);
+  };
+
+  const handleEmailSent = (message) => {
+    setEmailNotification(message);
+    // แสดง notification
+    setTimeout(() => {
+      setEmailNotification(null);
+    }, 5000);
   };
 
   if (loading) {
@@ -421,11 +494,31 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                 <Printer size={20} />
               </button>
               <button
-                className="p-2 hover:bg-blue-700 rounded-md transition-colors"
-                title="ส่งอีเมล"
+                className={`p-2 rounded-md transition-colors ${
+                  ticketData.po_number && ticketData.po_number.trim() !== ""
+                    ? "hover:bg-blue-700"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
+                title={
+                  ticketData.po_number && ticketData.po_number.trim() !== ""
+                    ? "ส่งอีเมล"
+                    : "ต้องออกเลข PO ก่อนส่งอีเมล"
+                }
+                onClick={handleEmailClick}
+                disabled={
+                  !ticketData.po_number || ticketData.po_number.trim() === ""
+                }
               >
                 <Mail size={20} />
               </button>
+              {emailNotification && (
+                <div className="fixed top-4 right-4 z-60 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+                  <div className="flex items-center">
+                    <CheckCircle size={20} className="mr-2" />
+                    <span>{emailNotification}</span>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-blue-700 rounded-md transition-colors"
@@ -1050,6 +1143,74 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
         onClose={handleCancelPrint}
         onConfirm={handleConfirmPrint}
         loading={generating}
+      />
+      <EmailInvoice
+        isOpen={showEmailModal}
+        onClose={handleCloseEmailModal}
+        invoiceData={
+          ticketData
+            ? {
+                customer: {
+                  name: ticketData.customer?.name || "",
+                  address: ticketData.customer?.address || "",
+                  phone: ticketData.customer?.phone || "",
+                  taxId: ticketData.customer?.id_number || "",
+                  branch: getBranchDisplay(
+                    ticketData.customer?.branch_type,
+                    ticketData.customer?.branch_number
+                  ),
+                  email: ticketData.customer?.email || "",
+                },
+                invoice: {
+                  poNumber: ticketData.po_number || "",
+                  date: formatDate(ticketData.detail?.issue_date),
+                  dueDate: formatDate(ticketData.detail?.due_date),
+                  salesPerson: ticketData.createdByName || "System",
+                },
+                passengers:
+                  ticketData.passengers?.map((p, index) => ({
+                    index: index + 1,
+                    name: p.passenger_name || "",
+                    age: p.age || "",
+                    ticketNumber: p.ticket_number || "",
+                    ticketCode: p.ticket_code || "",
+                    display: `${index + 1}. ${p.passenger_name || ""} ${
+                      p.age || ""
+                    } ${p.ticket_number || ""} ${p.ticket_code || ""}`
+                      .trim()
+                      .replace(/\s+/g, " "),
+                  })) || [],
+                flights:
+                  ticketData.routes?.map((route) => ({
+                    flightNumber: route.flight_number || "",
+                    rbd: route.rbd || "",
+                    date: formatRouteDate(route.date),
+                    route: `${route.origin || ""}-${route.destination || ""}`,
+                    display: `${route.flight_number || ""} ${formatRouteDate(
+                      route.date
+                    )} ${route.origin || ""}${route.destination || ""}`
+                      .trim()
+                      .replace(/\s+/g, " "),
+                  })) || [],
+                passengerTypes: getPassengerTypes(ticketData.pricing),
+                extras:
+                  ticketData.extras?.map((extra) => ({
+                    description: extra.description || "",
+                    quantity: extra.quantity || 1,
+                    unitPrice: extra.sale_price || 0,
+                    amount: extra.total_amount || 0,
+                  })) || [],
+                summary: {
+                  subtotal: ticketData.detail?.subtotal_before_vat || 0,
+                  vatPercent: ticketData.detail?.vat_percent || 0,
+                  vat: ticketData.detail?.vat_amount || 0,
+                  total: ticketData.detail?.grand_total || 0,
+                },
+              }
+            : null
+        }
+        ticketId={ticketId}
+        onEmailSent={handleEmailSent}
       />
     </>
   );
