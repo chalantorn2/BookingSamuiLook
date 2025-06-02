@@ -20,11 +20,10 @@ const PrintConfirmModal = ({ isOpen, onClose, onConfirm, loading = false }) => {
 
         <div className="mb-6">
           <p className="text-sm text-gray-500">
-            คุณต้องการพิมพ์เอกสารนี้หรือไม่?
+            คุณต้องการพิมพ์เอกสารนี้หรือไม่? การพิมพ์จะถือเป็นการออกเลข PO
+            Number
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            การดำเนินการนี้จะสร้าง PO Number และไม่สามารถย้อนกลับได้
-          </p>
+          <p className="text-sm text-gray-500 mt-2"></p>
         </div>
 
         <div className="flex justify-end space-x-3">
