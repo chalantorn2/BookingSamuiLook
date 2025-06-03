@@ -88,6 +88,18 @@ const SaleTicket = () => {
     },
   ]);
 
+  // เพิ่ม useEffect เพื่อ sync ข้อมูลระหว่าง supplier และ passenger ticket numbers
+  useEffect(() => {
+    // เมื่อ formData.supplierNumericCode เปลี่ยนแปลง ให้อัปเดท ticket numbers ของผู้โดยสารทุกคน
+    if (formData.supplierNumericCode) {
+      const updatedPassengers = passengers.map((passenger) => ({
+        ...passenger,
+        ticketNumber: formData.supplierNumericCode,
+      }));
+      setPassengers(updatedPassengers);
+    }
+  }, [formData.supplierNumericCode]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -436,6 +448,8 @@ const SaleTicket = () => {
                   setPassengers={setPassengers}
                   updatePricing={updatePricing}
                   pricing={pricing}
+                  formData={formData}
+                  setFormData={setFormData}
                 />
                 <SupplierSection
                   formData={formData}
