@@ -559,7 +559,7 @@ const SaleHeader = ({
               className={`${SaleStyles.form.input} ${
                 !globalEditMode ? "bg-gray-100" : ""
               }`}
-              value={formData.creditDays || "0"}
+              value={formData.creditDays}
               onChange={handleCreditDaysChange}
               placeholder="0"
               required

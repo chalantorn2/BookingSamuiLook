@@ -88,7 +88,66 @@ const SaleTicket = () => {
     },
   ]);
 
-  // เพิ่ม useEffect เพื่อ sync ข้อมูลระหว่าง supplier และ passenger ticket numbers
+  const searchSupplierByNumericCode = async (numericCode) => {
+    try {
+      const { data, error } = await supabase
+        .from("information")
+        .select("*")
+        .eq("category", "airline")
+        .eq("active", true)
+        .eq("numeric_code", numericCode)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = not found
+        console.error("Error searching supplier:", error);
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      console.error("Error in searchSupplierByNumericCode:", err);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const searchSupplier = async () => {
+      if (
+        formData.searchTicketNumber &&
+        formData.searchTicketNumber.length === 3
+      ) {
+        const supplier = await searchSupplierByNumericCode(
+          formData.searchTicketNumber
+        );
+
+        if (supplier) {
+          // เจอ supplier -> อัปเดทข้อมูล
+          setFormData((prev) => ({
+            ...prev,
+            supplier: supplier.code,
+            supplierName: supplier.name,
+            supplierId: supplier.id,
+            supplierNumericCode: supplier.numeric_code,
+            searchTicketNumber: "", // clear search flag
+          }));
+        } else {
+          // ไม่เจอ supplier -> clear ข้อมูล supplier ทั้งหมด
+          setFormData((prev) => ({
+            ...prev,
+            supplier: "",
+            supplierName: "",
+            supplierId: null,
+            supplierNumericCode: prev.searchTicketNumber, // เก็บเลขที่พิมพ์ไว้
+            searchTicketNumber: "", // clear search flag
+          }));
+        }
+      }
+    };
+
+    searchSupplier();
+  }, [formData.searchTicketNumber]);
+
   useEffect(() => {
     // เมื่อ formData.supplierNumericCode เปลี่ยนแปลง ให้อัปเดท ticket numbers ของผู้โดยสารทุกคน
     if (formData.supplierNumericCode) {
@@ -97,8 +156,127 @@ const SaleTicket = () => {
         ticketNumber: formData.supplierNumericCode,
       }));
       setPassengers(updatedPassengers);
+    } else {
+      // ถ้าไม่มี supplierNumericCode ให้ clear ticket numbers และ supplier info
+      const updatedPassengers = passengers.map((passenger) => ({
+        ...passenger,
+        ticketNumber: "",
+      }));
+      setPassengers(updatedPassengers);
+
+      // Clear supplier info ด้วย
+      setFormData((prev) => ({
+        ...prev,
+        supplier: "",
+        supplierName: "",
+        supplierId: null,
+      }));
     }
   }, [formData.supplierNumericCode]);
+
+  const searchSupplierByCode = async (code) => {
+    console.log("searchSupplierByCode called with:", code);
+
+    try {
+      const { data, error } = await supabase
+        .from("information")
+        .select("*")
+        .eq("category", "airline")
+        .eq("active", true)
+        .eq("code", code.toUpperCase())
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = not found
+        console.error("Error searching supplier by code:", error);
+        return null;
+      }
+
+      console.log("Database search result:", data);
+      return data;
+    } catch (err) {
+      console.error("Error in searchSupplierByCode:", err);
+      return null;
+    }
+  };
+
+  // เพิ่ม useEffect สำหรับค้นหาด้วย supplier code
+  useEffect(() => {
+    const searchSupplierByCodeFunc = async () => {
+      if (
+        formData.searchSupplierCode &&
+        formData.searchSupplierCode.length >= 2
+      ) {
+        console.log(
+          "Searching for supplier code:",
+          formData.searchSupplierCode
+        );
+
+        try {
+          const supplier = await searchSupplierByCode(
+            formData.searchSupplierCode
+          );
+          console.log("Search result:", supplier);
+
+          if (supplier) {
+            console.log("Found supplier:", supplier.code, supplier.name);
+            console.log("Numeric code:", supplier.numeric_code);
+
+            // เจอ supplier -> อัปเดทข้อมูล
+            setFormData((prev) => ({
+              ...prev,
+              supplier: supplier.code,
+              supplierName: supplier.name,
+              supplierId: supplier.id,
+              supplierNumericCode: supplier.numeric_code || "", // อนุญาตให้เป็น empty string
+              searchSupplierCode: "", // clear search flag
+            }));
+
+            // อัปเดท ticket numbers (ถ้ามี numeric_code)
+            const ticketNumber = supplier.numeric_code || "";
+            console.log("Setting ticket number to:", ticketNumber);
+
+            const updatedPassengers = passengers.map((passenger) => ({
+              ...passenger,
+              ticketNumber: ticketNumber,
+            }));
+            setPassengers(updatedPassengers);
+          } else {
+            console.log(
+              "Supplier not found for code:",
+              formData.searchSupplierCode
+            );
+
+            // ไม่เจอ supplier -> clear ข้อมูล supplier อื่น (เก็บ code ที่พิมพ์ไว้)
+            setFormData((prev) => ({
+              ...prev,
+              supplierName: "",
+              supplierId: null,
+              supplierNumericCode: "",
+              searchSupplierCode: "", // clear search flag
+            }));
+
+            // Clear ticket numbers ด้วย
+            const updatedPassengers = passengers.map((passenger) => ({
+              ...passenger,
+              ticketNumber: "",
+            }));
+            setPassengers(updatedPassengers);
+          }
+        } catch (error) {
+          console.error("Error in searchSupplierByCodeFunc:", error);
+
+          // Clear search flag ในกรณี error
+          setFormData((prev) => ({
+            ...prev,
+            searchSupplierCode: "",
+          }));
+        }
+      }
+    };
+
+    searchSupplierByCodeFunc();
+  }, [formData.searchSupplierCode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
