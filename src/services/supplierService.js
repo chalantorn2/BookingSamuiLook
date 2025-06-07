@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { transformToUpperCase } from "../utils/helpers";
 
 export const getSuppliers = async (
   type = "Airline",
@@ -87,14 +88,14 @@ export const createSupplier = async (supplierData) => {
       category = "supplier-other";
     }
 
-    const payload = {
+    const payload = transformToUpperCase({
       category: category,
       code: supplierData.code,
       name: supplierData.name,
       type: supplierData.type || "Other",
       numeric_code: supplierData.numeric_code || null,
       active: true,
-    };
+    });
 
     const { data, error } = await supabase
       .from("information")

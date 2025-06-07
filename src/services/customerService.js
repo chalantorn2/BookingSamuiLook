@@ -1,4 +1,5 @@
 import { supabase, insertData, fetchData } from "./supabase";
+import { transformToUpperCase } from "../utils/helpers";
 
 // ฟังก์ชันตัดข้อความให้มีความยาวสูงสุด
 const truncateText = (text, maxLength = 50) => {
@@ -79,17 +80,20 @@ export const createCustomer = async (customerData) => {
     }
 
     // เตรียมข้อมูลสำหรับบันทึก
-    const payload = {
-      name: customerData.name,
-      code: customerData.code || null,
-      address: customerData.address || null,
-      id_number: customerData.id_number || null,
-      phone: customerData.phone || null,
-      credit_days: customerData.credit_days || 0,
-      branch_type: customerData.branch_type || "Head Office",
-      branch_number: customerData.branch_number || null,
-      active: true,
-    };
+    const payload = transformToUpperCase(
+      {
+        name: customerData.name,
+        code: customerData.code || null,
+        address: customerData.address || null,
+        id_number: customerData.id_number || null,
+        phone: customerData.phone || null,
+        credit_days: customerData.credit_days || 0,
+        branch_type: customerData.branch_type || "Head Office",
+        branch_number: customerData.branch_number || null,
+        active: true,
+      },
+      ["phone", "credit_days"]
+    );
 
     const { data, error } = await supabase
       .from("customers")
@@ -136,19 +140,22 @@ export const updateCustomer = async (id, customerData) => {
       throw new Error("Branch number is required when branch type is Branch");
     }
 
-    const payload = {
-      name: customerData.name,
-      code: customerData.code || null,
-      address: customerData.address || null,
-      id_number: customerData.id_number || null,
-      phone: customerData.phone || null,
-      branch_type: customerData.branch_type || "Head Office",
-      branch_number:
-        customerData.branch_type === "Branch"
-          ? customerData.branch_number
-          : null,
-      credit_days: customerData.credit_days || 0,
-    };
+    const payload = transformToUpperCase(
+      {
+        name: customerData.name,
+        code: customerData.code || null,
+        address: customerData.address || null,
+        id_number: customerData.id_number || null,
+        phone: customerData.phone || null,
+        branch_type: customerData.branch_type || "Head Office",
+        branch_number:
+          customerData.branch_type === "Branch"
+            ? customerData.branch_number
+            : null,
+        credit_days: customerData.credit_days || 0,
+      },
+      ["phone", "credit_days"]
+    );
 
     const { data, error } = await supabase
       .from("customers")

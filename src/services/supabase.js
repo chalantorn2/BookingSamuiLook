@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { transformToUpperCase } from "../utils/helpers";
 
 // ดึงค่า URL และ API Key จากไฟล์ .env ที่กำหนดไว้
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -76,33 +77,27 @@ export const fetchData = async ({
 
 export const insertData = async (table, data) => {
   try {
-    // ถ้ามีฟิลด์ created_at และไม่ได้กำหนดค่าไว้ ให้กำหนดเป็นเวลาปัจจุบันในรูปแบบ ISO string
-    // แต่ต้องปรับเขตเวลาให้เป็น UTC+7 (เวลาประเทศไทย)
-    if (!data.created_at) {
-      // สร้างวัตถุ Date ปัจจุบัน
-      const now = new Date();
+    // แปลงข้อมูลเป็นตัวพิมพ์ใหญ่ก่อนบันทึก
+    const transformedData = transformToUpperCase(data);
 
-      // คำนวณ offset ที่ต้องการ (UTC+7)
-      const offset = 7 * 60 * 60 * 1000; // 7 ชั่วโมงในมิลลิวินาที
-
-      // ปรับเวลาให้เป็น UTC+7
-      const thaiTime = new Date(now.getTime() + offset);
-
-      // แปลงเป็น ISO string
-      data.created_at = thaiTime.toISOString();
-    }
-
-    // ถ้ามีฟิลด์ updated_at ให้ทำเหมือนกับ created_at
-    if ("updated_at" in data && !data.updated_at) {
+    // ฟิลด์ created_at และ updated_at (โค้ดเดิม)
+    if (!transformedData.created_at) {
       const now = new Date();
       const offset = 7 * 60 * 60 * 1000;
       const thaiTime = new Date(now.getTime() + offset);
-      data.updated_at = thaiTime.toISOString();
+      transformedData.created_at = thaiTime.toISOString();
+    }
+
+    if ("updated_at" in transformedData && !transformedData.updated_at) {
+      const now = new Date();
+      const offset = 7 * 60 * 60 * 1000;
+      const thaiTime = new Date(now.getTime() + offset);
+      transformedData.updated_at = thaiTime.toISOString();
     }
 
     const { data: result, error } = await supabase
       .from(table)
-      .insert(data)
+      .insert(transformedData) // ใช้ transformedData แทน data
       .select();
 
     if (error) {
@@ -115,12 +110,15 @@ export const insertData = async (table, data) => {
     throw error;
   }
 };
-// ฟังก์ชันสำหรับการอัพเดทข้อมูล
+
 export const updateData = async (table, id, data) => {
   try {
+    // แปลงข้อมูลเป็นตัวพิมพ์ใหญ่ก่อนอัปเดต
+    const transformedData = transformToUpperCase(data);
+
     const { data: result, error } = await supabase
       .from(table)
-      .update(data)
+      .update(transformedData) // ใช้ transformedData แทน data
       .eq("id", id)
       .select();
 

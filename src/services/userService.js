@@ -1,4 +1,5 @@
 import { supabase, insertData, fetchData } from "./supabase";
+import { transformToUpperCase } from "../utils/helpers";
 
 export const getUsers = async (search = "", limit = 10) => {
   try {
@@ -40,17 +41,20 @@ export const getUserById = async (id) => {
 
 export const createUser = async (userData) => {
   try {
-    const payload = {
-      username: userData.username,
-      full_name: userData.full_name,
-      display_name: userData.display_name,
-      email: userData.email,
-      position: userData.position,
-      phone: userData.phone,
-      role: userData.role || "viewer",
-      status: userData.status || "active",
-      password_hash: userData.password_hash,
-    };
+    const payload = transformToUpperCase(
+      {
+        username: userData.username,
+        full_name: userData.full_name,
+        display_name: userData.display_name,
+        email: userData.email,
+        position: userData.position,
+        phone: userData.phone,
+        role: userData.role || "viewer",
+        status: userData.status || "active",
+        password_hash: userData.password_hash,
+      },
+      ["username", "email", "phone", "password_hash"]
+    );
 
     const result = await insertData("users", payload);
     return { success: true, userId: result[0].id };

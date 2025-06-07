@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "../../services/supabase";
 import DataTable from "./components/DataTable";
 import AddEditForm from "./components/AddEditForm";
@@ -10,6 +10,14 @@ const Information = () => {
     { id: "customer", label: "Customer" },
   ]);
 
+  // เพิ่ม supplier types สำหรับ filter
+  const [supplierTypes] = useState([
+    { value: "all", label: "ทั้งหมด" },
+    { value: "Airline", label: "Airline" },
+    { value: "Voucher", label: "Voucher" },
+    { value: "Other", label: "Other" },
+  ]);
+
   const [selectedCategory, setSelectedCategory] = useState("supplier");
   const [informationData, setInformationData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,7 +26,7 @@ const Information = () => {
   const [newItem, setNewItem] = useState({
     name: "",
     code: "",
-    numeric_code: "", // เพิ่มฟิลด์ใหม่
+    numeric_code: "",
     address: "",
     id_number: "",
     phone: "",
@@ -29,8 +37,14 @@ const Information = () => {
   });
   const [addingNew, setAddingNew] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("name");
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [sortField, setSortField] = useState("created_at");
+  const [sortDirection, setSortDirection] = useState("desc");
+
+  // เพิ่ม state สำหรับ pagination และ filter
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [selectedSupplierType, setSelectedSupplierType] = useState("all");
 
   useEffect(() => {
     if (selectedCategory === "customer") {
@@ -38,20 +52,53 @@ const Information = () => {
     } else {
       loadInformationData();
     }
-  }, [selectedCategory]);
+  }, [
+    selectedCategory,
+    currentPage,
+    selectedSupplierType,
+    searchTerm,
+    sortField,
+    sortDirection,
+  ]);
 
   const loadInformationData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // แสดงข้อมูลของ airline, supplier-voucher, supplier-other ทั้งหมด
-      const { data, error } = await supabase
+      // คำนวณ offset สำหรับ pagination
+      const offset = (currentPage - 1) * itemsPerPage;
+
+      // สร้าง query พื้นฐาน
+      let query = supabase
         .from("information")
-        .select("*")
+        .select("*", { count: "exact" })
         .in("category", ["airline", "supplier-voucher", "supplier-other"])
         .eq("active", true);
+
+      // เพิ่ม filter สำหรับประเภท supplier
+      if (selectedSupplierType !== "all") {
+        query = query.eq("type", selectedSupplierType);
+      }
+
+      // เพิ่มการค้นหา
+      if (searchTerm) {
+        query = query.or(
+          `code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,numeric_code.ilike.%${searchTerm}%,type.ilike.%${searchTerm}%`
+        );
+      }
+
+      // เพิ่มการเรียงลำดับ
+      query = query.order(sortField, { ascending: sortDirection === "asc" });
+
+      // เพิ่ม pagination
+      query = query.range(offset, offset + itemsPerPage - 1);
+
+      const { data, error, count } = await query;
+
       if (error) throw error;
+
       setInformationData(data || []);
+      setTotalItems(count || 0);
     } catch (err) {
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err.message);
     } finally {
@@ -63,14 +110,33 @@ const Information = () => {
     setLoading(true);
     setError(null);
     try {
-      // เพิ่มการกรองเฉพาะข้อมูลที่ active = true
-      const { data, error } = await supabase
+      // คำนวณ offset สำหรับ pagination
+      const offset = (currentPage - 1) * itemsPerPage;
+
+      let query = supabase
         .from("customers")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("active", true);
 
+      // เพิ่มการค้นหา
+      if (searchTerm) {
+        query = query.or(
+          `code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,id_number.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`
+        );
+      }
+
+      // เพิ่มการเรียงลำดับ
+      query = query.order(sortField, { ascending: sortDirection === "asc" });
+
+      // เพิ่ม pagination
+      query = query.range(offset, offset + itemsPerPage - 1);
+
+      const { data, error, count } = await query;
+
       if (error) throw error;
+
       setInformationData(data || []);
+      setTotalItems(count || 0);
     } catch (err) {
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูลลูกค้า: " + err.message);
     } finally {
@@ -83,6 +149,49 @@ const Information = () => {
     setEditingItem(null);
     setAddingNew(false);
     setSearchTerm("");
+    setCurrentPage(1); // รีเซ็ตหน้าเมื่อเปลี่ยนประเภท
+    setSelectedSupplierType("all"); // รีเซ็ต filter
+  };
+
+  const handleSupplierTypeChange = (type) => {
+    setSelectedSupplierType(type);
+    setCurrentPage(1); // รีเซ็ตหน้าเมื่อเปลี่ยน filter
+  };
+
+  const handleSearchChange = (term) => {
+    setSearchTerm(term);
+    setCurrentPage(1); // รีเซ็ตหน้าเมื่อค้นหา
+  };
+
+  // คำนวณจำนวนหน้าทั้งหมด
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // สร้างอาร์เรย์ของหมายเลขหน้า
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+      } else if (currentPage >= totalPages - 2) {
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+          pages.push(i);
+        }
+      }
+    }
+
+    return pages;
   };
 
   const handleEditItem = (item) => {
@@ -101,10 +210,8 @@ const Information = () => {
       const updatedItem = { ...editingItem };
 
       if (name === "code" && selectedCategory === "customer") {
-        // จำกัดให้รหัสลูกค้าเป็นตัวอักษร 3 ตัว
-        updatedItem[name] = value.toUpperCase().substring(0, 3);
+        updatedItem[name] = value.toUpperCase().substring(0, 5);
       } else if (name === "numeric_code") {
-        // จำกัดให้รหัสตัวเลขเป็นตัวเลข 3 ตัว
         updatedItem[name] = value.replace(/\D/g, "").substring(0, 3);
       } else if (name === "branch_type" && value === "Head Office") {
         updatedItem[name] = value;
@@ -118,10 +225,8 @@ const Information = () => {
       const updatedItem = { ...newItem };
 
       if (name === "code" && selectedCategory === "customer") {
-        // จำกัดให้รหัสลูกค้าเป็นตัวอักษร 3 ตัว
-        updatedItem[name] = value.toUpperCase().substring(0, 3);
+        updatedItem[name] = value.toUpperCase().substring(0, 5);
       } else if (name === "numeric_code") {
-        // จำกัดให้รหัสตัวเลขเป็นตัวเลข 3 ตัว
         updatedItem[name] = value.replace(/\D/g, "").substring(0, 3);
       } else if (name === "branch_type" && value === "Head Office") {
         updatedItem[name] = value;
@@ -141,20 +246,20 @@ const Information = () => {
         return;
       }
 
-      // ตรวจสอบรหัสลูกค้า
-      if (editingItem.code && editingItem.code.length !== 3) {
-        alert("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+      if (
+        editingItem.code &&
+        (editingItem.code.length < 3 || editingItem.code.length > 5)
+      ) {
+        alert("รหัสลูกค้าต้องเป็นตัวอักษร 3-5 ตัว");
         return;
       }
 
-      // ตรวจสอบความถูกต้องของข้อมูลสาขา
       if (editingItem.branch_type === "Branch" && !editingItem.branch_number) {
         alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
         return;
       }
 
       try {
-        // ตรวจสอบว่ามีรหัสซ้ำหรือไม่ (ถ้ามีการกรอกรหัส)
         if (editingItem.code) {
           const { data: existingCode } = await supabase
             .from("customers")
@@ -202,14 +307,12 @@ const Information = () => {
         return;
       }
 
-      // ตรวจสอบรหัสตัวเลข (ถ้ามี)
       if (editingItem.numeric_code && editingItem.numeric_code.length !== 3) {
         alert("รหัสตัวเลขต้องเป็นตัวเลข 3 ตัว");
         return;
       }
 
-      // แปลงประเภทเป็น category
-      let category = "supplier-other"; // ค่าเริ่มต้น
+      let category = "supplier-other";
 
       if (editingItem.type === "Airline") {
         category = "airline";
@@ -267,9 +370,11 @@ const Information = () => {
         return;
       }
 
-      // ตรวจสอบรหัสลูกค้า
-      if (newItem.code && newItem.code.length !== 3) {
-        alert("รหัสลูกค้าต้องเป็นตัวอักษร 3 ตัว");
+      if (
+        newItem.code &&
+        (newItem.code.length < 3 || newItem.code.length > 5)
+      ) {
+        alert("รหัสลูกค้าต้องเป็นตัวอักษร 3-5 ตัว");
         return;
       }
 
@@ -279,7 +384,6 @@ const Information = () => {
       }
 
       try {
-        // ตรวจสอบว่ามีรหัสซ้ำหรือไม่ (ถ้ามีการกรอกรหัส)
         if (newItem.code) {
           const { data: existingCode } = await supabase
             .from("customers")
@@ -329,14 +433,12 @@ const Information = () => {
         return;
       }
 
-      // ตรวจสอบรหัสตัวเลข (ถ้ามี)
       if (newItem.numeric_code && newItem.numeric_code.length !== 3) {
         alert("รหัสตัวเลขต้องเป็นตัวเลข 3 ตัว");
         return;
       }
 
-      // แปลงประเภทเป็น category
-      let category = "supplier-other"; // ค่าเริ่มต้น
+      let category = "supplier-other";
 
       if (newItem.type === "Airline") {
         category = "airline";
@@ -365,7 +467,6 @@ const Information = () => {
     }
   };
 
-  // ฟังก์ชัน handleDeactivate
   const handleDeactivate = async (id) => {
     const confirmText =
       selectedCategory === "customer"
@@ -377,7 +478,6 @@ const Information = () => {
         const table =
           selectedCategory === "customer" ? "customers" : "information";
 
-        // ใช้การอัปเดตสถานะ active เป็น false แทนการลบ
         const { error } = await supabase
           .from(table)
           .update({ active: false })
@@ -394,47 +494,6 @@ const Information = () => {
     }
   };
 
-  const getFilteredAndSortedData = () => {
-    let filteredData = informationData;
-    if (searchTerm) {
-      filteredData = informationData.filter((item) =>
-        selectedCategory === "customer"
-          ? (item.code &&
-              item.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.address &&
-              item.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.id_number &&
-              item.id_number
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase())) ||
-            (item.phone &&
-              item.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.branch_number && item.branch_number.includes(searchTerm))
-          : item.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.numeric_code && item.numeric_code.includes(searchTerm)) ||
-            (item.type &&
-              item.type.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    return filteredData.sort((a, b) => {
-      const aValue = a[sortField] || "";
-      const bValue = b[sortField] || "";
-
-      // Handle numeric sorting for credit_days
-      if (sortField === "credit_days") {
-        const aNum = parseInt(aValue) || 0;
-        const bNum = parseInt(bValue) || 0;
-        return sortDirection === "asc" ? aNum - bNum : bNum - aNum;
-      }
-
-      // Default string comparison
-      const comparison = String(aValue).localeCompare(String(bValue));
-      return sortDirection === "asc" ? comparison : -comparison;
-    });
-  };
-
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -442,9 +501,8 @@ const Information = () => {
       setSortField(field);
       setSortDirection("asc");
     }
+    setCurrentPage(1); // รีเซ็ตหน้าเมื่อเรียงลำดับใหม่
   };
-
-  const filteredAndSortedData = getFilteredAndSortedData();
 
   return (
     <div className="bg-gray-100 min-h-screen p-6">
@@ -452,31 +510,29 @@ const Information = () => {
         {`
     .table-customer {
       width: 100%;
-      
     }
     .table-customer th, .table-customer td {
       padding-left: 0.75rem;
       padding-right: 0.75rem;
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
-      white-space: normal; /* ป้องกันการขึ้นบรรทัดใหม่ */
+      white-space: normal;
       overflow: hidden;
-      
     }
     .table-customer th:nth-child(1), .table-customer td:nth-child(1) {
-      max-width: 80px; /* รหัส */
+      max-width: 80px;
     }
     .table-customer th:nth-child(2), .table-customer td:nth-child(2) {
-      max-width: 200px; /* ชื่อ */
+      max-width: 200px;
     }
     .table-customer th:nth-child(3), .table-customer td:nth-child(3) {
-      max-width: 100px; /* สาขา */
+      max-width: 100px;
     }
     .table-customer th:nth-child(4), .table-customer td:nth-child(4) {
-      max-width: 80px; /* เครดิต */
+      max-width: 80px;
     }
     .table-customer th:nth-child(5), .table-customer td:nth-child(5) {
-      max-width: 80px; /* จัดการ */
+      max-width: 80px;
     }
   `}
       </style>
@@ -511,23 +567,15 @@ const Information = () => {
             </div>
 
             <div className="w-full md:w-3/4 p-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-                <h2 className="text-xl font-semibold">
-                  {categories.find((cat) => cat.id === selectedCategory)?.label}
-                </h2>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search size={16} className="text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="ค้นหา..."
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
+              <div className="flex flex-col gap-4 mb-4">
+                {/* Header และปุ่มเพิ่มข้อมูล */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-xl font-semibold">
+                    {
+                      categories.find((cat) => cat.id === selectedCategory)
+                        ?.label
+                    }
+                  </h2>
                   <button
                     onClick={handleAddNew}
                     className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md flex items-center"
@@ -536,6 +584,66 @@ const Information = () => {
                     <Plus size={18} className="mr-1" />
                     เพิ่มข้อมูลใหม่
                   </button>
+                </div>
+
+                {/* แถบค้นหาและ filter */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* ช่องค้นหา */}
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search size={16} className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="ค้นหา..."
+                      className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={searchTerm}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Filter สำหรับ Supplier */}
+                  {selectedCategory === "supplier" && (
+                    <div className="flex items-center gap-2">
+                      <Filter size={16} className="text-gray-400" />
+                      <select
+                        value={selectedSupplierType}
+                        onChange={(e) =>
+                          handleSupplierTypeChange(e.target.value)
+                        }
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {supplierTypes.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* แสดงจำนวนข้อมูลและหน้าปัจจุบัน */}
+                <div className="flex justify-between items-center text-sm text-gray-600">
+                  <div>
+                    แสดง {(currentPage - 1) * itemsPerPage + 1} -{" "}
+                    {Math.min(currentPage * itemsPerPage, totalItems)} จาก{" "}
+                    {totalItems} รายการ
+                    {selectedCategory === "supplier" &&
+                      selectedSupplierType !== "all" && (
+                        <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                          ประเภท:{" "}
+                          {
+                            supplierTypes.find(
+                              (t) => t.value === selectedSupplierType
+                            )?.label
+                          }
+                        </span>
+                      )}
+                  </div>
+                  <div>
+                    หน้า {currentPage} จาก {totalPages}
+                  </div>
                 </div>
               </div>
 
@@ -559,8 +667,9 @@ const Information = () => {
                       handleSaveNew={handleSaveNew}
                     />
                   )}
+
                   <DataTable
-                    data={filteredAndSortedData}
+                    data={informationData}
                     selectedCategory={selectedCategory}
                     sortField={sortField}
                     sortDirection={sortDirection}
@@ -572,6 +681,56 @@ const Information = () => {
                     handleCancelEdit={handleCancelEdit}
                     handleSaveEdit={handleSaveEdit}
                   />
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center mt-6 gap-2">
+                      {/* ปุ่มหน้าก่อนหน้า */}
+                      <button
+                        onClick={() =>
+                          setCurrentPage(Math.max(1, currentPage - 1))
+                        }
+                        disabled={currentPage === 1}
+                        className={`p-2 rounded-md ${
+                          currentPage === 1
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                        }`}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+
+                      {/* หมายเลขหน้า */}
+                      {getPageNumbers().map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 rounded-md ${
+                            currentPage === pageNum
+                              ? "bg-blue-500 text-white"
+                              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+
+                      {/* ปุ่มหน้าถัดไป */}
+                      <button
+                        onClick={() =>
+                          setCurrentPage(Math.min(totalPages, currentPage + 1))
+                        }
+                        disabled={currentPage === totalPages}
+                        className={`p-2 rounded-md ${
+                          currentPage === totalPages
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                        }`}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>

@@ -244,3 +244,76 @@ export const formatThaiDate = (date) => {
 
   return `${day}/${month}/${yearThai}`;
 };
+
+/**
+ * แปลงข้อมูลเป็นตัวพิมพ์ใหญ่
+ * @param {Object} data - ข้อมูลที่ต้องการแปลง
+ * @param {Array} excludeFields - ฟิลด์ที่ไม่ต้องแปลง
+ * @returns {Object} - ข้อมูลที่แปลงแล้ว
+ */
+export const transformToUpperCase = (data, excludeFields = []) => {
+  if (!data || typeof data !== "object") return data;
+
+  // ฟิลด์ที่ไม่ต้องแปลงเป็นตัวใหญ่
+  const defaultExcludeFields = [
+    "email",
+    "password",
+    "phone",
+    "username",
+    "fullname",
+    "password_hash",
+    "created_at",
+    "updated_at",
+    "id",
+    "active",
+    "credit_days",
+    "age",
+    "quantity",
+    "net_price",
+    "sale_price",
+    "total_amount",
+    "pax",
+    "total",
+    "vat_percent",
+    "vat_amount",
+    "grand_total",
+    "subtotal_before_vat",
+    "pricing_total",
+    "extras_total",
+    "issue_date",
+    "due_date",
+    "departure_time",
+    "arrival_time",
+    "date",
+    "po_generated_at",
+    "cancelled_at",
+    "last_login",
+  ];
+
+  const allExcludeFields = [...defaultExcludeFields, ...excludeFields];
+  const transformed = { ...data };
+
+  Object.keys(transformed).forEach((key) => {
+    const value = transformed[key];
+
+    // ข้ามฟิลด์ที่ไม่ต้องแปลง
+    if (allExcludeFields.includes(key)) return;
+
+    // แปลง string เป็นตัวใหญ่
+    if (typeof value === "string" && value.trim()) {
+      transformed[key] = value.toUpperCase();
+    }
+    // แปลง object/array ซ้อน (recursive)
+    else if (typeof value === "object" && value !== null) {
+      if (Array.isArray(value)) {
+        transformed[key] = value.map((item) =>
+          transformToUpperCase(item, excludeFields)
+        );
+      } else {
+        transformed[key] = transformToUpperCase(value, excludeFields);
+      }
+    }
+  });
+
+  return transformed;
+};

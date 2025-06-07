@@ -1,7 +1,8 @@
 // src/services/ticketService.js
 import { supabase } from "./supabase";
 import { generateReferenceNumber, generatePONumber } from "./referencesService";
-import { toThaiTimeZone } from "../utils/helpers"; // เพิ่มการ import
+import { toThaiTimeZone } from "../utils/helpers";
+import { transformToUpperCase } from "../utils/helpers"; // เพิ่ม import
 
 /**
  * สร้างและบันทึก PO Number สำหรับ booking ticket
@@ -102,19 +103,25 @@ export const createFlightTicket = async (ticketData) => {
     const grandTotal = subtotalBeforeVat + vatAmount;
 
     // 1. บันทึกข้อมูลหลักลงในตาราง bookings_ticket
-    const { data: bookingTicket, error: bookingTicketError } = await supabase
-      .from("bookings_ticket")
-      .insert({
+    // แปลงข้อมูลเป็นตัวพิมพ์ใหญ่ก่อนบันทึก
+    const mainTicketData = transformToUpperCase(
+      {
         reference_number: referenceNumber,
         customer_id: ticketData.customerId,
         information_id: ticketData.supplierId,
-        status: "not_invoiced", // เปลี่ยนจาก "pending" เป็น "not_invoiced"
+        status: "not_invoiced",
         payment_status: ticketData.paymentStatus || "unpaid",
         created_by: ticketData.createdBy,
         updated_by: ticketData.updatedBy,
         po_number: null,
         po_generated_at: null,
-      })
+      },
+      ["customer_id", "information_id", "created_by", "updated_by"]
+    );
+
+    const { data: bookingTicket, error: bookingTicketError } = await supabase
+      .from("bookings_ticket")
+      .insert(mainTicketData)
       .select("id, reference_number")
       .single();
 
@@ -132,56 +139,68 @@ export const createFlightTicket = async (ticketData) => {
       dueDate = toThaiTimeZone(new Date(dueDate), false);
     }
 
-    // 2. บันทึกข้อมูลรายละเอียดตั๋ว (แก้ไขให้รวม extras)
+    // 2. บันทึกข้อมูลรายละเอียดตั๋ว
+    const ticketDetailData = {
+      bookings_ticket_id: bookingTicket.id,
+      total_price: grandTotal,
+      pricing_total: pricingSubtotal,
+      extras_total: extrasSubtotal,
+      subtotal_before_vat: subtotalBeforeVat,
+      vat_percent: parseFloat(ticketData.vatPercent || 0),
+      vat_amount: vatAmount,
+      grand_total: grandTotal,
+      issue_date: bookingDate,
+      due_date: dueDate,
+      credit_days: ticketData.creditDays,
+    };
+
     const { data: ticketDetail, error: ticketDetailError } = await supabase
       .from("tickets_detail")
-      .insert({
-        bookings_ticket_id: bookingTicket.id,
-        total_price: grandTotal, // ยอดรวมสุดท้าย
-        pricing_total: pricingSubtotal, // ยอดรวมจาก pricing
-        extras_total: extrasSubtotal, // ยอดรวมจาก extras
-        subtotal_before_vat: subtotalBeforeVat, // ยอดรวมก่อน VAT
-        vat_percent: parseFloat(ticketData.vatPercent || 0),
-        vat_amount: vatAmount, // จำนวน VAT
-        grand_total: grandTotal, // ยอดรวมสุดท้าย
-        issue_date: bookingDate,
-        due_date: dueDate,
-        credit_days: ticketData.creditDays,
-      })
+      .insert(ticketDetailData)
       .select("id")
       .single();
 
     if (ticketDetailError) throw ticketDetailError;
 
     // 3. บันทึกข้อมูลเพิ่มเติมของตั๋ว
-    const { data: additionalInfoData, error: additionalInfoError } =
+    const additionalInfoData = transformToUpperCase(
+      {
+        bookings_ticket_id: bookingTicket.id,
+        company_payment_method: ticketData.companyPaymentMethod,
+        company_payment_details: ticketData.companyPaymentDetails,
+        customer_payment_method: ticketData.customerPaymentMethod,
+        customer_payment_details: ticketData.customerPaymentDetails,
+        code: ticketData.code,
+        ticket_type: (ticketData.ticketType || "").toLowerCase(),
+        ticket_type_details: ticketData.ticketTypeDetails,
+      },
+      ["bookings_ticket_id"]
+    );
+
+    const { data: additionalInfoResult, error: additionalInfoError } =
       await supabase
         .from("ticket_additional_info")
-        .insert({
-          bookings_ticket_id: bookingTicket.id,
-          company_payment_method: ticketData.companyPaymentMethod,
-          company_payment_details: ticketData.companyPaymentDetails,
-          customer_payment_method: ticketData.customerPaymentMethod,
-          customer_payment_details: ticketData.customerPaymentDetails,
-          code: ticketData.code,
-          ticket_type: (ticketData.ticketType || "").toLowerCase(),
-          ticket_type_details: ticketData.ticketTypeDetails,
-        })
+        .insert(additionalInfoData)
         .select("id")
         .single();
 
     if (additionalInfoError) throw additionalInfoError;
 
     // 4. บันทึกข้อมูลผู้โดยสาร
-    const passengersToInsert = ticketData.passengers.map((passenger) => ({
-      bookings_ticket_id: bookingTicket.id,
-      passenger_name: passenger.name,
-      age: passenger.age || null,
-      ticket_number: passenger.ticketNumber || null,
-      ticket_code: passenger.ticket_code || null,
-    }));
+    if (ticketData.passengers && ticketData.passengers.length > 0) {
+      const passengersToInsert = ticketData.passengers.map((passenger) =>
+        transformToUpperCase(
+          {
+            bookings_ticket_id: bookingTicket.id,
+            passenger_name: passenger.name,
+            age: passenger.age || null,
+            ticket_number: passenger.ticketNumber || null,
+            ticket_code: passenger.ticket_code || null,
+          },
+          ["bookings_ticket_id", "age"]
+        )
+      );
 
-    if (passengersToInsert.length > 0) {
       const { error: passengersError } = await supabase
         .from("tickets_passengers")
         .insert(passengersToInsert);
@@ -189,46 +208,53 @@ export const createFlightTicket = async (ticketData) => {
       if (passengersError) throw passengersError;
     }
 
-    // 5. บันทึกข้อมูลราคา (ไม่รวม VAT ในตารางนี้)
-    const { data: pricingData, error: pricingError } = await supabase
+    // 5. บันทึกข้อมูลราคา
+    const pricingData = {
+      bookings_ticket_id: bookingTicket.id,
+      adult_net_price: ticketData.pricing.adult?.net || 0,
+      adult_sale_price: ticketData.pricing.adult?.sale || 0,
+      adult_pax: ticketData.pricing.adult?.pax || 0,
+      adult_total: ticketData.pricing.adult?.total || 0,
+      child_net_price: ticketData.pricing.child?.net || 0,
+      child_sale_price: ticketData.pricing.child?.sale || 0,
+      child_pax: ticketData.pricing.child?.pax || 0,
+      child_total: ticketData.pricing.child?.total || 0,
+      infant_net_price: ticketData.pricing.infant?.net || 0,
+      infant_sale_price: ticketData.pricing.infant?.sale || 0,
+      infant_pax: ticketData.pricing.infant?.pax || 0,
+      infant_total: ticketData.pricing.infant?.total || 0,
+      subtotal_amount: pricingSubtotal,
+      vat_percent: parseFloat(ticketData.vatPercent || 0),
+      vat_amount: vatAmount,
+      total_amount: pricingSubtotal,
+    };
+
+    const { data: pricingResult, error: pricingError } = await supabase
       .from("tickets_pricing")
-      .insert({
-        bookings_ticket_id: bookingTicket.id,
-        adult_net_price: ticketData.pricing.adult?.net || 0,
-        adult_sale_price: ticketData.pricing.adult?.sale || 0,
-        adult_pax: ticketData.pricing.adult?.pax || 0,
-        adult_total: ticketData.pricing.adult?.total || 0,
-        child_net_price: ticketData.pricing.child?.net || 0,
-        child_sale_price: ticketData.pricing.child?.sale || 0,
-        child_pax: ticketData.pricing.child?.pax || 0,
-        child_total: ticketData.pricing.child?.total || 0,
-        infant_net_price: ticketData.pricing.infant?.net || 0,
-        infant_sale_price: ticketData.pricing.infant?.sale || 0,
-        infant_pax: ticketData.pricing.infant?.pax || 0,
-        infant_total: ticketData.pricing.infant?.total || 0,
-        subtotal_amount: pricingSubtotal, // เฉพาะยอดรวม pricing
-        vat_percent: parseFloat(ticketData.vatPercent || 0),
-        vat_amount: vatAmount,
-        total_amount: pricingSubtotal, // เฉพาะยอดรวม pricing (ไม่รวม extras)
-      })
+      .insert(pricingData)
       .select("id")
       .single();
 
     if (pricingError) throw pricingError;
 
     // 6. บันทึกข้อมูลเส้นทาง
-    const routesToInsert = ticketData.routes.map((route) => ({
-      bookings_ticket_id: bookingTicket.id,
-      flight_number: route.flight_number || route.flight,
-      rbd: route.rbd || null,
-      date: route.date,
-      origin: route.origin,
-      destination: route.destination,
-      departure_time: route.departure,
-      arrival_time: route.arrival,
-    }));
+    if (ticketData.routes && ticketData.routes.length > 0) {
+      const routesToInsert = ticketData.routes.map((route) =>
+        transformToUpperCase(
+          {
+            bookings_ticket_id: bookingTicket.id,
+            flight_number: route.flight_number || route.flight,
+            rbd: route.rbd || null,
+            date: route.date,
+            origin: route.origin,
+            destination: route.destination,
+            departure_time: route.departure,
+            arrival_time: route.arrival,
+          },
+          ["bookings_ticket_id", "date", "departure_time", "arrival_time"]
+        )
+      );
 
-    if (routesToInsert.length > 0) {
       const { error: routesError } = await supabase
         .from("tickets_routes")
         .insert(routesToInsert);
@@ -240,14 +266,25 @@ export const createFlightTicket = async (ticketData) => {
     if (ticketData.extras && ticketData.extras.length > 0) {
       const extrasToInsert = ticketData.extras
         .filter((extra) => extra.description && extra.description.trim())
-        .map((extra) => ({
-          bookings_ticket_id: bookingTicket.id,
-          description: extra.description,
-          net_price: extra.net_price || 0,
-          sale_price: extra.sale_price || 0,
-          quantity: extra.quantity || 1,
-          total_amount: extra.total_amount || 0,
-        }));
+        .map((extra) =>
+          transformToUpperCase(
+            {
+              bookings_ticket_id: bookingTicket.id,
+              description: extra.description,
+              net_price: extra.net_price || 0,
+              sale_price: extra.sale_price || 0,
+              quantity: extra.quantity || 1,
+              total_amount: extra.total_amount || 0,
+            },
+            [
+              "bookings_ticket_id",
+              "net_price",
+              "sale_price",
+              "quantity",
+              "total_amount",
+            ]
+          )
+        );
 
       if (extrasToInsert.length > 0) {
         const { error: extrasError } = await supabase
