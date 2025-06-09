@@ -8,6 +8,7 @@ const PricingSummarySection = ({
   updatePricing,
   setFormData,
   extras,
+  readOnly = false, // เพิ่มบรรทัดนี้
 }) => {
   return (
     <div className={SaleStyles.section.container}>
@@ -36,7 +37,11 @@ const PricingSummarySection = ({
             "col-span-10 self-start"
           )}
         >
-          <PricingTable pricing={pricing} updatePricing={updatePricing} />
+          <PricingTable
+            pricing={pricing}
+            updatePricing={updatePricing}
+            readOnly={readOnly} // เพิ่มบรรทัดนี้
+          />
         </section>
         <section className="col-span-5">
           <TotalSummary
@@ -53,6 +58,7 @@ const PricingSummarySection = ({
             setFormData={setFormData}
             pricing={pricing}
             extras={extras}
+            readOnly={readOnly} // เพิ่มบรรทัดนี้
           />
         </section>
       </div>

@@ -29,6 +29,7 @@ const PricingTable = ({
     showTotal: true,
     enableEdit: true,
   },
+  readOnly = false,
 }) => {
   // ฟังก์ชันคำนวณราคารวมต่อรายการ (ไม่มีทศนิยม)
   const calculateItemTotal = (price, quantity) => {
@@ -96,7 +97,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("adult", "net", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-3">
@@ -108,7 +109,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("adult", "sale", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-1">
@@ -121,7 +122,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("adult", "pax", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-4">
@@ -149,7 +150,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("child", "net", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-3">
@@ -161,7 +162,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("child", "sale", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-1">
@@ -174,7 +175,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("child", "pax", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-4">
@@ -202,7 +203,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("infant", "net", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-3">
@@ -214,7 +215,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("infant", "sale", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-1">
@@ -227,7 +228,7 @@ const PricingTable = ({
               onChange={(e) =>
                 handleUpdatePricing("infant", "pax", e.target.value)
               }
-              disabled={!config.enableEdit}
+              disabled={readOnly || !config.enableEdit}
             />
           </div>
           <div className="col-span-4">

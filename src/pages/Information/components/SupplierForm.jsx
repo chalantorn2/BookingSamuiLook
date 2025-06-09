@@ -2,8 +2,24 @@ import React from "react";
 
 const SupplierForm = ({ item, handleInputChange }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
+    <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+      <div className="col-span-1">
+        <label className="block text-sm font-medium mb-1">
+          ประเภท <span className="text-red-500">*</span>
+        </label>
+        <select
+          name="type"
+          value={item.type}
+          onChange={handleInputChange}
+          className="w-full border border-gray-300  rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+        >
+          <option value="">เลือกประเภท</option>
+          <option value="Airline">Airline</option>
+          <option value="Voucher">Voucher</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div className="col-span-1">
         <label className="block text-sm font-medium mb-1">
           รหัสตัวเลข (3 ตัว)
         </label>
@@ -23,7 +39,7 @@ const SupplierForm = ({ item, handleInputChange }) => {
           maxLength={3}
         />
       </div>
-      <div>
+      <div className="col-span-1">
         <label className="block text-sm font-medium mb-1">
           รหัส <span className="text-red-500">*</span>
         </label>
@@ -35,7 +51,7 @@ const SupplierForm = ({ item, handleInputChange }) => {
           className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
-      <div>
+      <div className="col-span-3">
         <label className="block text-sm font-medium mb-1">
           ชื่อ <span className="text-red-500">*</span>
         </label>
@@ -46,22 +62,6 @@ const SupplierForm = ({ item, handleInputChange }) => {
           onChange={handleInputChange}
           className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          ประเภท <span className="text-red-500">*</span>
-        </label>
-        <select
-          name="type"
-          value={item.type}
-          onChange={handleInputChange}
-          className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-        >
-          <option value="">เลือกประเภท</option>
-          <option value="Airline">Airline</option>
-          <option value="Voucher">Voucher</option>
-          <option value="Other">Other</option>
-        </select>
       </div>
     </div>
   );

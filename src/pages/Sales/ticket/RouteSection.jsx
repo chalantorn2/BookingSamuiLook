@@ -2,11 +2,17 @@ import React, { useRef } from "react";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
-const RouteSection = ({ routes, setRoutes, supplierCode }) => {
+const RouteSection = ({
+  routes,
+  setRoutes,
+  supplierCode,
+  readOnly = false,
+}) => {
   // สร้าง ref สำหรับแต่ละ input เพื่อควบคุม focus
   const inputRefs = useRef([]);
 
   const addRoute = () => {
+    if (readOnly) return;
     setRoutes([
       ...routes,
       {
@@ -23,9 +29,8 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
   };
 
   const removeRoute = (id) => {
-    if (routes.length > 1) {
-      setRoutes(routes.filter((r) => r.id !== id));
-    }
+    if (readOnly || routes.length <= 1) return;
+    setRoutes(routes.filter((r) => r.id !== id));
   };
 
   const formatTime = (value) => {
@@ -38,8 +43,9 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
   };
 
   // ฟังก์ชันสำหรับจัดการการย้าย focus
-  // ในฟังก์ชัน handleInputChange
   const handleInputChange = (e, index, field, maxLength, nextField) => {
+    if (readOnly) return;
+
     const value = e.target.value;
     const updatedRoutes = [...routes];
 
@@ -56,8 +62,8 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
     }
     setRoutes(updatedRoutes);
 
-    // ตรวจสอบ maxLength และย้าย focus
-    if (value.length >= maxLength && nextField) {
+    // ตรวจสอบ maxLength และย้าย focus (เฉพาะเมื่อไม่ readOnly)
+    if (!readOnly && value.length >= maxLength && nextField) {
       const nextInput = inputRefs.current[`${index}-${nextField}`];
       if (nextInput) {
         nextInput.focus();
@@ -89,14 +95,16 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
               )}
             >
               <h3 className="font-medium text-sm">เส้นทางที่ {index + 1}</h3>
-              <button
-                type="button"
-                onClick={() => removeRoute(route.id)}
-                className={SaleStyles.button.actionButton}
-                disabled={routes.length === 1}
-              >
-                <FiTrash2 size={18} />
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => removeRoute(route.id)}
+                  className={SaleStyles.button.actionButton}
+                  disabled={routes.length === 1}
+                >
+                  <FiTrash2 size={18} />
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-28 gap-3">
               {/* เที่ยวบิน */}
@@ -113,6 +121,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   }
                   maxLength={6}
                   ref={(el) => (inputRefs.current[`${index}-flight`] = el)}
+                  disabled={readOnly}
                 />
               </div>
 
@@ -128,6 +137,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   }
                   maxLength={1}
                   ref={(el) => (inputRefs.current[`${index}-rbd`] = el)}
+                  disabled={readOnly}
                 />
               </div>
 
@@ -143,6 +153,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   }
                   maxLength={5}
                   ref={(el) => (inputRefs.current[`${index}-date`] = el)}
+                  disabled={readOnly}
                 />
               </div>
 
@@ -158,6 +169,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   }
                   maxLength={3}
                   ref={(el) => (inputRefs.current[`${index}-origin`] = el)}
+                  disabled={readOnly}
                 />
               </div>
 
@@ -175,6 +187,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   }
                   maxLength={3}
                   ref={(el) => (inputRefs.current[`${index}-destination`] = el)}
+                  disabled={readOnly}
                 />
               </div>
 
@@ -192,6 +205,7 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   }
                   pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
                   ref={(el) => (inputRefs.current[`${index}-departure`] = el)}
+                  disabled={readOnly}
                 />
               </div>
 
@@ -209,21 +223,24 @@ const RouteSection = ({ routes, setRoutes, supplierCode }) => {
                   }
                   pattern="^([0-1]?[0-9]|2[0-3])\.[0-5][0-9]$"
                   ref={(el) => (inputRefs.current[`${index}-arrival`] = el)}
+                  disabled={readOnly}
                 />
               </div>
             </div>
           </div>
         ))}
-        <button
-          type="button"
-          onClick={addRoute}
-          className={combineClasses(
-            SaleStyles.button.primary,
-            SaleStyles.spacing.mt1
-          )}
-        >
-          <FiPlus className={SaleStyles.button.icon} /> เพิ่มเส้นทาง
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={addRoute}
+            className={combineClasses(
+              SaleStyles.button.primary,
+              SaleStyles.spacing.mt1
+            )}
+          >
+            <FiPlus className={SaleStyles.button.icon} /> เพิ่มเส้นทาง
+          </button>
+        )}
       </div>
     </section>
   );

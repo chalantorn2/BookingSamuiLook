@@ -3,8 +3,9 @@ import { FiPlus, FiTrash2 } from "react-icons/fi";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 import { formatNumber, parseInput } from "../common/FormatNumber";
 
-const ExtrasSection = ({ extras, setExtras }) => {
+const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
   const addExtra = () => {
+    if (readOnly) return;
     setExtras([
       ...extras,
       {
@@ -19,9 +20,8 @@ const ExtrasSection = ({ extras, setExtras }) => {
   };
 
   const removeExtra = (id) => {
-    if (extras.length > 1) {
-      setExtras(extras.filter((e) => e.id !== id));
-    }
+    if (readOnly || extras.length <= 1) return;
+    setExtras(extras.filter((e) => e.id !== id));
   };
 
   // ฟังก์ชันคำนวณราคารวม (ไม่มีทศนิยม)
@@ -29,6 +29,46 @@ const ExtrasSection = ({ extras, setExtras }) => {
     const numPrice = parseInt(price) || 0;
     const numQuantity = parseInt(quantity) || 0;
     return (numPrice * numQuantity).toString();
+  };
+
+  const handleDescriptionChange = (index, value) => {
+    if (readOnly) return;
+    const updatedExtras = [...extras];
+    updatedExtras[index].description = value;
+    setExtras(updatedExtras);
+  };
+
+  const handleNetPriceChange = (index, value) => {
+    if (readOnly) return;
+    const updatedExtras = [...extras];
+    updatedExtras[index].net_price = parseInput(value);
+    setExtras(updatedExtras);
+  };
+
+  const handleSalePriceChange = (index, value) => {
+    if (readOnly) return;
+    const updatedExtras = [...extras];
+    updatedExtras[index].sale_price = parseInput(value);
+
+    // คำนวณยอดรวมใหม่
+    const salePrice = parseInt(updatedExtras[index].sale_price) || 0;
+    const quantity = parseInt(updatedExtras[index].quantity);
+    updatedExtras[index].total_amount = calculateItemTotal(salePrice, quantity);
+
+    setExtras(updatedExtras);
+  };
+
+  const handleQuantityChange = (index, value) => {
+    if (readOnly) return;
+    const updatedExtras = [...extras];
+    updatedExtras[index].quantity = value;
+
+    // คำนวณยอดรวมใหม่
+    const salePrice = parseInt(updatedExtras[index].sale_price) || 0;
+    const quantity = parseInt(value);
+    updatedExtras[index].total_amount = calculateItemTotal(salePrice, quantity);
+
+    setExtras(updatedExtras);
   };
 
   return (
@@ -69,12 +109,13 @@ const ExtrasSection = ({ extras, setExtras }) => {
             <div className="col-span-3">ราคาขาย</div>
             <div className="col-span-1">จำนวน</div>
             <div className="col-span-4">รวม</div>
+            {!readOnly && <div className="col-span-1">จัดการ</div>}
           </div>
           {extras.map((item, index) => (
             <div
               key={item.id}
               className={combineClasses(
-                "grid grid-cols-20 gap-3",
+                `grid ${readOnly ? "grid-cols-19" : "grid-cols-20"} gap-3`,
                 SaleStyles.spacing.mb2
               )}
             >
@@ -91,11 +132,10 @@ const ExtrasSection = ({ extras, setExtras }) => {
                   type="text"
                   className={SaleStyles.form.input}
                   value={item.description || ""}
-                  onChange={(e) => {
-                    const updatedExtras = [...extras];
-                    updatedExtras[index].description = e.target.value;
-                    setExtras(updatedExtras);
-                  }}
+                  onChange={(e) =>
+                    handleDescriptionChange(index, e.target.value)
+                  }
+                  disabled={readOnly}
                 />
               </div>
               <div className="col-span-3">
@@ -107,11 +147,8 @@ const ExtrasSection = ({ extras, setExtras }) => {
                   )}
                   placeholder="0"
                   value={formatNumber(item.net_price) || ""}
-                  onChange={(e) => {
-                    const updatedExtras = [...extras];
-                    updatedExtras[index].net_price = parseInput(e.target.value);
-                    setExtras(updatedExtras);
-                  }}
+                  onChange={(e) => handleNetPriceChange(index, e.target.value)}
+                  disabled={readOnly}
                 />
               </div>
               <div className="col-span-3">
@@ -120,23 +157,8 @@ const ExtrasSection = ({ extras, setExtras }) => {
                   className={combineClasses(SaleStyles.form.input, "text-end")}
                   placeholder="0"
                   value={formatNumber(item.sale_price) || ""}
-                  onChange={(e) => {
-                    const updatedExtras = [...extras];
-                    updatedExtras[index].sale_price = parseInput(
-                      e.target.value
-                    );
-
-                    // คำนวณยอดรวมใหม่
-                    const salePrice =
-                      parseInt(updatedExtras[index].sale_price) || 0;
-                    const quantity = parseInt(updatedExtras[index].quantity);
-                    updatedExtras[index].total_amount = calculateItemTotal(
-                      salePrice,
-                      quantity
-                    );
-
-                    setExtras(updatedExtras);
-                  }}
+                  onChange={(e) => handleSalePriceChange(index, e.target.value)}
+                  disabled={readOnly}
                 />
               </div>
               <div className="col-span-1">
@@ -149,21 +171,8 @@ const ExtrasSection = ({ extras, setExtras }) => {
                   )}
                   placeholder="1"
                   value={item.quantity}
-                  onChange={(e) => {
-                    const updatedExtras = [...extras];
-                    updatedExtras[index].quantity = e.target.value;
-
-                    // คำนวณยอดรวมใหม่
-                    const salePrice =
-                      parseInt(updatedExtras[index].sale_price) || 0;
-                    const quantity = parseInt(e.target.value);
-                    updatedExtras[index].total_amount = calculateItemTotal(
-                      salePrice,
-                      quantity
-                    );
-
-                    setExtras(updatedExtras);
-                  }}
+                  onChange={(e) => handleQuantityChange(index, e.target.value)}
+                  disabled={readOnly}
                 />
               </div>
               <div className="col-span-4 flex items-center">
@@ -178,29 +187,33 @@ const ExtrasSection = ({ extras, setExtras }) => {
                   disabled
                 />
               </div>
-              <div className="col-span-1 flex items-center justify-center">
-                <button
-                  type="button"
-                  onClick={() => removeExtra(item.id)}
-                  className={SaleStyles.button.actionButton}
-                  disabled={extras.length === 1}
-                >
-                  <FiTrash2 size={18} />
-                </button>
-              </div>
+              {!readOnly && (
+                <div className="col-span-1 flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => removeExtra(item.id)}
+                    className={SaleStyles.button.actionButton}
+                    disabled={extras.length === 1}
+                  >
+                    <FiTrash2 size={18} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
-          <button
-            type="button"
-            onClick={addExtra}
-            className={combineClasses(
-              SaleStyles.button.primary,
-              SaleStyles.spacing.mt2,
-              SaleStyles.spacing.ml4
-            )}
-          >
-            <FiPlus className={SaleStyles.button.icon} /> เพิ่มรายการ
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={addExtra}
+              className={combineClasses(
+                SaleStyles.button.primary,
+                SaleStyles.spacing.mt2,
+                SaleStyles.spacing.ml4
+              )}
+            >
+              <FiPlus className={SaleStyles.button.icon} /> เพิ่มรายการ
+            </button>
+          )}
         </div>
       </section>
     </div>

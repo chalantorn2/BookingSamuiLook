@@ -2,8 +2,19 @@ import React from "react";
 
 const CustomerForm = ({ item, handleInputChange }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
+    <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <div className="col-span-1">
+        <label className="block text-sm font-medium mb-1">รหัสลูกค้า</label>
+        <input
+          type="text"
+          name="code"
+          value={item.code}
+          onChange={handleInputChange}
+          maxLength={5}
+          className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+        />
+      </div>
+      <div className="col-span-4">
         <label className="block text-sm font-medium mb-1">
           ชื่อ <span className="text-red-500">*</span>
         </label>
@@ -15,41 +26,8 @@ const CustomerForm = ({ item, handleInputChange }) => {
           className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          รหัสลูกค้า (3-5 ตัวอักษร)
-        </label>
-        <input
-          type="text"
-          name="code"
-          value={item.code}
-          onChange={handleInputChange}
-          maxLength={5}
-          placeholder="รหัส 3-5 ตัวอักษร"
-          className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">ที่อยู่</label>
-        <input
-          type="text"
-          name="address"
-          value={item.address}
-          onChange={handleInputChange}
-          className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">เลขผู้เสียภาษี</label>
-        <input
-          type="text"
-          name="id_number"
-          value={item.id_number}
-          onChange={handleInputChange}
-          className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-        />
-      </div>
-      <div>
+
+      <div className="col-span-2">
         <label className="block text-sm font-medium mb-1">เบอร์โทรศัพท์</label>
         <input
           type="text"
@@ -59,7 +37,28 @@ const CustomerForm = ({ item, handleInputChange }) => {
           className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
-      <div>
+      <div className="col-span-2">
+        <label className="block text-sm font-medium mb-1">ที่อยู่</label>
+        <input
+          type="text"
+          name="address"
+          value={item.address}
+          onChange={handleInputChange}
+          className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+        />
+      </div>
+      <div className="col-span-2">
+        <label className="block text-sm font-medium mb-1">เลขผู้เสียภาษี</label>
+        <input
+          type="text"
+          name="id_number"
+          value={item.id_number}
+          onChange={handleInputChange}
+          className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+        />
+      </div>
+
+      <div className="col-span-2">
         <label className="block text-sm font-medium mb-1">สาขา</label>
         <select
           name="branch_type"
@@ -92,7 +91,7 @@ const CustomerForm = ({ item, handleInputChange }) => {
           </div>
         )}
       </div>
-      <div>
+      <div className="col-span-1">
         <label className="block text-sm font-medium mb-1">เครดิต (วัน)</label>
         <input
           type="number"

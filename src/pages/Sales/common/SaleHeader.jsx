@@ -19,6 +19,7 @@ const SaleHeader = ({
   section,
   globalEditMode,
   setGlobalEditMode,
+  readOnly = false,
 }) => {
   const { user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -357,18 +358,26 @@ const SaleHeader = ({
     return (
       <div className="space-y-4">
         <div>
-          <div className="flex justify-between">
+          {!readOnly && ( // เพิ่มเงื่อนไขนี้
+            <div className="flex justify-between">
+              <label className={SaleStyles.form.labelRequired}>
+                Customer Name
+              </label>
+              <button
+                type="button"
+                className="px-2 text-xs text-blue-600 hover:text-blue-800"
+                onClick={toggleEditMode}
+              >
+                {globalEditMode ? "ค้นหาลูกค้าที่มีอยู่" : "กรอกข้อมูลเอง"}
+              </button>
+            </div>
+          )}{" "}
+          {/* ปิดเงื่อนไข */}
+          {readOnly && ( // เพิ่มกรณี readOnly
             <label className={SaleStyles.form.labelRequired}>
               Customer Name
             </label>
-            <button
-              type="button"
-              className="px-2 text-xs text-blue-600 hover:text-blue-800"
-              onClick={toggleEditMode}
-            >
-              {globalEditMode ? "ค้นหาลูกค้าที่มีอยู่" : "กรอกข้อมูลเอง"}
-            </button>
-          </div>
+          )}
           <div className="relative">
             <input
               type="text"
@@ -377,9 +386,9 @@ const SaleHeader = ({
               onChange={handleCustomerNameChange}
               required
               placeholder="ชื่อลูกค้า"
-              disabled={false}
+              disabled={readOnly || false}
             />
-            {formData.customer && (
+            {formData.customer && !readOnly && (
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -388,7 +397,7 @@ const SaleHeader = ({
                 <FiX className="text-gray-400 hover:text-gray-600" />
               </button>
             )}
-            {showResults && searchResults.length > 0 && (
+            {!readOnly && showResults && searchResults.length > 0 && (
               <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
                 {isLoading ? (
                   <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
@@ -444,7 +453,7 @@ const SaleHeader = ({
               value={formData.contactDetails}
               onChange={handleContactDetailsChange}
               required
-              disabled={!globalEditMode}
+              disabled={readOnly || !globalEditMode}
               style={{
                 minHeight: "38px",
                 height: "auto",
@@ -462,7 +471,7 @@ const SaleHeader = ({
               }`}
               value={formData.phone}
               onChange={handlePhoneChange}
-              disabled={!globalEditMode}
+              disabled={readOnly || !globalEditMode}
             />
           </div>
           <div className="col-span-1">
@@ -475,7 +484,7 @@ const SaleHeader = ({
               value={formData.customerCode}
               onChange={handleCustomerCodeChange}
               maxLength={5}
-              disabled={!globalEditMode}
+              disabled={readOnly || !globalEditMode}
             />
           </div>
         </div>
@@ -489,7 +498,7 @@ const SaleHeader = ({
               }`}
               value={formData.id}
               onChange={handleIdNumberChange}
-              disabled={!globalEditMode}
+              disabled={readOnly || !globalEditMode}
             />
           </div>
           <div>
@@ -500,7 +509,7 @@ const SaleHeader = ({
               }`}
               value={formData.branchType || "Head Office"}
               onChange={handleBranchTypeChange}
-              disabled={!globalEditMode}
+              disabled={readOnly || !globalEditMode}
             >
               <option value="Head Office">Head Office</option>
               <option value="Branch">Branch</option>
@@ -518,7 +527,9 @@ const SaleHeader = ({
               value={formData.branchNumber || ""}
               onChange={handleBranchNumberChange}
               maxLength={3}
-              disabled={!globalEditMode || formData.branchType !== "Branch"}
+              disabled={
+                readOnly || !globalEditMode || formData.branchType !== "Branch"
+              }
             />
           </div>
         </div>
@@ -564,7 +575,7 @@ const SaleHeader = ({
               placeholder="0"
               required
               min="0"
-              disabled={!globalEditMode}
+              disabled={readOnly || !globalEditMode}
             />
           </div>
           <div className="relative">
@@ -582,7 +593,7 @@ const SaleHeader = ({
                 onBlur={handleDueDateBlur}
                 placeholder="วัน/เดือน/ปี (เช่น 09/05/2025)"
                 required
-                disabled={!globalEditMode}
+                disabled={readOnly || !globalEditMode}
               />
               <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
@@ -603,7 +614,7 @@ const SaleHeader = ({
               value={formData.salesName || currentUser?.fullname || ""}
               onChange={handleSalesNameChange}
               required
-              disabled={!globalEditMode || !!currentUser?.fullname}
+              disabled={readOnly || !globalEditMode || !!currentUser?.fullname}
             />
           </div>
         </div>
@@ -623,7 +634,7 @@ const SaleHeader = ({
             onChange={handleCustomerNameChange}
             required
             placeholder="ชื่อลูกค้า"
-            disabled={false}
+            disabled={readOnly || false}
           />
           {formData.customer && (
             <button
@@ -700,7 +711,7 @@ const SaleHeader = ({
             value={formData.contactDetails}
             onChange={handleContactDetailsChange}
             required
-            disabled={!globalEditMode}
+            disabled={readOnly || !globalEditMode}
             style={{
               minHeight: "38px",
               height: "auto",
@@ -719,7 +730,7 @@ const SaleHeader = ({
             placeholder="เบอร์โทรศัพท์"
             value={formData.phone}
             onChange={handlePhoneChange}
-            disabled={!globalEditMode}
+            disabled={readOnly || !globalEditMode}
           />
         </div>
       </div>
@@ -734,7 +745,7 @@ const SaleHeader = ({
             placeholder="เลขผู้เสียภาษี"
             value={formData.id}
             onChange={handleIdNumberChange}
-            disabled={!globalEditMode}
+            disabled={readOnly || !globalEditMode}
           />
         </div>
         <div>
@@ -745,7 +756,7 @@ const SaleHeader = ({
             }`}
             value={formData.branchType || "Head Office"}
             onChange={handleBranchTypeChange}
-            disabled={!globalEditMode}
+            disabled={readOnly || !globalEditMode}
           >
             <option value="Head Office">Head Office</option>
             <option value="Branch">Branch</option>
@@ -763,7 +774,9 @@ const SaleHeader = ({
             value={formData.branchNumber || ""}
             onChange={handleBranchNumberChange}
             maxLength={3}
-            disabled={!globalEditMode || formData.branchType !== "Branch"}
+            disabled={
+              readOnly || !globalEditMode || formData.branchType !== "Branch"
+            }
           />
         </div>
       </div>
@@ -800,7 +813,7 @@ const SaleHeader = ({
             placeholder="0"
             required
             min="0"
-            disabled={!globalEditMode}
+            disabled={readOnly || !globalEditMode}
           />
         </div>
         <div className="relative">
@@ -816,7 +829,7 @@ const SaleHeader = ({
               onBlur={handleDueDateBlur}
               placeholder="วัน/เดือน/ปี (เช่น 09/05/2025)"
               required
-              disabled={!globalEditMode}
+              disabled={readOnly || !globalEditMode}
             />
             <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
@@ -837,7 +850,7 @@ const SaleHeader = ({
             value={formData.salesName || currentUser?.fullname || ""}
             onChange={handleSalesNameChange}
             required
-            disabled={!globalEditMode || !!currentUser?.fullname}
+            disabled={readOnly || !globalEditMode || !!currentUser?.fullname}
           />
         </div>
       </div>

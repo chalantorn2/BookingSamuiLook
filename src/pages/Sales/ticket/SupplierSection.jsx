@@ -1,7 +1,7 @@
 import React from "react";
 import SaleStyles from "../common/SaleStyles";
 
-const SupplierSection = ({ formData, setFormData }) => {
+const SupplierSection = ({ formData, setFormData, readOnly = false }) => {
   // ฟังก์ชันจัดการการเปลี่ยนแปลงรหัสสายการบิน
   const handleSupplierCodeChange = (value) => {
     // อนุญาตเฉพาะตัวอักษร 2 ตัว
@@ -53,6 +53,7 @@ const SupplierSection = ({ formData, setFormData }) => {
                 value={formData.supplier || ""}
                 onChange={(e) => handleSupplierCodeChange(e.target.value)}
                 maxLength={3}
+                disabled={readOnly}
               />
             </div>
 
@@ -61,7 +62,7 @@ const SupplierSection = ({ formData, setFormData }) => {
               <input
                 type="text"
                 className={SaleStyles.form.inputDisabled}
-                disabled
+                disabled={readOnly}
                 value={formData.supplierName || ""}
               />
             </div>
@@ -76,6 +77,7 @@ const SupplierSection = ({ formData, setFormData }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, code: e.target.value })
                 }
+                disabled={readOnly}
               />
             </div>
           </div>

@@ -22,8 +22,11 @@ import RouteSection from "../../Sales/ticket/RouteSection";
 import TicketTypeSection from "../../Sales/ticket/TicketTypeSection";
 import ExtrasSection from "../../Sales/ticket/ExtrasSection";
 import PricingSummarySection from "../../Sales/ticket/PricingSummarySection";
+import SaleHeader from "../../Sales/common/SaleHeader";
 
 const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [globalEditMode, setGlobalEditMode] = useState(false);
   const showAlert = useAlertDialogContext();
   const [ticketData, setTicketData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -146,9 +149,11 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
       supplierId: ticket.supplier?.id || null,
       supplierNumericCode: ticket.supplier?.numeric_code || "",
       ticketType: additional.ticket_type || "bsp",
-      paymentMethod: additional.company_payment_method || "",
+      paymentMethod:
+        mapPaymentMethodFromDB(additional.company_payment_method) || "",
       companyPaymentDetails: additional.company_payment_details || "",
-      customerPayment: additional.customer_payment_method || "",
+      customerPayment:
+        mapPaymentMethodFromDB(additional.customer_payment_method) || "",
       customerPaymentDetails: additional.customer_payment_details || "",
       vatPercent: String(detail.vat_percent || 0),
       code: additional.code || "",
@@ -164,6 +169,15 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
         additional.ticket_type === "tg"
           ? additional.ticket_type_details || ""
           : "",
+    });
+
+    console.log("Payment method mapping:", {
+      originalCompany: additional.company_payment_method,
+      mappedCompany: mapPaymentMethodFromDB(additional.company_payment_method),
+      originalCustomer: additional.customer_payment_method,
+      mappedCustomer: mapPaymentMethodFromDB(
+        additional.customer_payment_method
+      ),
     });
 
     // เพิ่มใน mapDataToFormState หลังจาก setFormData
@@ -509,6 +523,35 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
     return new Date(dateTime).toLocaleDateString("th-TH");
   };
 
+  // Helper function to map database payment method to form values
+  const mapPaymentMethodFromDB = (dbValue) => {
+    if (!dbValue) return "";
+
+    const mapping = {
+      // Database values -> Form values
+      เครดิตการ์ด: "creditCard",
+      โอนเงินผ่านธนาคาร: "bankTransfer",
+      เงินสด: "cash",
+      เครดิต: "credit",
+      "อื่น ๆ": "other",
+      อื่นๆ: "other",
+      // English values - เพิ่มตัวใหญ่
+      CREDITCARD: "creditCard",
+      BANKTRANSFER: "bankTransfer",
+      CASH: "cash",
+      CREDIT: "credit",
+      OTHER: "other",
+      // camelCase values
+      creditCard: "creditCard",
+      bankTransfer: "bankTransfer",
+      cash: "cash",
+      credit: "credit",
+      other: "other",
+    };
+
+    return mapping[dbValue] || "";
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -567,115 +610,48 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
               </div>
             )}
 
-            {/* Customer & Dates - แสดงข้อมูลครบเหมือน FlightTicketDetail */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h2 className="text-lg font-semibold mb-3 flex items-center">
-                  <User className="text-blue-500 mr-2" size={20} />
+            {/* Customer & Dates - ใช้ SaleHeader */}
+            <div className={SaleStyles.grid.twoColumns}>
+              <div>
+                <h2
+                  className={combineClasses(
+                    "text-lg font-semibold border-b pb-2",
+                    SaleStyles.spacing.mb4
+                  )}
+                >
                   ข้อมูลลูกค้า
                 </h2>
-                <div className="space-y-3">
-                  {/* แถวที่ 1: ชื่อลูกค้า | รหัสลูกค้า | ที่อยู่ */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="flex items-start">
-                      <User className="text-gray-500 mr-2 mt-1" size={16} />
-                      <div>
-                        <div className="font-medium text-base">
-                          {formData.customer || "-"}
-                        </div>
-                        <div className="text-gray-600 text-sm">ชื่อลูกค้า</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <Tag className="text-gray-500 mr-2 mt-1" size={16} />
-                      <div>
-                        <div className="font-medium text-base">
-                          {formData.customerCode || "-"}
-                        </div>
-                        <div className="text-gray-600 text-sm">รหัสลูกค้า</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <MapPin className="text-gray-500 mr-2 mt-1" size={16} />
-                      <div>
-                        <div className="font-medium text-base">
-                          {formData.contactDetails || "-"}
-                        </div>
-                        <div className="text-gray-600 text-sm">ที่อยู่</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* แถวที่ 2: เบอร์โทร | เลขผู้เสียภาษี | ประเภทสาขา */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="flex items-start">
-                      <Phone className="text-gray-500 mr-2 mt-1" size={16} />
-                      <div>
-                        <div className="font-medium text-base">
-                          {formData.phone || "-"}
-                        </div>
-                        <div className="text-gray-600 text-sm">เบอร์โทร</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <FileText className="text-gray-500 mr-2 mt-1" size={16} />
-                      <div>
-                        <div className="font-medium text-base">
-                          {formData.id || "-"}
-                        </div>
-                        <div className="text-gray-600 text-sm">
-                          เลขผู้เสียภาษี
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <Tag className="text-gray-500 mr-2 mt-1" size={16} />
-                      <div>
-                        <div className="font-medium text-base">
-                          {ticketData.customer?.branch_type || "Head Office"}
-                          {ticketData.customer?.branch_number &&
-                            ` ${ticketData.customer.branch_number}`}
-                        </div>
-                        <div className="text-gray-600 text-sm">ประเภทสาขา</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <SaleHeader
+                  formData={formData}
+                  setFormData={setFormData}
+                  section="customer"
+                  selectedCustomer={selectedCustomer}
+                  setSelectedCustomer={setSelectedCustomer}
+                  globalEditMode={globalEditMode}
+                  setGlobalEditMode={setGlobalEditMode}
+                  readOnly={true} // true เพื่อให้เป็น readonly
+                />
               </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h2 className="text-lg font-semibold mb-3 flex items-center">
-                  <Calendar className="text-blue-500 mr-2" size={20} />
+              <div>
+                <h2
+                  className={combineClasses(
+                    "text-lg font-semibold border-b pb-2",
+                    SaleStyles.spacing.mb4
+                  )}
+                >
                   ราคาและวันที่
                 </h2>
-                <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                  <div className="text-sm text-gray-600">ราคารวมทั้งสิ้น</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    ฿{formatCurrency(calculatedTotal)}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-start">
-                    <Calendar className="text-gray-500 mr-2 mt-1" size={16} />
-                    <div>
-                      <div className="font-medium text-base">
-                        {formatDate(formData.date)}
-                      </div>
-                      <div className="text-gray-600 text-sm">วันที่บันทึก</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Calendar className="text-gray-500 mr-2 mt-1" size={16} />
-                    <div>
-                      <div className="font-medium text-base">
-                        {formatDate(formData.dueDate)}
-                      </div>
-                      <div className="text-gray-600 text-sm">
-                        วันครบกำหนด ({formData.creditDays || "0"} วัน)
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <SaleHeader
+                  formData={formData}
+                  setFormData={setFormData}
+                  section="price"
+                  totalAmount={calculatedTotal}
+                  subtotalAmount={calculatedSubtotal}
+                  vatAmount={calculatedVatAmount}
+                  globalEditMode={globalEditMode}
+                  setGlobalEditMode={setGlobalEditMode}
+                  readOnly={true} // true เพื่อให้เป็น readonly
+                />
               </div>
             </div>
 

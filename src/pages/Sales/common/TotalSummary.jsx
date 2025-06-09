@@ -11,11 +11,13 @@ const TotalSummary = ({
   extras = [],
   pricing = {},
   setFormData,
+  readOnly = false,
 }) => {
   const [vatPercentInput, setVatPercentInput] = useState("0");
 
-  // อัปเดต formData.vatPercent เมื่อ vatPercentInput เปลี่ยน
+  // แก้ไขฟังก์ชัน handleVatChange
   const handleVatChange = (e) => {
+    if (readOnly) return; // เพิ่มบรรทัดนี้
     const value = e.target.value;
     if (value === "" || (Number(value) >= 0 && Number(value) <= 100)) {
       setVatPercentInput(value);
@@ -73,6 +75,7 @@ const TotalSummary = ({
             placeholder="0"
             min="0"
             max="100"
+            disabled={readOnly}
           />
           %
         </div>

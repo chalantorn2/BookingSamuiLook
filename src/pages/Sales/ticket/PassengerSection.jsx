@@ -9,6 +9,7 @@ const PassengerSection = ({
   pricing,
   formData,
   setFormData,
+  readOnly = false,
 }) => {
   // เพิ่มประเภทผู้โดยสาร
   const passengerTypes = [
@@ -174,6 +175,7 @@ const PassengerSection = ({
                     updatedPassengers[index].name = e.target.value;
                     setPassengers(updatedPassengers);
                   }}
+                  disabled={readOnly}
                 />
               </div>
               <div className="col-span-3">
@@ -184,6 +186,7 @@ const PassengerSection = ({
                   )}
                   value={passenger.type || "ADT"}
                   onChange={(e) => handleTypeChange(index, e.target.value)}
+                  disabled={readOnly}
                 >
                   {passengerTypes.map((type) => (
                     <option
@@ -208,6 +211,7 @@ const PassengerSection = ({
                     value={passenger.ticketNumber || ""}
                     onChange={(e) => handleTicketNumberChange(e.target.value)}
                     maxLength={3}
+                    disabled={readOnly}
                   />
                 ) : (
                   // แถวอื่นๆ: แสดงค่า readonly
@@ -219,6 +223,7 @@ const PassengerSection = ({
                     )}
                     value={passenger.ticketNumber || ""}
                     readOnly
+                    disabled={readOnly}
                   />
                 )}
               </div>
@@ -232,30 +237,45 @@ const PassengerSection = ({
                     updatedPassengers[index].ticketCode = e.target.value;
                     setPassengers(updatedPassengers);
                   }}
+                  disabled={readOnly}
                 />
               </div>
               <div className="col-span-1 flex items-center justify-center">
-                <button
-                  type="button"
-                  onClick={() => removePassenger(passenger.id)}
-                  className={SaleStyles.button.actionButton}
-                  disabled={passengers.length === 1}
-                >
-                  <FiTrash2 size={18} />
-                </button>
+                {!readOnly && ( // เพิ่มเงื่อนไขนี้
+                  <button
+                    type="button"
+                    onClick={() => removePassenger(passenger.id)}
+                    className={SaleStyles.button.actionButton}
+                    disabled={passengers.length === 1}
+                  >
+                    <FiTrash2 size={18} />
+                  </button>
+                )}
               </div>
             </div>
           ))}
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={addPassenger}
+              className={combineClasses(
+                SaleStyles.button.primary,
+                SaleStyles.spacing.mt2,
+                SaleStyles.spacing.ml4
+              )}
+            >
+              <FiPlus className={SaleStyles.button.icon} /> เพิ่มผู้โดยสาร
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={addPassenger}
-            className={combineClasses(
-              SaleStyles.button.primary,
-              SaleStyles.spacing.mt2,
-              SaleStyles.spacing.ml4
-            )}
+            onClick={() => removePassenger(passenger.id)}
+            className={SaleStyles.button.actionButton}
+            disabled={passengers.length === 1 || readOnly} // เพิ่ม || readOnly
+            style={{ display: readOnly ? "none" : "block" }} // เพิ่มบรรทัดนี้
           >
-            <FiPlus className={SaleStyles.button.icon} /> เพิ่มผู้โดยสาร
+            {/* <FiTrash2 size={18} /> */}
           </button>
         </div>
       </section>
