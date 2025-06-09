@@ -21,6 +21,17 @@ const DataTable = ({
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [currentEditSupplier, setCurrentEditSupplier] = useState(null);
 
+  // Helper function to format address from multiple lines
+  const formatFullAddress = (item) => {
+    const addressParts = [
+      item.address_line1,
+      item.address_line2,
+      item.address_line3,
+    ].filter((part) => part && part.trim() !== "");
+
+    return addressParts.length > 0 ? addressParts.join(" ") : "-";
+  };
+
   const formatBranchInfo = (item) => {
     if (item.branch_type === "Branch" && item.branch_number) {
       return (
@@ -145,6 +156,15 @@ const DataTable = ({
       alert("กรุณากรอกชื่อลูกค้า");
       return;
     }
+
+    if (
+      !currentEditItem.address_line1 ||
+      !currentEditItem.address_line1.trim()
+    ) {
+      alert("กรุณากรอกที่อยู่บรรทัดที่ 1");
+      return;
+    }
+
     if (
       currentEditItem.branch_type === "Branch" &&
       !currentEditItem.branch_number
@@ -154,9 +174,21 @@ const DataTable = ({
     }
 
     // ตรวจสอบรหัสลูกค้า
-    if (currentEditItem.code && currentEditItem.code.length !== 5) {
+    if (
+      currentEditItem.code &&
+      (currentEditItem.code.length < 3 || currentEditItem.code.length > 5)
+    ) {
       alert("รหัสลูกค้าต้องเป็นตัวอักษร 3-5 ตัว");
       return;
+    }
+
+    // ตรวจสอบรูปแบบอีเมล
+    if (currentEditItem.email && currentEditItem.email.trim() !== "") {
+      const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      if (!emailRegex.test(currentEditItem.email)) {
+        alert("รูปแบบอีเมลไม่ถูกต้อง");
+        return;
+      }
     }
 
     try {
@@ -180,7 +212,10 @@ const DataTable = ({
         .update({
           name: currentEditItem.name,
           code: currentEditItem.code || null,
-          address: currentEditItem.address || null,
+          email: currentEditItem.email || null,
+          address_line1: currentEditItem.address_line1 || null,
+          address_line2: currentEditItem.address_line2 || null,
+          address_line3: currentEditItem.address_line3 || null,
           id_number: currentEditItem.id_number || null,
           phone: currentEditItem.phone || null,
           branch_type: currentEditItem.branch_type || "Head Office",
@@ -204,7 +239,7 @@ const DataTable = ({
     const { name, value } = e.target;
 
     if (name === "code") {
-      // จำกัดให้เป็นตัวอักษร 3 ตัว
+      // จำกัดให้เป็นตัวอักษร 3-5 ตัว
       const updatedValue = value.toUpperCase().substring(0, 5);
       setCurrentEditItem({ ...currentEditItem, [name]: updatedValue });
     } else if (name === "numeric_code") {
@@ -227,115 +262,176 @@ const DataTable = ({
       {/* Modal สำหรับการแก้ไขลูกค้า */}
       {showModal && currentEditItem && (
         <div className="fixed inset-0 modal-backdrop bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md information-modal">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto information-modal">
             <h3 className="text-lg font-semibold mb-4">แก้ไขข้อมูลลูกค้า</h3>
             <div className="space-y-4">
+              {/* ชื่อลูกค้า */}
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  ชื่อลูกค้า
+                  ชื่อลูกค้า <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="name"
-                  value={currentEditItem.name}
+                  value={currentEditItem.name || ""}
                   onChange={handleModalInputChange}
                   className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  รหัสลูกค้า (3-5 ตัวอักษร)
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  value={currentEditItem.code || ""}
-                  onChange={handleModalInputChange}
-                  maxLength={5}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">สาขา</label>
-                <select
-                  name="branch_type"
-                  value={currentEditItem.branch_type || "Head Office"}
-                  onChange={handleModalInputChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                >
-                  <option value="Head Office">Head Office</option>
-                  <option value="Branch">Branch</option>
-                </select>
-                {currentEditItem.branch_type === "Branch" && (
+
+              {/* รหัสลูกค้า และ อีเมล */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    รหัสลูกค้า (3-5 ตัวอักษร)
+                  </label>
                   <input
                     type="text"
-                    name="branch_number"
-                    value={currentEditItem.branch_number || ""}
-                    onChange={(e) => {
-                      const value = e.target.value
-                        .replace(/\D/g, "")
-                        .substring(0, 3);
-                      setCurrentEditItem({
-                        ...currentEditItem,
-                        branch_number: value,
-                      });
-                    }}
-                    placeholder="หมายเลขสาขา"
-                    maxLength={3}
-                    className="mt-2 w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                    name="code"
+                    value={currentEditItem.code || ""}
+                    onChange={handleModalInputChange}
+                    maxLength={5}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
                   />
-                )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    อีเมล
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={currentEditItem.email || ""}
+                    onChange={handleModalInputChange}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                    placeholder="example@email.com"
+                  />
+                </div>
               </div>
+
+              {/* ที่อยู่บรรทัดที่ 1 */}
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  เครดิต (วัน)
-                </label>
-                <input
-                  type="number"
-                  name="credit_days"
-                  value={currentEditItem.credit_days || 0}
-                  onChange={handleModalInputChange}
-                  min="0"
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  เลขผู้เสียภาษี
-                </label>
-                <input
-                  type="text"
-                  name="id_number"
-                  value={currentEditItem.id_number || ""}
-                  onChange={handleModalInputChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  โทรศัพท์
+                  ที่อยู่บรรทัดที่ 1 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="phone"
-                  value={currentEditItem.phone || ""}
+                  name="address_line1"
+                  value={currentEditItem.address_line1 || ""}
                   onChange={handleModalInputChange}
                   className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  placeholder="บ้านเลขที่ ซอย ถนน"
                 />
               </div>
+
+              {/* ที่อยู่บรรทัดที่ 2 */}
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  ที่อยู่
+                  ที่อยู่บรรทัดที่ 2
                 </label>
-                <textarea
-                  name="address"
-                  value={currentEditItem.address || ""}
+                <input
+                  type="text"
+                  name="address_line2"
+                  value={currentEditItem.address_line2 || ""}
                   onChange={handleModalInputChange}
-                  rows={3}
                   className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  placeholder="ตำบล/แขวง อำเภอ/เขต"
                 />
+              </div>
+
+              {/* ที่อยู่บรรทัดที่ 3 */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  ที่อยู่บรรทัดที่ 3
+                </label>
+                <input
+                  type="text"
+                  name="address_line3"
+                  value={currentEditItem.address_line3 || ""}
+                  onChange={handleModalInputChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  placeholder="จังหวัด รหัสไปรษณีย์"
+                />
+              </div>
+
+              {/* เลขผู้เสียภาษี และ โทรศัพท์ */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    เลขผู้เสียภาษี
+                  </label>
+                  <input
+                    type="text"
+                    name="id_number"
+                    value={currentEditItem.id_number || ""}
+                    onChange={handleModalInputChange}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    โทรศัพท์
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={currentEditItem.phone || ""}
+                    onChange={handleModalInputChange}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* สาขา และ เครดิต */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">สาขา</label>
+                  <select
+                    name="branch_type"
+                    value={currentEditItem.branch_type || "Head Office"}
+                    onChange={handleModalInputChange}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  >
+                    <option value="Head Office">Head Office</option>
+                    <option value="Branch">Branch</option>
+                  </select>
+                  {currentEditItem.branch_type === "Branch" && (
+                    <input
+                      type="text"
+                      name="branch_number"
+                      value={currentEditItem.branch_number || ""}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/\D/g, "")
+                          .substring(0, 3);
+                        setCurrentEditItem({
+                          ...currentEditItem,
+                          branch_number: value,
+                        });
+                      }}
+                      placeholder="หมายเลขสาขา"
+                      maxLength={3}
+                      className="mt-2 w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    เครดิต (วัน)
+                  </label>
+                  <input
+                    type="number"
+                    name="credit_days"
+                    value={currentEditItem.credit_days || 0}
+                    onChange={handleModalInputChange}
+                    min="0"
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  />
+                </div>
               </div>
             </div>
+
+            {/* ปุ่มบันทึก และ ยกเลิก */}
             <div className="flex justify-end mt-4 space-x-2">
               <button
                 onClick={handleCloseModal}
@@ -557,15 +653,19 @@ const DataTable = ({
                       <div className="font-medium text-gray-900">
                         {item.name}
                       </div>
-                      {(item.id_number || item.phone || item.address) && (
+                      {(item.id_number ||
+                        item.phone ||
+                        item.email ||
+                        item.address_line1) && (
                         <div className="text-sm text-gray-600 mt-1">
+                          {item.email && <div>อีเมล: {item.email}</div>}
                           {item.id_number && (
                             <div>เลขผู้เสียภาษี: {item.id_number}</div>
                           )}
                           {item.phone && <div>โทรศัพท์: {item.phone}</div>}
-                          {item.address && (
+                          {item.address_line1 && (
                             <div className="truncate max-w-xs">
-                              ที่อยู่: {item.address}
+                              ที่อยู่: {formatFullAddress(item)}
                             </div>
                           )}
                         </div>

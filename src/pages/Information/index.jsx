@@ -27,7 +27,11 @@ const Information = () => {
     name: "",
     code: "",
     numeric_code: "",
-    address: "",
+    email: "", // เพิ่มบรรทัดนี้
+    address_line1: "", // เพิ่มบรรทัดนี้
+    address_line2: "", // เพิ่มบรรทัดนี้
+    address_line3: "", // เพิ่มบรรทัดนี้
+    // ลบ address: "", ออก
     id_number: "",
     phone: "",
     branch_type: "Head Office",
@@ -118,10 +122,10 @@ const Information = () => {
         .select("*", { count: "exact" })
         .eq("active", true);
 
-      // เพิ่มการค้นหา
+      // เพิ่มการค้นหา - แก้บรรทัดนี้
       if (searchTerm) {
         query = query.or(
-          `code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,id_number.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`
+          `code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,id_number.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,address_line1.ilike.%${searchTerm}%,address_line2.ilike.%${searchTerm}%,address_line3.ilike.%${searchTerm}%`
         );
       }
 
@@ -238,11 +242,16 @@ const Information = () => {
       setNewItem(updatedItem);
     }
   };
-
   const handleSaveEdit = async () => {
     if (selectedCategory === "customer") {
       if (!editingItem.name.trim()) {
         alert("กรุณากรอกชื่อลูกค้า");
+        return;
+      }
+
+      // เพิ่มการตรวจสอบ address_line1
+      if (!editingItem.address_line1 || !editingItem.address_line1.trim()) {
+        alert("กรุณากรอกที่อยู่บรรทัดที่ 1");
         return;
       }
 
@@ -257,6 +266,15 @@ const Information = () => {
       if (editingItem.branch_type === "Branch" && !editingItem.branch_number) {
         alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
         return;
+      }
+
+      // เพิ่มการตรวจสอบ email
+      if (editingItem.email && editingItem.email.trim() !== "") {
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if (!emailRegex.test(editingItem.email)) {
+          alert("รูปแบบอีเมลไม่ถูกต้อง");
+          return;
+        }
       }
 
       try {
@@ -274,12 +292,16 @@ const Information = () => {
           }
         }
 
+        // แก้ไขส่วน update - เปลี่ยนจาก address เป็น address_line1, 2, 3
         const { error } = await supabase
           .from("customers")
           .update({
             name: editingItem.name,
             code: editingItem.code || null,
-            address: editingItem.address || null,
+            email: editingItem.email || null, // เพิ่มบรรทัดนี้
+            address_line1: editingItem.address_line1 || null, // เปลี่ยนจาก address
+            address_line2: editingItem.address_line2 || null, // เพิ่มบรรทัดนี้
+            address_line3: editingItem.address_line3 || null, // เพิ่มบรรทัดนี้
             id_number: editingItem.id_number || null,
             phone: editingItem.phone || null,
             branch_type: editingItem.branch_type || "Head Office",
@@ -298,6 +320,7 @@ const Information = () => {
         setError("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
       }
     } else {
+      // ส่วน supplier ไม่เปลี่ยน - คงเดิม
       if (
         !editingItem.code.trim() ||
         !editingItem.name.trim() ||
@@ -349,7 +372,11 @@ const Information = () => {
       name: "",
       code: "",
       numeric_code: "",
-      address: "",
+      email: "", // เพิ่มบรรทัดนี้
+      address_line1: "", // เพิ่มบรรทัดนี้
+      address_line2: "", // เพิ่มบรรทัดนี้
+      address_line3: "", // เพิ่มบรรทัดนี้
+      // ลบ address: "", ออก
       id_number: "",
       phone: "",
       branch_type: "Head Office",
@@ -370,6 +397,12 @@ const Information = () => {
         return;
       }
 
+      // เพิ่มการตรวจสอบ address_line1
+      if (!newItem.address_line1 || !newItem.address_line1.trim()) {
+        alert("กรุณากรอกที่อยู่บรรทัดที่ 1");
+        return;
+      }
+
       if (
         newItem.code &&
         (newItem.code.length < 3 || newItem.code.length > 5)
@@ -381,6 +414,15 @@ const Information = () => {
       if (newItem.branch_type === "Branch" && !newItem.branch_number) {
         alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
         return;
+      }
+
+      // เพิ่มการตรวจสอบ email
+      if (newItem.email && newItem.email.trim() !== "") {
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if (!emailRegex.test(newItem.email)) {
+          alert("รูปแบบอีเมลไม่ถูกต้อง");
+          return;
+        }
       }
 
       try {
@@ -397,10 +439,14 @@ const Information = () => {
           }
         }
 
+        // แก้ไขส่วน insert - เปลี่ยนจาก address เป็น address_line1, 2, 3
         const { error } = await supabase.from("customers").insert({
           name: newItem.name,
           code: newItem.code || null,
-          address: newItem.address || null,
+          email: newItem.email || null, // เพิ่มบรรทัดนี้
+          address_line1: newItem.address_line1 || null, // เปลี่ยนจาก address
+          address_line2: newItem.address_line2 || null, // เพิ่มบรรทัดนี้
+          address_line3: newItem.address_line3 || null, // เพิ่มบรรทัดนี้
           id_number: newItem.id_number || null,
           phone: newItem.phone || null,
           branch_type: newItem.branch_type || "Head Office",
@@ -417,7 +463,11 @@ const Information = () => {
           name: "",
           code: "",
           numeric_code: "",
-          address: "",
+          email: "", // เพิ่มบรรทัดนี้
+          address_line1: "", // เพิ่มบรรทัดนี้
+          address_line2: "", // เพิ่มบรรทัดนี้
+          address_line3: "", // เพิ่มบรรทัดนี้
+          // ลบ address: "", ออก
           id_number: "",
           phone: "",
           branch_type: "Head Office",
@@ -428,6 +478,7 @@ const Information = () => {
         setError("เกิดข้อผิดพลาดในการเพิ่มข้อมูล: " + err.message);
       }
     } else {
+      // ส่วน supplier ไม่เปลี่ยน - คงเดิม
       if (!newItem.code.trim() || !newItem.name.trim() || !newItem.type) {
         alert("กรุณากรอกข้อมูลให้ครบถ้วน");
         return;

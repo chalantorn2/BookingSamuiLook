@@ -2,6 +2,30 @@
 import { supabase } from "../services/supabase";
 
 /**
+ * แปลงที่อยู่ลูกค้าจากหลายบรรทัดเป็นบรรทัดเดียว
+ * รองรับทั้งรูปแบบใหม่ (address_line1, 2, 3) และรูปแบบเก่า (address)
+ * @param {Object} customer - ข้อมูลลูกค้า
+ * @returns {string} - ที่อยู่ที่รวมแล้ว
+ */
+export const formatCustomerAddress = (customer) => {
+  if (!customer) return "";
+
+  // ลองใช้รูปแบบใหม่ก่อน (address_line1, 2, 3)
+  const addressParts = [
+    customer.address_line1,
+    customer.address_line2,
+    customer.address_line3,
+  ].filter((part) => part && part.trim() !== "");
+
+  if (addressParts.length > 0) {
+    return addressParts.join(" ");
+  }
+
+  // Backward compatibility - ใช้แบบเก่าสำหรับข้อมูลที่ยังไม่ได้ migrate
+  return customer.address || customer.full_address || "";
+};
+
+/**
  * สร้างเลขอ้างอิงสำหรับเอกสาร
  * @param {string} prefix - คำนำหน้าเลขอ้างอิง (เช่น FT สำหรับ Flight Ticket)
  * @returns {string} - เลขอ้างอิงที่สร้างขึ้น

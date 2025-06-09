@@ -7,6 +7,17 @@ const truncateText = (text, maxLength = 50) => {
   return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 };
 
+// ฟังก์ชันสำหรับจัดการที่อยู่แบบใหม่
+const formatFullAddress = (customer) => {
+  const addressParts = [
+    customer.address_line1,
+    customer.address_line2,
+    customer.address_line3,
+  ].filter((part) => part && part.trim() !== "");
+
+  return addressParts.join(" ");
+};
+
 export const getCustomers = async (search = "", limit = 10) => {
   try {
     let query = supabase
@@ -16,8 +27,10 @@ export const getCustomers = async (search = "", limit = 10) => {
       .order("name");
 
     if (search) {
-      // เพิ่มการค้นหาด้วยรหัส (code)
-      query = query.or(`name.ilike.%${search}%,code.ilike.%${search}%`);
+      // เพิ่มการค้นหาด้วยรหัส (code) และ email
+      query = query.or(
+        `name.ilike.%${search}%,code.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,address_line1.ilike.%${search}%`
+      );
     }
 
     if (limit) {
@@ -31,9 +44,9 @@ export const getCustomers = async (search = "", limit = 10) => {
     return data.map((customer) => ({
       ...customer,
       name: truncateText(customer.name),
-      address: truncateText(customer.address),
+      address: formatFullAddress(customer), // สำหรับ backward compatibility
+      full_address: formatFullAddress(customer),
       full_name: customer.name,
-      full_address: customer.address,
     }));
   } catch (error) {
     console.error("Error fetching customers:", error);
@@ -50,6 +63,13 @@ export const getCustomerById = async (id) => {
       .single();
 
     if (error) throw error;
+
+    // เพิ่ม address สำหรับ backward compatibility
+    if (data) {
+      data.address = formatFullAddress(data);
+      data.full_address = formatFullAddress(data);
+    }
+
     return data;
   } catch (error) {
     console.error("Error fetching customer:", error);
@@ -79,21 +99,39 @@ export const createCustomer = async (customerData) => {
       }
     }
 
+    // ตรวจสอบรูปแบบอีเมล
+    if (customerData.email && customerData.email.trim() !== "") {
+      const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      if (!emailRegex.test(customerData.email)) {
+        return { success: false, error: "รูปแบบอีเมลไม่ถูกต้อง" };
+      }
+    }
+
+    // จัดการข้อมูลที่อยู่ - ถ้าเป็นแบบเก่า (address) ให้ย้ายไป address_line1
+    let addressLine1 = customerData.address_line1;
+    let addressLine2 = customerData.address_line2;
+    let addressLine3 = customerData.address_line3;
+
+    // Backward compatibility: ถ้ามี address แต่ไม่มี address_line1
+    if (!addressLine1 && customerData.address) {
+      addressLine1 = customerData.address;
+    }
+
     // เตรียมข้อมูลสำหรับบันทึก
-    const payload = transformToUpperCase(
-      {
-        name: customerData.name,
-        code: customerData.code || null,
-        address: customerData.address || null,
-        id_number: customerData.id_number || null,
-        phone: customerData.phone || null,
-        credit_days: customerData.credit_days || 0,
-        branch_type: customerData.branch_type || "Head Office",
-        branch_number: customerData.branch_number || null,
-        active: true,
-      },
-      ["phone", "credit_days"]
-    );
+    const payload = {
+      name: customerData.name,
+      code: customerData.code || null,
+      email: customerData.email || null,
+      address_line1: addressLine1 || null,
+      address_line2: addressLine2 || null,
+      address_line3: addressLine3 || null,
+      id_number: customerData.id_number || null,
+      phone: customerData.phone || null,
+      credit_days: customerData.credit_days || 0,
+      branch_type: customerData.branch_type || "Head Office",
+      branch_number: customerData.branch_number || null,
+      active: true,
+    };
 
     const { data, error } = await supabase
       .from("customers")
@@ -113,6 +151,11 @@ export const updateCustomer = async (id, customerData) => {
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!customerData.name) {
       throw new Error("Customer name is required");
+    }
+
+    // ตรวจสอบว่ามี address_line1 หรือไม่
+    if (!customerData.address_line1 && !customerData.address) {
+      throw new Error("ที่อยู่บรรทัดที่ 1 เป็นข้อมูลที่จำเป็น");
     }
 
     // ตรวจสอบรหัสลูกค้า
@@ -135,27 +178,41 @@ export const updateCustomer = async (id, customerData) => {
       }
     }
 
+    // ตรวจสอบรูปแบบอีเมล
+    if (customerData.email && customerData.email.trim() !== "") {
+      const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      if (!emailRegex.test(customerData.email)) {
+        throw new Error("รูปแบบอีเมลไม่ถูกต้อง");
+      }
+    }
+
     // ตรวจสอบความถูกต้องของข้อมูลสาขา
     if (customerData.branch_type === "Branch" && !customerData.branch_number) {
       throw new Error("Branch number is required when branch type is Branch");
     }
 
-    const payload = transformToUpperCase(
-      {
-        name: customerData.name,
-        code: customerData.code || null,
-        address: customerData.address || null,
-        id_number: customerData.id_number || null,
-        phone: customerData.phone || null,
-        branch_type: customerData.branch_type || "Head Office",
-        branch_number:
-          customerData.branch_type === "Branch"
-            ? customerData.branch_number
-            : null,
-        credit_days: customerData.credit_days || 0,
-      },
-      ["phone", "credit_days"]
-    );
+    // จัดการข้อมูลที่อยู่ - Backward compatibility
+    let addressLine1 = customerData.address_line1;
+    if (!addressLine1 && customerData.address) {
+      addressLine1 = customerData.address;
+    }
+
+    const payload = {
+      name: customerData.name,
+      code: customerData.code || null,
+      email: customerData.email || null,
+      address_line1: addressLine1 || null,
+      address_line2: customerData.address_line2 || null,
+      address_line3: customerData.address_line3 || null,
+      id_number: customerData.id_number || null,
+      phone: customerData.phone || null,
+      branch_type: customerData.branch_type || "Head Office",
+      branch_number:
+        customerData.branch_type === "Branch"
+          ? customerData.branch_number
+          : null,
+      credit_days: customerData.credit_days || 0,
+    };
 
     const { data, error } = await supabase
       .from("customers")
@@ -166,6 +223,12 @@ export const updateCustomer = async (id, customerData) => {
     if (error) {
       console.error("Database error when updating customer:", error);
       throw error;
+    }
+
+    // เพิ่ม address สำหรับ backward compatibility
+    if (data && data[0]) {
+      data[0].address = formatFullAddress(data[0]);
+      data[0].full_address = formatFullAddress(data[0]);
     }
 
     return { success: true, customer: data ? data[0] : null };

@@ -23,6 +23,7 @@ import ExtrasSection from "../../Sales/ticket/ExtrasSection";
 import PricingSummarySection from "../../Sales/ticket/PricingSummarySection";
 import usePricing from "../../../hooks/usePricing";
 import SaleStyles, { combineClasses } from "../../Sales/common/SaleStyles";
+import { formatCustomerAddress } from "../../../utils/helpers";
 
 const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   const [ticketData, setTicketData] = useState(null);
@@ -172,7 +173,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     setFormData({
       customer: ticket.customer?.name || "",
       customerCode: ticket.customer?.code || "",
-      contactDetails: ticket.customer?.address || "",
+      contactDetails: formatCustomerAddress(ticket.customer),
       phone: ticket.customer?.phone || "",
       id: ticket.customer?.id_number || "",
       date: detail.issue_date?.split("T")[0] || "",

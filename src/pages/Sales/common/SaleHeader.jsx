@@ -5,6 +5,7 @@ import { getCustomers } from "../../../services/customerService";
 import SaleStyles from "../common/SaleStyles";
 import { useAuth } from "../../../pages/Login/AuthContext";
 import { debounce } from "lodash";
+import { formatCustomerAddress } from "../../../utils/helpers";
 
 let instanceCount = 0;
 
@@ -119,7 +120,7 @@ const SaleHeader = ({
       ...formData,
       customer: customer.name,
       customerCode: customer.code || "",
-      contactDetails: customer.full_address || customer.address || "",
+      contactDetails: formatCustomerAddress(customer),
       phone: customer.phone || "",
       id: customer.id_number || "",
       date: today,
@@ -331,6 +332,36 @@ const SaleHeader = ({
     setGlobalEditMode(!globalEditMode);
   };
 
+  const createCustomerFromSaleHeader = async (customerData) => {
+    try {
+      const payload = {
+        name: customerData.customer,
+        code: customerData.customerCode || null,
+        email: null, // SaleHeader ไม่มีช่อง email
+        address_line1: customerData.contactDetails || null, // เก็บใน address_line1
+        address_line2: null,
+        address_line3: null,
+        id_number: customerData.id || null,
+        phone: customerData.phone || null,
+        credit_days: parseInt(customerData.creditDays) || 0,
+        branch_type: customerData.branchType || "Head Office",
+        branch_number: customerData.branchNumber || null,
+        active: true,
+      };
+
+      const { data, error } = await supabase
+        .from("customers")
+        .insert(payload)
+        .select();
+
+      if (error) throw error;
+      return { success: true, customerId: data[0].id };
+    } catch (error) {
+      console.error("Error creating customer from SaleHeader:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
   useEffect(() => {
     if (currentUser?.fullname && !formData.salesName) {
       setFormData((prev) => ({ ...prev, salesName: currentUser.fullname }));
@@ -416,11 +447,16 @@ const SaleHeader = ({
                           {customer.code ? `[${customer.code}] ` : ""}
                         </span>
                         <span className="text-sm text-gray-500">
-                          {customer.address || "ไม่มีที่อยู่"}
+                          {formatCustomerAddress(customer) || "ไม่มีที่อยู่"}
                         </span>
                         {customer.phone && (
                           <span className="text-sm text-gray-500">
                             โทร: {customer.phone}
+                          </span>
+                        )}
+                        {customer.email /* เพิ่มการแสดง email */ && (
+                          <span className="text-sm text-gray-500">
+                            อีเมล: {customer.email}
                           </span>
                         )}
                         {customer.credit_days > 0 && (
