@@ -752,6 +752,36 @@ const SaleTicket = () => {
               </section>
             </div>
           </div>
+          {/* ปุ่มบันทึกด้านล่าง */}
+          <div
+            className={combineClasses(
+              SaleStyles.section.container,
+              "border-t-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 p-6"
+            )}
+          >
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                className={combineClasses(
+                  "px-8 py-3 bg-green-500 text-white rounded-lg flex items-center hover:bg-green-600 text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200",
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                )}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                    <span>กำลังบันทึก...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiSave className="mr-2" size={20} />
+                    บันทึกข้อมูลตั๋วเครื่องบิน
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </form>
     </div>
