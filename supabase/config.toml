@@ -1,0 +1,5 @@
+[project]
+ref = "your-project-ref"
+
+[functions.generate-pdf]
+verify_jwt = false

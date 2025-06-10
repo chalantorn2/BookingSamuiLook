@@ -23,7 +23,10 @@ import ExtrasSection from "../../Sales/ticket/ExtrasSection";
 import PricingSummarySection from "../../Sales/ticket/PricingSummarySection";
 import usePricing from "../../../hooks/usePricing";
 import SaleStyles, { combineClasses } from "../../Sales/common/SaleStyles";
-import { formatCustomerAddress } from "../../../utils/helpers";
+import {
+  formatCustomerAddress,
+  displayThaiDateTime,
+} from "../../../utils/helpers";
 
 const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   const [ticketData, setTicketData] = useState(null);
@@ -34,6 +37,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   const [generating, setGenerating] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailNotification, setEmailNotification] = useState(null);
+  const [generatingPuppeteer, setGeneratingPuppeteer] = useState(false);
 
   // Use same pricing hook as SaleTicket
   const { pricing, updatePricing, calculateSubtotal } = usePricing();
@@ -307,6 +311,52 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     setShowPrintModal(false);
   };
 
+  // เพิ่ม function ใหม่
+  const handlePuppeteerPrint = async () => {
+    if (!ticketData.po_number) {
+      // ถ้าไม่มี PO ให้สร้างก่อน
+      setShowPrintConfirm(true);
+      return;
+    }
+
+    await generatePuppeteerPDF();
+  };
+
+  const generatePuppeteerPDF = async () => {
+    setGeneratingPuppeteer(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("pdf-generator", {
+        body: { ticketId: ticketData.id },
+      });
+
+      if (error) throw error;
+
+      // Download PDF
+      const byteCharacters = atob(data.pdf);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `invoice-${data.poNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("ไม่สามารถสร้าง PDF ได้: " + error.message);
+    } finally {
+      setGeneratingPuppeteer(false);
+    }
+  };
+
   const handlePOGenerated = () => {
     if (onPOGenerated) {
       onPOGenerated();
@@ -337,7 +387,8 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     }
   };
 
-  const handleConfirmPrint = async () => {
+  // แก้ไข handleConfirmPrint ให้รองรับ Puppeteer
+  const handleConfirmPrint = async (usePuppeteer = false) => {
     setGenerating(true);
 
     try {
@@ -356,7 +407,13 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
         }
 
         setShowPrintConfirm(false);
-        setShowPrintModal(true);
+
+        // เลือกวิธีสร้าง PDF
+        if (usePuppeteer) {
+          await generatePuppeteerPDF();
+        } else {
+          setShowPrintModal(true);
+        }
       } else {
         alert("ไม่สามารถสร้าง PO Number ได้: " + poResult.error);
       }
@@ -392,17 +449,21 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     }, 5000);
   };
 
-  // Helper functions
-  const formatDateTime = (dateTime) => {
-    if (!dateTime || isNaN(new Date(dateTime).getTime())) return "-";
-    const dateObj = new Date(dateTime);
-    const day = dateObj.getDate().toString().padStart(2, "0");
-    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
-    const year = dateObj.getFullYear();
-    const hours = dateObj.getHours().toString().padStart(2, "0");
-    const minutes = dateObj.getMinutes().toString().padStart(2, "0");
-    const seconds = dateObj.getSeconds().toString().padStart(2, "0");
-    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  // ฟังก์ชันสำหรับแสดงวันที่เวลาแบบไทย (ไม่มีวินาที)
+  const formatThaiDateTime = (dateTime) => {
+    if (!dateTime) return "-";
+    const date = new Date(dateTime);
+    // ปรับเป็น UTC+7 (เวลาไทย)
+    const thaiTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+    return thaiTime.toLocaleString("th-TH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false, // ใช้รูปแบบ 24 ชั่วโมง
+    });
   };
 
   const getBranchDisplay = (branchType, branchNumber) => {
@@ -483,13 +544,45 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               {ticketData.reference_number || `#${ticketData.id}`}
             </h1>
             <div className="flex items-center space-x-2">
+              {/* ปุ่มพิมพ์เดิม */}
               <button
                 className="p-2 hover:bg-blue-700 rounded-md transition-colors"
-                title="พิมพ์"
+                title="พิมพ์ (แบบเดิม)"
                 onClick={handlePrintClick}
               >
                 <Printer size={20} />
               </button>
+
+              {/* ปุ่มพิมพ์ใหม่ - Puppeteer */}
+              <button
+                className={`p-2 rounded-md transition-colors ${
+                  generatingPuppeteer
+                    ? "bg-green-700 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+                title="พิมพ์ (แบบใหม่ - Puppeteer)"
+                onClick={handlePuppeteerPrint}
+                disabled={generatingPuppeteer}
+              >
+                {generatingPuppeteer ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="6,9 6,2 18,2 18,9"></polyline>
+                    <path d="M6,18H4a2,2,0,0,1-2-2V11a2,2,0,0,1,2-2H20a2,2,0,0,1,2,2v5a2,2,0,0,1-2,2H18"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                    <circle cx="8" cy="17" r="1" fill="currentColor"></circle>
+                  </svg>
+                )}
+              </button>
+
               <button
                 className={`p-2 rounded-md transition-colors ${
                   ticketData.po_number && ticketData.po_number.trim() !== ""
@@ -508,14 +601,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               >
                 <Mail size={20} />
               </button>
-              {emailNotification && (
-                <div className="fixed top-4 right-4 z-60 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
-                  <div className="flex items-center">
-                    <CheckCircle size={20} className="mr-2" />
-                    <span>{emailNotification}</span>
-                  </div>
-                </div>
-              )}
+
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-blue-700 rounded-md transition-colors"
@@ -814,7 +900,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     {ticketData.createdByName}
                   </div>
                   <div className="text-gray-600 text-sm">
-                    {formatDateTime(ticketData.created_at)}
+                    {formatThaiDateTime(ticketData.created_at)}
                   </div>
                 </div>
                 <div>
@@ -823,7 +909,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                     {ticketData.updatedByName}
                   </div>
                   <div className="text-gray-600 text-sm">
-                    {formatDateTime(ticketData.updated_at)}
+                    {formatThaiDateTime(ticketData.updated_at)}
                   </div>
                 </div>
                 {ticketData.cancelled_at && (
@@ -833,7 +919,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                       {ticketData.cancelledByName}
                     </div>
                     <div className="text-gray-600 text-sm">
-                      {formatDateTime(ticketData.cancelled_at)}
+                      {formatThaiDateTime(ticketData.cancelled_at)}
                     </div>
                     <div className="text-gray-600 text-sm">
                       เหตุผล: {ticketData.cancel_reason || "-"}

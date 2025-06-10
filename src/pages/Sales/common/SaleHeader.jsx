@@ -191,21 +191,6 @@ const SaleHeader = ({
     });
   };
 
-  const formatPhoneNumber = (value) => {
-    const digits = value.replace(/\D/g, "");
-    const limitedDigits = digits.slice(0, 10);
-    if (limitedDigits.length) {
-      if (limitedDigits.length <= 3) return limitedDigits;
-      if (limitedDigits.length <= 6)
-        return `${limitedDigits.slice(0, 3)}-${limitedDigits.slice(3)}`;
-      return `${limitedDigits.slice(0, 3)}-${limitedDigits.slice(
-        3,
-        6
-      )}-${limitedDigits.slice(6, 10)}`;
-    }
-    return limitedDigits;
-  };
-
   const handleCustomerNameChange = (e) => {
     const value = e.target.value;
     setFormData({ ...formData, customer: value });
@@ -221,8 +206,7 @@ const SaleHeader = ({
 
   const handlePhoneChange = (e) => {
     if (!globalEditMode) return;
-    const formatted = formatPhoneNumber(e.target.value);
-    setFormData({ ...formData, phone: formatted });
+    setFormData({ ...formData, phone: e.target.value });
   };
 
   const handleIdNumberChange = (e) => {
@@ -479,7 +463,7 @@ const SaleHeader = ({
           </div>
         </div>
         <div className="grid grid-cols-5 gap-2">
-          <div className="col-span-2">
+          <div className="col-span-3">
             <label className={SaleStyles.form.labelRequired}>Address</label>
             <textarea
               ref={textareaRef}
@@ -510,7 +494,7 @@ const SaleHeader = ({
               disabled={readOnly || !globalEditMode}
             />
           </div>
-          <div className="col-span-1">
+          {/* <div className="col-span-1">
             <label className={SaleStyles.form.label}>Customer Code</label>
             <input
               type="text"
@@ -522,7 +506,7 @@ const SaleHeader = ({
               maxLength={5}
               disabled={readOnly || !globalEditMode}
             />
-          </div>
+          </div> */}
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div>
@@ -763,10 +747,15 @@ const SaleHeader = ({
             className={`${SaleStyles.form.inputNoUppercase} ${
               !globalEditMode ? "bg-gray-100" : ""
             }`}
-            placeholder="เบอร์โทรศัพท์"
             value={formData.phone}
-            onChange={handlePhoneChange}
+            onChange={(e) => {
+              if (!globalEditMode) return;
+              // อนุญาต: ตัวเลข, เครื่องหมาย -, (, ), +, space
+              const value = e.target.value.replace(/[^0-9\-\(\)\+\s]/g, "");
+              setFormData({ ...formData, phone: value });
+            }}
             disabled={readOnly || !globalEditMode}
+            placeholder="เบอร์โทรศัพท์"
           />
         </div>
       </div>

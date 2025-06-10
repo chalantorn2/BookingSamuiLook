@@ -182,7 +182,7 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               </div>
             </div>
           )}
-          {!readOnly && formData.ticketType === "b2b" && (
+          {!readOnly && formData.ticketType === "ประเภทตั๋ว" && (
             <div className="grid grid-cols-3 gap-2">
               <div
                 className={combineClasses(
@@ -244,7 +244,7 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
             (formData.b2bDetails ||
               formData.otherDetails ||
               formData.tgDetails) && (
-              <div className="mt-3 p-3 bg-gray-50 rounded border text-sm">
+              <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-300 text-sm">
                 <span className="text-gray-600">รายละเอียด: </span>
                 <span className="font-medium">
                   {formData.b2bDetails ||

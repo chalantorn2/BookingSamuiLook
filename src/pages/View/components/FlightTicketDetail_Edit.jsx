@@ -34,6 +34,7 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
+  const [suppliers, setSuppliers] = useState([]);
 
   // Use same pricing hook as SaleTicket
   const { pricing, updatePricing, calculateSubtotal, calculateTotal } =
@@ -128,6 +129,14 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
     fetchTicketData();
   }, [ticketId]);
 
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const data = await getSuppliers("Airline");
+      setSuppliers(data);
+    };
+    fetchSuppliers();
+  }, []);
+
   // Map database data to component state
   const mapDataToFormState = (ticket) => {
     const detail = ticket.tickets_detail?.[0] || {};
@@ -170,29 +179,6 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
         additional.ticket_type === "tg"
           ? additional.ticket_type_details || ""
           : "",
-    });
-
-    console.log("Payment method mapping:", {
-      originalCompany: additional.company_payment_method,
-      mappedCompany: mapPaymentMethodFromDB(additional.company_payment_method),
-      originalCustomer: additional.customer_payment_method,
-      mappedCustomer: mapPaymentMethodFromDB(
-        additional.customer_payment_method
-      ),
-    });
-
-    // เพิ่มใน mapDataToFormState หลังจาก setFormData
-    console.log("Supplier data:", {
-      supplier: ticket.supplier,
-      code: ticket.supplier?.code,
-      name: ticket.supplier?.name,
-      numeric_code: ticket.supplier?.numeric_code,
-    });
-
-    console.log("FormData after set:", {
-      supplier: ticket.supplier?.code || "",
-      supplierName: ticket.supplier?.name || "",
-      supplierNumericCode: ticket.supplier?.numeric_code || "",
     });
 
     // Map pricing - แก้ไขการคำนวณ total ให้ถูกต้อง
@@ -273,6 +259,186 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
         ];
     setExtras(mappedExtras);
   };
+
+  const searchSupplierByNumericCode = async (numericCode) => {
+    try {
+      const { data, error } = await supabase
+        .from("information")
+        .select("*")
+        .eq("category", "airline")
+        .eq("active", true)
+        .eq("numeric_code", numericCode)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error searching supplier:", error);
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      console.error("Error in searchSupplierByNumericCode:", err);
+      return null;
+    }
+  };
+
+  const searchSupplierByCode = async (code) => {
+    console.log("searchSupplierByCode called with:", code);
+
+    try {
+      const { data, error } = await supabase
+        .from("information")
+        .select("*")
+        .eq("category", "airline")
+        .eq("active", true)
+        .eq("code", code.toUpperCase())
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error searching supplier by code:", error);
+        return null;
+      }
+
+      console.log("Database search result:", data);
+      return data;
+    } catch (err) {
+      console.error("Error in searchSupplierByCode:", err);
+      return null;
+    }
+  };
+
+  // 5. เพิ่ม useEffect สำหรับค้นหาด้วย numeric code (ใส่หลังฟังก์ชันค้นหา)
+  useEffect(() => {
+    const searchSupplier = async () => {
+      if (
+        formData.searchTicketNumber &&
+        formData.searchTicketNumber.length === 3
+      ) {
+        const supplier = await searchSupplierByNumericCode(
+          formData.searchTicketNumber
+        );
+
+        if (supplier) {
+          setFormData((prev) => ({
+            ...prev,
+            supplier: supplier.code,
+            supplierName: supplier.name,
+            supplierId: supplier.id,
+            supplierNumericCode: supplier.numeric_code,
+            searchTicketNumber: "",
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            supplier: "",
+            supplierName: "",
+            supplierId: null,
+            supplierNumericCode: prev.searchTicketNumber,
+            searchTicketNumber: "",
+          }));
+        }
+      }
+    };
+
+    searchSupplier();
+  }, [formData.searchTicketNumber]);
+
+  // 6. เพิ่ม useEffect สำหรับค้นหาด้วย supplier code
+  useEffect(() => {
+    const searchSupplierByCodeFunc = async () => {
+      if (
+        formData.searchSupplierCode &&
+        formData.searchSupplierCode.length >= 2
+      ) {
+        console.log(
+          "Searching for supplier code:",
+          formData.searchSupplierCode
+        );
+
+        try {
+          const supplier = await searchSupplierByCode(
+            formData.searchSupplierCode
+          );
+          console.log("Search result:", supplier);
+
+          if (supplier) {
+            console.log("Found supplier:", supplier.code, supplier.name);
+            console.log("Numeric code:", supplier.numeric_code);
+
+            setFormData((prev) => ({
+              ...prev,
+              supplier: supplier.code,
+              supplierName: supplier.name,
+              supplierId: supplier.id,
+              supplierNumericCode: supplier.numeric_code || "",
+              searchSupplierCode: "",
+            }));
+
+            const ticketNumber = supplier.numeric_code || "";
+            console.log("Setting ticket number to:", ticketNumber);
+
+            const updatedPassengers = passengers.map((passenger) => ({
+              ...passenger,
+              ticketNumber: ticketNumber,
+            }));
+            setPassengers(updatedPassengers);
+          } else {
+            console.log(
+              "Supplier not found for code:",
+              formData.searchSupplierCode
+            );
+
+            setFormData((prev) => ({
+              ...prev,
+              supplierName: "",
+              supplierId: null,
+              supplierNumericCode: "",
+              searchSupplierCode: "",
+            }));
+
+            const updatedPassengers = passengers.map((passenger) => ({
+              ...passenger,
+              ticketNumber: "",
+            }));
+            setPassengers(updatedPassengers);
+          }
+        } catch (error) {
+          console.error("Error in searchSupplierByCodeFunc:", error);
+
+          setFormData((prev) => ({
+            ...prev,
+            searchSupplierCode: "",
+          }));
+        }
+      }
+    };
+
+    searchSupplierByCodeFunc();
+  }, [formData.searchSupplierCode]);
+
+  // 7. เพิ่ม useEffect สำหรับซิงค์ ticket numbers กับ supplier
+  useEffect(() => {
+    if (formData.supplierNumericCode) {
+      const updatedPassengers = passengers.map((passenger) => ({
+        ...passenger,
+        ticketNumber: formData.supplierNumericCode,
+      }));
+      setPassengers(updatedPassengers);
+    } else {
+      const updatedPassengers = passengers.map((passenger) => ({
+        ...passenger,
+        ticketNumber: "",
+      }));
+      setPassengers(updatedPassengers);
+
+      setFormData((prev) => ({
+        ...prev,
+        supplier: "",
+        supplierName: "",
+        supplierId: null,
+      }));
+    }
+  }, [formData.supplierNumericCode]);
 
   // Calculate totals
   const calculatedSubtotal =
@@ -358,7 +524,7 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
 
       // Update passengers, routes, extras
       await Promise.all([
-        // อัปเดต bookings_ticket
+        // อัปเดต bookings_ticket รวมทั้ง information_id
         supabase
           .from("bookings_ticket")
           .update({
@@ -669,10 +835,14 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                   setPassengers={setPassengers}
                   updatePricing={updatePricing}
                   pricing={pricing}
+                  formData={formData} // เพิ่ม props นี้
+                  setFormData={setFormData} // เพิ่ม props นี้
+                  readOnly={false} // เปลี่ยนจาก true เป็น false เพื่อให้สามารถแก้ไขได้
                 />
                 <SupplierSection
                   formData={formData}
                   setFormData={setFormData}
+                  readOnly={false} // เปลี่ยนจาก true เป็น false เพื่อให้สามารถแก้ไขได้
                 />
               </div>
             </div>
@@ -685,16 +855,25 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                 </h2>
               </div>
               <div className="grid grid-cols-10 gap-2">
-                <RouteSection routes={routes} setRoutes={setRoutes} />
+                <RouteSection
+                  routes={routes}
+                  setRoutes={setRoutes}
+                  readOnly={false} // เปลี่ยนเป็น false
+                />
                 <TicketTypeSection
                   formData={formData}
                   setFormData={setFormData}
+                  readOnly={false} // เปลี่ยนเป็น false
                 />
               </div>
             </div>
 
             {/* Extras */}
-            <ExtrasSection extras={extras} setExtras={setExtras} />
+            <ExtrasSection
+              extras={extras}
+              setExtras={setExtras}
+              readOnly={false} // เปลี่ยนเป็น false
+            />
 
             {/* Pricing Summary */}
             <PricingSummarySection
@@ -702,6 +881,7 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
               updatePricing={updatePricing}
               setFormData={setFormData}
               extras={extras}
+              readOnly={false} // เปลี่ยนเป็น false
             />
 
             {/* Payment Methods */}
@@ -733,7 +913,9 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                     formData={formData}
                     setFormData={setFormData}
                     detailPlaceholder="รายละเอียดการชำระเงิน"
+                    readOnly={false} // เพิ่ม readOnly={false}
                   />
+
                   <PaymentMethodSection
                     title="การชำระเงินของลูกค้า"
                     sectionType="customer"
@@ -760,6 +942,7 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                     formData={formData}
                     setFormData={setFormData}
                     detailPlaceholder="รายละเอียดการชำระเงิน"
+                    readOnly={false} // เพิ่ม readOnly={false}
                   />
                 </div>
               </div>

@@ -693,8 +693,11 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
               </button>
             </div>
           </div>
-          <div style={modalStyles.content}>
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <div style={modalStyles.content} className="flex justify-center ">
+            <div
+              style={{ textAlign: "center", padding: "40px 0" }}
+              className="text-center justify-items-center"
+            >
               <AlertTriangle size={40} color="#dc2626" />
               <p
                 style={{
