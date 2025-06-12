@@ -45,3 +45,8 @@
 .information-status {
   text-transform: uppercase !important;
 }
+
+.information-table tbody td .email,
+.information-table tbody td .no-uppercase {
+  text-transform: none !important;
+}

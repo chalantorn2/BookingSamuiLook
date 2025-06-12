@@ -83,11 +83,14 @@ export const useFlightTicketsData = ({
         );
       }
 
-      // ดึงข้อมูลผู้โดยสาร
+      // ดึงข้อมูลผู้โดยสาร พร้อม ticket_number และ ticket_code
       const { data: passengers, error: passengersError } = await supabase
         .from("tickets_passengers")
-        .select("bookings_ticket_id, passenger_name")
-        .in("bookings_ticket_id", ticketIds);
+        .select(
+          "bookings_ticket_id, passenger_name, ticket_number, ticket_code"
+        )
+        .in("bookings_ticket_id", ticketIds)
+        .order("id"); // เรียงตาม id เพื่อให้ได้ผู้โดยสารคนแรก
 
       if (passengersError) {
         console.error("Error fetching passengers:", passengersError);
@@ -111,9 +114,16 @@ export const useFlightTicketsData = ({
       );
 
       const passengersMap = new Map();
+      const firstPassengerTicketMap = new Map(); // Map สำหรับเก็บข้อมูล ticket ของผู้โดยสารคนแรก
+
       passengers?.forEach((passenger) => {
         if (!passengersMap.has(passenger.bookings_ticket_id)) {
           passengersMap.set(passenger.bookings_ticket_id, []);
+          // เก็บข้อมูล ticket ของผู้โดยสารคนแรก
+          firstPassengerTicketMap.set(passenger.bookings_ticket_id, {
+            ticket_number: passenger.ticket_number,
+            ticket_code: passenger.ticket_code,
+          });
         }
         passengersMap.get(passenger.bookings_ticket_id).push(passenger);
       });
@@ -130,6 +140,8 @@ export const useFlightTicketsData = ({
       const processedData = adjustedTickets.map((ticket) => {
         const ticketPassengers = passengersMap.get(ticket.id) || [];
         const ticketRoutes = routesMap.get(ticket.id) || [];
+        const firstPassengerTicketInfo =
+          firstPassengerTicketMap.get(ticket.id) || {};
 
         // สร้างชื่อผู้โดยสาร
         let passengersDisplay = "";
@@ -163,6 +175,7 @@ export const useFlightTicketsData = ({
           passengersDisplay,
           routingDisplay,
           passengersCount: ticketPassengers.length,
+          firstPassengerTicketInfo, // เพิ่มข้อมูล ticket ของผู้โดยสารคนแรก
         };
       });
 
@@ -210,6 +223,15 @@ export const useFlightTicketsData = ({
             ticket.routingDisplay.toLowerCase().includes(searchLower)) ||
           (ticket.po_number &&
             ticket.po_number.toLowerCase().includes(searchLower)) ||
+          // เพิ่มการค้นหาด้วย ticket_number และ ticket_code
+          (ticket.firstPassengerTicketInfo?.ticket_number &&
+            ticket.firstPassengerTicketInfo.ticket_number
+              .toLowerCase()
+              .includes(searchLower)) ||
+          (ticket.firstPassengerTicketInfo?.ticket_code &&
+            ticket.firstPassengerTicketInfo.ticket_code
+              .toLowerCase()
+              .includes(searchLower)) ||
           // เพิ่มการค้นหาด้วยสถานะที่แปลงแล้ว
           (ticket.po_number &&
             ticket.po_number.trim() !== "" &&

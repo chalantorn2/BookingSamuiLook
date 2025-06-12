@@ -286,6 +286,14 @@ const SaleTicket = () => {
     console.log("Form submitted", { formData, passengers, routes, pricing });
     console.log("ticketType to be saved:", formData.ticketType);
 
+    // ✅ เพิ่ม debug สำหรับ ticket type details
+    console.log("Ticket Type Details Debug:", {
+      ticketType: formData.ticketType,
+      b2bDetails: formData.b2bDetails,
+      otherDetails: formData.otherDetails,
+      tgDetails: formData.tgDetails,
+    });
+
     const { isValid, errors } = validateFlightTicket({
       customer: formData.customer,
       supplier: formData.supplier,
@@ -363,12 +371,17 @@ const SaleTicket = () => {
 
       let ticketTypeDetails = null;
       if (ticketTypeFixed === "b2b") {
-        ticketTypeDetails = formData.b2bDetails;
+        ticketTypeDetails = formData.b2bDetails || "";
       } else if (ticketTypeFixed === "other") {
-        ticketTypeDetails = formData.otherDetails;
+        ticketTypeDetails = formData.otherDetails || "";
       } else if (ticketTypeFixed === "tg") {
-        ticketTypeDetails = formData.tgDetails;
+        ticketTypeDetails = formData.tgDetails || "";
       }
+
+      console.log("Final ticket type details to send:", {
+        ticketType: ticketTypeFixed,
+        ticketTypeDetails: ticketTypeDetails,
+      });
 
       console.log("Payment details before sending:", {
         companyMethod: formData.paymentMethod,

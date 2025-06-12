@@ -197,7 +197,7 @@ const DataTable = ({
         const { data: existingCode } = await supabase
           .from("customers")
           .select("id")
-          .eq("code", currentEditItem.code)
+          .eq("code", currentEditItem.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
           .eq("active", true)
           .neq("id", currentEditItem.id);
 
@@ -207,17 +207,32 @@ const DataTable = ({
         }
       }
 
+      // อัปเดตข้อมูล - แปลงเป็นตัวพิมพ์ใหญ่
       const { error } = await supabase
         .from("customers")
         .update({
-          name: currentEditItem.name,
-          code: currentEditItem.code || null,
-          email: currentEditItem.email || null,
-          address_line1: currentEditItem.address_line1 || null,
-          address_line2: currentEditItem.address_line2 || null,
-          address_line3: currentEditItem.address_line3 || null,
-          id_number: currentEditItem.id_number || null,
-          phone: currentEditItem.phone || null,
+          name: currentEditItem.name
+            ? currentEditItem.name.toUpperCase()
+            : null,
+          code: currentEditItem.code
+            ? currentEditItem.code.toUpperCase()
+            : null,
+          email: currentEditItem.email
+            ? currentEditItem.email.toLowerCase()
+            : null, // email เป็นตัวเล็ก
+          address_line1: currentEditItem.address_line1
+            ? currentEditItem.address_line1.toUpperCase()
+            : null,
+          address_line2: currentEditItem.address_line2
+            ? currentEditItem.address_line2.toUpperCase()
+            : null,
+          address_line3: currentEditItem.address_line3
+            ? currentEditItem.address_line3.toUpperCase()
+            : null,
+          id_number: currentEditItem.id_number || null, // ไม่แปลง
+          phone: currentEditItem.phone
+            ? currentEditItem.phone.toUpperCase()
+            : null,
           branch_type: currentEditItem.branch_type || "Head Office",
           branch_number:
             currentEditItem.branch_type === "Branch"
@@ -266,24 +281,10 @@ const DataTable = ({
             <h3 className="text-lg font-semibold mb-4">แก้ไขข้อมูลลูกค้า</h3>
             <div className="space-y-4">
               {/* ชื่อลูกค้า */}
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  ชื่อลูกค้า <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={currentEditItem.name || ""}
-                  onChange={handleModalInputChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                />
-              </div>
-
-              {/* รหัสลูกค้า และ อีเมล */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-5 gap-2">
+                <div className="col-span-1">
                   <label className="block text-sm font-medium mb-1">
-                    รหัสลูกค้า (3-5 ตัวอักษร)
+                    รหัสลูกค้า
                   </label>
                   <input
                     type="text"
@@ -291,6 +292,35 @@ const DataTable = ({
                     value={currentEditItem.code || ""}
                     onChange={handleModalInputChange}
                     maxLength={5}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                    placeholder="3-5 ตัวอักษร"
+                  />
+                </div>
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium mb-1">
+                    ชื่อลูกค้า <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={currentEditItem.name || ""}
+                    onChange={handleModalInputChange}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* รหัสลูกค้า และ อีเมล */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    โทรศัพท์
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={currentEditItem.phone || ""}
+                    onChange={handleModalInputChange}
                     className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
                   />
                 </div>
@@ -355,36 +385,8 @@ const DataTable = ({
               </div>
 
               {/* เลขผู้เสียภาษี และ โทรศัพท์ */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    เลขผู้เสียภาษี
-                  </label>
-                  <input
-                    type="text"
-                    name="id_number"
-                    value={currentEditItem.id_number || ""}
-                    onChange={handleModalInputChange}
-                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    โทรศัพท์
-                  </label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={currentEditItem.phone || ""}
-                    onChange={handleModalInputChange}
-                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* สาขา และ เครดิต */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-7 gap-2">
+                <div className="col-span-2">
                   <label className="block text-sm font-medium mb-1">สาขา</label>
                   <select
                     name="branch_type"
@@ -415,7 +417,20 @@ const DataTable = ({
                     />
                   )}
                 </div>
-                <div>
+
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium mb-1">
+                    เลขผู้เสียภาษี
+                  </label>
+                  <input
+                    type="text"
+                    name="id_number"
+                    value={currentEditItem.id_number || ""}
+                    onChange={handleModalInputChange}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  />
+                </div>
+                <div className="col-span-1">
                   <label className="block text-sm font-medium mb-1">
                     เครดิต (วัน)
                   </label>
@@ -425,7 +440,7 @@ const DataTable = ({
                     value={currentEditItem.credit_days || 0}
                     onChange={handleModalInputChange}
                     min="0"
-                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                    className="w-full border text-center border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -458,39 +473,43 @@ const DataTable = ({
               แก้ไขข้อมูลซัพพลายเออร์
             </h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  รหัสตัวเลข (3 ตัว)
-                </label>
-                <input
-                  type="text"
-                  name="numeric_code"
-                  value={currentEditSupplier.numeric_code || ""}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/\D/g, "")
-                      .substring(0, 3);
-                    handleSupplierInputChange({
-                      target: { name: "numeric_code", value },
-                    });
-                  }}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                  placeholder="เช่น 235"
-                  maxLength={3}
-                />
+              <div className="grid grid-cols-2 gap-2">
+                {" "}
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium mb-1">
+                    รหัสตัวเลข (3 ตัว)
+                  </label>
+                  <input
+                    type="text"
+                    name="numeric_code"
+                    value={currentEditSupplier.numeric_code || ""}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .substring(0, 3);
+                      handleSupplierInputChange({
+                        target: { name: "numeric_code", value },
+                      });
+                    }}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                    placeholder="เช่น 235"
+                    maxLength={3}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium mb-1">
+                    รหัส <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="code"
+                    value={currentEditSupplier.code || ""}
+                    onChange={handleSupplierInputChange}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  รหัส <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  value={currentEditSupplier.code || ""}
-                  onChange={handleSupplierInputChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
-                />
-              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-1">
                   ชื่อ <span className="text-red-500">*</span>
@@ -658,7 +677,9 @@ const DataTable = ({
                         item.email ||
                         item.address_line1) && (
                         <div className="text-sm text-gray-600 mt-1">
-                          {item.email && <div>อีเมล: {item.email}</div>}
+                          {item.email && (
+                            <div className="email">อีเมล: {item.email}</div>
+                          )}
                           {item.id_number && (
                             <div>เลขผู้เสียภาษี: {item.id_number}</div>
                           )}

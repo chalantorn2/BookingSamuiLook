@@ -174,8 +174,18 @@ export const createFlightTicket = async (ticketData) => {
         ticket_type: (ticketData.ticketType || "").toLowerCase(),
         ticket_type_details: ticketData.ticketTypeDetails,
       },
-      ["bookings_ticket_id"]
+      ["bookings_ticket_id", "ticket_type"] // ← เพิ่ม "ticket_type" ใน exclude list
     );
+
+    console.log("Before saving ticket_additional_info:", {
+      company_payment_method: ticketData.companyPaymentMethod,
+      company_payment_details: ticketData.companyPaymentDetails,
+      customer_payment_method: ticketData.customerPaymentMethod,
+      customer_payment_details: ticketData.customerPaymentDetails,
+      code: ticketData.code,
+      ticket_type: (ticketData.ticketType || "").toLowerCase(),
+      ticket_type_details: ticketData.ticketTypeDetails, // ✅ ตรวจสอบค่านี้
+    });
 
     const { data: additionalInfoResult, error: additionalInfoError } =
       await supabase

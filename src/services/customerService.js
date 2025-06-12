@@ -91,7 +91,7 @@ export const createCustomer = async (customerData) => {
       const { data: existingCustomer } = await supabase
         .from("customers")
         .select("*")
-        .eq("code", customerData.code)
+        .eq("code", customerData.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
         .eq("active", true);
 
       if (existingCustomer && existingCustomer.length > 0) {
@@ -117,16 +117,16 @@ export const createCustomer = async (customerData) => {
       addressLine1 = customerData.address;
     }
 
-    // เตรียมข้อมูลสำหรับบันทึก
+    // เตรียมข้อมูลสำหรับบันทึก - แปลงเป็นตัวพิมพ์ใหญ่
     const payload = {
-      name: customerData.name,
-      code: customerData.code || null,
-      email: customerData.email || null,
-      address_line1: addressLine1 || null,
-      address_line2: addressLine2 || null,
-      address_line3: addressLine3 || null,
-      id_number: customerData.id_number || null,
-      phone: customerData.phone || null,
+      name: customerData.name ? customerData.name.toUpperCase() : null,
+      code: customerData.code ? customerData.code.toUpperCase() : null,
+      email: customerData.email ? customerData.email.toLowerCase() : null, // email เป็นตัวเล็ก
+      address_line1: addressLine1 ? addressLine1.toUpperCase() : null,
+      address_line2: addressLine2 ? addressLine2.toUpperCase() : null,
+      address_line3: addressLine3 ? addressLine3.toUpperCase() : null,
+      id_number: customerData.id_number || null, // ไม่แปลง
+      phone: customerData.phone ? customerData.phone.toUpperCase() : null,
       credit_days: customerData.credit_days || 0,
       branch_type: customerData.branch_type || "Head Office",
       branch_number: customerData.branch_number || null,
@@ -169,7 +169,7 @@ export const updateCustomer = async (id, customerData) => {
       const { data: existingCustomer } = await supabase
         .from("customers")
         .select("*")
-        .eq("code", customerData.code)
+        .eq("code", customerData.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
         .eq("active", true)
         .neq("id", id); // ไม่นับรหัสของลูกค้าคนนี้
 
@@ -197,15 +197,20 @@ export const updateCustomer = async (id, customerData) => {
       addressLine1 = customerData.address;
     }
 
+    // เตรียมข้อมูลสำหรับบันทึก - แปลงเป็นตัวพิมพ์ใหญ่
     const payload = {
-      name: customerData.name,
-      code: customerData.code || null,
-      email: customerData.email || null,
-      address_line1: addressLine1 || null,
-      address_line2: customerData.address_line2 || null,
-      address_line3: customerData.address_line3 || null,
-      id_number: customerData.id_number || null,
-      phone: customerData.phone || null,
+      name: customerData.name ? customerData.name.toUpperCase() : null,
+      code: customerData.code ? customerData.code.toUpperCase() : null,
+      email: customerData.email ? customerData.email.toLowerCase() : null, // email เป็นตัวเล็ก
+      address_line1: addressLine1 ? addressLine1.toUpperCase() : null,
+      address_line2: customerData.address_line2
+        ? customerData.address_line2.toUpperCase()
+        : null,
+      address_line3: customerData.address_line3
+        ? customerData.address_line3.toUpperCase()
+        : null,
+      id_number: customerData.id_number || null, // ไม่แปลง
+      phone: customerData.phone ? customerData.phone.toUpperCase() : null,
       branch_type: customerData.branch_type || "Head Office",
       branch_number:
         customerData.branch_type === "Branch"
@@ -227,6 +232,15 @@ export const updateCustomer = async (id, customerData) => {
 
     // เพิ่ม address สำหรับ backward compatibility
     if (data && data[0]) {
+      const formatFullAddress = (customer) => {
+        const addressParts = [
+          customer.address_line1,
+          customer.address_line2,
+          customer.address_line3,
+        ].filter((part) => part && part.trim() !== "");
+        return addressParts.join(" ");
+      };
+
       data[0].address = formatFullAddress(data[0]);
       data[0].full_address = formatFullAddress(data[0]);
     }

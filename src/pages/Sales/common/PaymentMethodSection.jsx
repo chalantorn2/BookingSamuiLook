@@ -23,12 +23,12 @@ const PaymentMethodSection = ({
       ? "customerPaymentDetails"
       : detailsFieldName;
 
-  console.log(`PaymentMethodSection (${sectionType}):`, {
-    fieldName,
-    detailsField,
-    selectedValue,
-    currentDetailsValue: formData[detailsField],
-  });
+  // console.log(`PaymentMethodSection (${sectionType}):`, {
+  //   fieldName,
+  //   detailsField,
+  //   selectedValue,
+  //   currentDetailsValue: formData[detailsField],
+  // });
 
   const handlePaymentMethodChange = (method) => {
     setFormData({

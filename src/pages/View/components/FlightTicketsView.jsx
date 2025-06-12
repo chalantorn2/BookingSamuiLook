@@ -12,6 +12,7 @@ import {
   Plane,
   Users,
   MapPin,
+  Ticket, // เพิ่ม icon สำหรับ ticket number
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import DateRangeSelector from "./DateRangeSelector";
@@ -128,6 +129,29 @@ const FlightTicketsView = () => {
     }
   };
 
+  // ฟังก์ชันแสดง Ticket Number จากผู้โดยสารคนแรก
+  const getTicketNumberDisplay = (ticket) => {
+    // ดึงข้อมูลผู้โดยสารคนแรกจาก firstPassengerTicketInfo ที่มีใน ticket object
+    if (ticket.firstPassengerTicketInfo) {
+      const { ticket_number, ticket_code } = ticket.firstPassengerTicketInfo;
+
+      // ถ้ามีทั้ง ticket_number และ ticket_code
+      if (ticket_number && ticket_code) {
+        return `${ticket_number}-${ticket_code}`;
+      }
+      // ถ้ามีแค่ ticket_number
+      else if (ticket_number) {
+        return ticket_number;
+      }
+      // ถ้ามีแค่ ticket_code
+      else if (ticket_code) {
+        return ticket_code;
+      }
+    }
+
+    return "-";
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       <div className="max-w-7xl mx-auto">
@@ -173,77 +197,83 @@ const FlightTicketsView = () => {
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
-                <tr>
+                <tr className="text-center">
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort("id")}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       ID
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort("customer")}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       Customer
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort("supplier")}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       Supplier
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     Pax's Name
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     Routing
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Ticket Number
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     Code
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort("status")}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       Status
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     Actions
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort("created_at")}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       Created At
                       <ChevronsUpDown size={16} className="ml-1" />
                     </div>
@@ -254,7 +284,7 @@ const FlightTicketsView = () => {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="10" // เปลี่ยนจาก 9 เป็น 10 เนื่องจากเพิ่มคอลัม
                       className="px-6 py-4 text-center text-gray-500"
                     >
                       <div className="flex justify-center">
@@ -284,7 +314,7 @@ const FlightTicketsView = () => {
                 ) : currentTickets.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="10" // เปลี่ยนจาก 9 เป็น 10 เนื่องจากเพิ่มคอลัม
                       className="px-6 py-4 text-center text-gray-500"
                     >
                       ไม่พบข้อมูลตามเงื่อนไขที่กำหนด
@@ -299,7 +329,7 @@ const FlightTicketsView = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                         {ticket.reference_number || "-"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <User size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
@@ -309,7 +339,7 @@ const FlightTicketsView = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Plane size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
@@ -319,7 +349,7 @@ const FlightTicketsView = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Users size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
@@ -327,7 +357,7 @@ const FlightTicketsView = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <MapPin size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
@@ -335,13 +365,22 @@ const FlightTicketsView = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {/* เพิ่มเซลล์ TICKET NUMBER ใหม่ */}
+                      <td className="px-2 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Ticket size={16} className="text-gray-400 mr-2" />
+                          <div className="text-sm font-medium text-gray-900">
+                            {getTicketNumberDisplay(ticket)}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
                         {ticket.code || "-"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-4 whitespace-nowrap">
                         {getStatusDisplay(ticket)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
                             className="text-blue-600 hover:text-blue-900"
@@ -359,7 +398,7 @@ const FlightTicketsView = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDateTime(ticket.created_at)}
                       </td>
                     </tr>
@@ -470,7 +509,7 @@ const FlightTicketsView = () => {
         <FlightTicketDetail
           ticketId={selectedTicket}
           onClose={closeTicketDetail}
-          onPOGenerated={fetchFlightTickets} // เพิ่ม callback สำหรับรีเฟรชข้อมูล
+          onPOGenerated={fetchFlightTickets}
         />
       )}
       {selectedTicketForEdit && (

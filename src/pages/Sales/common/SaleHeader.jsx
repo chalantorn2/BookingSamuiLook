@@ -318,15 +318,22 @@ const SaleHeader = ({
 
   const createCustomerFromSaleHeader = async (customerData) => {
     try {
+      // เตรียมข้อมูลสำหรับบันทึก - แปลงเป็นตัวพิมพ์ใหญ่
       const payload = {
-        name: customerData.customer,
-        code: customerData.customerCode || null,
+        name: customerData.customer
+          ? customerData.customer.toUpperCase()
+          : null,
+        code: customerData.customerCode
+          ? customerData.customerCode.toUpperCase()
+          : null,
         email: null, // SaleHeader ไม่มีช่อง email
-        address_line1: customerData.contactDetails || null, // เก็บใน address_line1
+        address_line1: customerData.contactDetails
+          ? customerData.contactDetails.toUpperCase()
+          : null, // เก็บใน address_line1
         address_line2: null,
         address_line3: null,
-        id_number: customerData.id || null,
-        phone: customerData.phone || null,
+        id_number: customerData.id || null, // ไม่แปลง
+        phone: customerData.phone ? customerData.phone.toUpperCase() : null,
         credit_days: parseInt(customerData.creditDays) || 0,
         branch_type: customerData.branchType || "Head Office",
         branch_number: customerData.branchNumber || null,

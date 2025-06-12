@@ -74,7 +74,8 @@ const App = () => {
         inputClass.includes("no-uppercase") ||
         inputClass.includes("inputNoUppercase") ||
         inputClass.includes("login-input") || // เพิ่ม class สำหรับ login
-        inputClass.includes("user-management-input") // เพิ่ม class สำหรับ user management
+        inputClass.includes("user-management-input") || // เพิ่ม class สำหรับ user management
+        inputClass.includes("email") // เพิ่มการข้าม element ที่มี class email
       )
         return;
 

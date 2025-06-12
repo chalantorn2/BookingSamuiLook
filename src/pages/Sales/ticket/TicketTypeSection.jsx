@@ -46,6 +46,15 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
     );
   };
 
+  // ✅ แก้ไขฟังก์ชันเปลี่ยนประเภทตั๋ว - เก็บค่า details ไว้
+  const handleTicketTypeChange = (newTicketType) => {
+    setFormData({
+      ...formData,
+      ticketType: newTicketType,
+      // ไม่ต้องล้างค่า details - ให้เก็บไว้
+    });
+  };
+
   return (
     <section
       className={combineClasses(
@@ -65,45 +74,21 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               value="bsp"
               label="BSP"
               checked={formData.ticketType === "bsp"}
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  ticketType: "bsp",
-                  b2bDetails: "",
-                  otherDetails: "",
-                  tgDetails: "",
-                })
-              }
+              onChange={() => handleTicketTypeChange("bsp")}
             />
             <RadioButton
               id="airline"
               value="airline"
               label="AIRLINE"
               checked={formData.ticketType === "airline"}
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  ticketType: "airline",
-                  b2bDetails: "",
-                  otherDetails: "",
-                  tgDetails: "",
-                })
-              }
+              onChange={() => handleTicketTypeChange("airline")}
             />
             <RadioButton
               id="web"
               value="web"
               label="WEB"
               checked={formData.ticketType === "web"}
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  ticketType: "web",
-                  b2bDetails: "",
-                  otherDetails: "",
-                  tgDetails: "",
-                })
-              }
+              onChange={() => handleTicketTypeChange("web")}
             />
           </div>
 
@@ -114,42 +99,21 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               value="tg"
               label="TG"
               checked={formData.ticketType === "tg"}
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  ticketType: "tg",
-                  b2bDetails: "",
-                  otherDetails: "",
-                })
-              }
+              onChange={() => handleTicketTypeChange("tg")}
             />
             <RadioButton
               id="b2b"
               value="b2b"
               label="B2B"
               checked={formData.ticketType === "b2b"}
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  ticketType: "b2b",
-                  otherDetails: "",
-                  tgDetails: "",
-                })
-              }
+              onChange={() => handleTicketTypeChange("b2b")}
             />
             <RadioButton
               id="other"
               value="other"
               label="OTHER"
               checked={formData.ticketType === "other"}
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  ticketType: "other",
-                  b2bDetails: "",
-                  tgDetails: "",
-                })
-              }
+              onChange={() => handleTicketTypeChange("other")}
             />
           </div>
 
@@ -182,7 +146,7 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               </div>
             </div>
           )}
-          {!readOnly && formData.ticketType === "ประเภทตั๋ว" && (
+          {!readOnly && formData.ticketType === "b2b" && (
             <div className="grid grid-cols-3 gap-2">
               <div
                 className={combineClasses(

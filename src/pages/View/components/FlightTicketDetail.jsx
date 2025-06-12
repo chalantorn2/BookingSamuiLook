@@ -473,6 +473,18 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     return branchType || "Head Office";
   };
 
+  const formatDateTime = (dateTime) => {
+    if (!dateTime || isNaN(new Date(dateTime).getTime())) return "-";
+    const dateObj = new Date(dateTime);
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const year = dateObj.getFullYear();
+    const hours = dateObj.getHours().toString().padStart(2, "0");
+    const minutes = dateObj.getMinutes().toString().padStart(2, "0");
+    const seconds = dateObj.getSeconds().toString().padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
   const getStatusBadge = (status, poNumber, poGeneratedAt) => {
     if (poNumber) {
       return (

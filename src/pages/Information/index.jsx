@@ -282,7 +282,7 @@ const Information = () => {
           const { data: existingCode } = await supabase
             .from("customers")
             .select("id")
-            .eq("code", editingItem.code)
+            .eq("code", editingItem.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
             .eq("active", true)
             .neq("id", editingItem.id);
 
@@ -292,18 +292,24 @@ const Information = () => {
           }
         }
 
-        // แก้ไขส่วน update - เปลี่ยนจาก address เป็น address_line1, 2, 3
+        // แก้ไขส่วน update - เปลี่ยนจาก address เป็น address_line1, 2, 3 และแปลงเป็นตัวพิมพ์ใหญ่
         const { error } = await supabase
           .from("customers")
           .update({
-            name: editingItem.name,
-            code: editingItem.code || null,
-            email: editingItem.email || null, // เพิ่มบรรทัดนี้
-            address_line1: editingItem.address_line1 || null, // เปลี่ยนจาก address
-            address_line2: editingItem.address_line2 || null, // เพิ่มบรรทัดนี้
-            address_line3: editingItem.address_line3 || null, // เพิ่มบรรทัดนี้
-            id_number: editingItem.id_number || null,
-            phone: editingItem.phone || null,
+            name: editingItem.name ? editingItem.name.toUpperCase() : null,
+            code: editingItem.code ? editingItem.code.toUpperCase() : null,
+            email: editingItem.email ? editingItem.email.toLowerCase() : null, // email เป็นตัวเล็ก
+            address_line1: editingItem.address_line1
+              ? editingItem.address_line1.toUpperCase()
+              : null,
+            address_line2: editingItem.address_line2
+              ? editingItem.address_line2.toUpperCase()
+              : null,
+            address_line3: editingItem.address_line3
+              ? editingItem.address_line3.toUpperCase()
+              : null,
+            id_number: editingItem.id_number || null, // ไม่แปลง
+            phone: editingItem.phone ? editingItem.phone.toUpperCase() : null,
             branch_type: editingItem.branch_type || "Head Office",
             branch_number:
               editingItem.branch_type === "Branch"
@@ -430,7 +436,7 @@ const Information = () => {
           const { data: existingCode } = await supabase
             .from("customers")
             .select("id")
-            .eq("code", newItem.code)
+            .eq("code", newItem.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
             .eq("active", true);
 
           if (existingCode && existingCode.length > 0) {
@@ -439,16 +445,22 @@ const Information = () => {
           }
         }
 
-        // แก้ไขส่วน insert - เปลี่ยนจาก address เป็น address_line1, 2, 3
+        // แก้ไขส่วน insert - เปลี่ยนจาก address เป็น address_line1, 2, 3 และแปลงเป็นตัวพิมพ์ใหญ่
         const { error } = await supabase.from("customers").insert({
-          name: newItem.name,
-          code: newItem.code || null,
-          email: newItem.email || null, // เพิ่มบรรทัดนี้
-          address_line1: newItem.address_line1 || null, // เปลี่ยนจาก address
-          address_line2: newItem.address_line2 || null, // เพิ่มบรรทัดนี้
-          address_line3: newItem.address_line3 || null, // เพิ่มบรรทัดนี้
-          id_number: newItem.id_number || null,
-          phone: newItem.phone || null,
+          name: newItem.name ? newItem.name.toUpperCase() : null,
+          code: newItem.code ? newItem.code.toUpperCase() : null,
+          email: newItem.email ? newItem.email.toLowerCase() : null, // email เป็นตัวเล็ก
+          address_line1: newItem.address_line1
+            ? newItem.address_line1.toUpperCase()
+            : null,
+          address_line2: newItem.address_line2
+            ? newItem.address_line2.toUpperCase()
+            : null,
+          address_line3: newItem.address_line3
+            ? newItem.address_line3.toUpperCase()
+            : null,
+          id_number: newItem.id_number || null, // ไม่แปลง
+          phone: newItem.phone ? newItem.phone.toUpperCase() : null,
           branch_type: newItem.branch_type || "Head Office",
           branch_number:
             newItem.branch_type === "Branch" ? newItem.branch_number : null,
@@ -463,11 +475,10 @@ const Information = () => {
           name: "",
           code: "",
           numeric_code: "",
-          email: "", // เพิ่มบรรทัดนี้
-          address_line1: "", // เพิ่มบรรทัดนี้
-          address_line2: "", // เพิ่มบรรทัดนี้
-          address_line3: "", // เพิ่มบรรทัดนี้
-          // ลบ address: "", ออก
+          email: "",
+          address_line1: "",
+          address_line2: "",
+          address_line3: "",
           id_number: "",
           phone: "",
           branch_type: "Head Office",
