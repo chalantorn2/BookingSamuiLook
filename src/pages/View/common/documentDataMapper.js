@@ -25,7 +25,7 @@ export const getInvoiceData = async (ticketId) => {
         po_number,
         po_generated_at,
         created_at,
-        customer:customer_id(name, address, phone, id_number, branch_type, branch_number, code),
+        customer:customer_id(name, address_line1, address_line2, address_line3, phone, id_number, branch_type, branch_number, code),
         supplier:information_id(name, code, numeric_code),
         tickets_detail(issue_date, due_date, credit_days, subtotal_before_vat, vat_percent, vat_amount, grand_total),
         ticket_additional_info(code, ticket_type, ticket_type_details, company_payment_method, company_payment_details, customer_payment_method, customer_payment_details),
@@ -46,10 +46,10 @@ export const getInvoiceData = async (ticketId) => {
     const additional = ticket.ticket_additional_info?.[0] || {};
     const pricing = ticket.tickets_pricing?.[0] || {};
 
-    // แปลงข้อมูลลูกค้า
+    // แปลงข้อมูลลูกค้า - รองรับที่อยู่หลายบรรทัด
     const customerInfo = {
       name: ticket.customer?.name || "",
-      address: ticket.customer?.address || "",
+      address: formatCustomerAddressForPrint(ticket.customer),
       phone: ticket.customer?.phone || "",
       taxId: ticket.customer?.id_number || "",
       branch: getBranchDisplay(
@@ -159,6 +159,23 @@ export const getInvoiceData = async (ticketId) => {
       error: error.message,
     };
   }
+};
+
+/**
+ * แปลงที่อยู่ลูกค้าสำหรับการพิมพ์ (หลายบรรทัด)
+ * @param {Object} customer - ข้อมูลลูกค้า
+ * @returns {string} - ที่อยู่ที่แปลงแล้ว (ขึ้นบรรทัดใหม่ด้วย \n)
+ */
+const formatCustomerAddressForPrint = (customer) => {
+  if (!customer) return "";
+
+  const addressLines = [
+    customer.address_line1,
+    customer.address_line2,
+    customer.address_line3,
+  ].filter((line) => line && line.trim() !== "");
+
+  return addressLines.join("\n"); // ใช้ \n สำหรับขึ้นบรรทัดใหม่
 };
 
 /**

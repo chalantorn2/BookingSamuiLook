@@ -151,7 +151,16 @@ const createPrintInvoiceHTML = (invoiceData) => {
           </div>
           <div style="display: grid; grid-template-columns: 120px 1fr; margin-bottom: 6px; font-size: 12px; font-family: Prompt, sans-serif;">
             <span style="font-weight: bold;">ที่อยู่:</span>
-            <span>${invoiceData.customer?.address || ""}</span>
+          <div style="line-height: 1.4;">
+  ${
+    invoiceData.customer?.address
+      ? invoiceData.customer.address
+          .split("\n")
+          .map((line) => `<div style="margin: 1px 0;">${line}</div>`)
+          .join("")
+      : ""
+  }
+</div>
           </div>
           <div style="display: grid; grid-template-columns: 120px 1fr; margin-bottom: 6px; font-size: 12px; font-family: Prompt, sans-serif;">
             <span style="font-weight: bold;">เบอร์โทร:</span>

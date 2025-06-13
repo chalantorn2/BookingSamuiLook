@@ -827,12 +827,19 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
                   >
                     ที่อยู่:
                   </span>
-                  <span
+                  <div
                     style={documentStyles.infoValue}
-                    className="print-info-value text-balance"
+                    className="print-info-value"
                   >
-                    {invoiceData.customer.address}
-                  </span>
+                    {invoiceData.customer.address &&
+                      invoiceData.customer.address
+                        .split("\n")
+                        .map((line, index) => (
+                          <div key={index} style={{ margin: "1px 0" }}>
+                            {line}
+                          </div>
+                        ))}
+                  </div>
                 </div>
                 <div style={documentStyles.infoRow} className="print-info-row">
                   <span
