@@ -34,36 +34,13 @@ const PrintConfirmModal = ({ isOpen, onClose, onConfirm, loading = false }) => {
             ยกเลิก
           </button>
 
-          {/* ปุ่มพิมพ์แบบเดิม */}
           <button
-            onClick={() => onConfirm(false)}
+            onClick={onConfirm}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
             disabled={loading}
           >
             <Printer size={16} className="mr-2" />
-            {loading ? "กำลังสร้าง PO..." : "พิมพ์แบบเดิม"}
-          </button>
-
-          {/* ปุ่มพิมพ์แบบใหม่ */}
-          <button
-            onClick={() => onConfirm(true)}
-            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-            disabled={loading}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="mr-2"
-            >
-              <polyline points="6,9 6,2 18,2 18,9"></polyline>
-              <path d="M6,18H4a2,2,0,0,1-2-2V11a2,2,0,0,1,2-2H20a2,2,0,0,1,2,2v5a2,2,0,0,1-2,2H18"></path>
-              <rect x="6" y="14" width="12" height="8"></rect>
-            </svg>
-            {loading ? "กำลังสร้าง PO..." : "พิมพ์แบบใหม่"}
+            {loading ? "กำลังสร้าง PO..." : "พิมพ์เอกสาร"}
           </button>
         </div>
       </div>

@@ -37,7 +37,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   const [generating, setGenerating] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailNotification, setEmailNotification] = useState(null);
-  const [generatingPuppeteer, setGeneratingPuppeteer] = useState(false);
 
   // Use same pricing hook as SaleTicket
   const { pricing, updatePricing, calculateSubtotal } = usePricing();
@@ -311,52 +310,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     setShowPrintModal(false);
   };
 
-  // เพิ่ม function ใหม่
-  const handlePuppeteerPrint = async () => {
-    if (!ticketData.po_number) {
-      // ถ้าไม่มี PO ให้สร้างก่อน
-      setShowPrintConfirm(true);
-      return;
-    }
-
-    await generatePuppeteerPDF();
-  };
-
-  const generatePuppeteerPDF = async () => {
-    setGeneratingPuppeteer(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("pdf-generator", {
-        body: { ticketId: ticketData.id },
-      });
-
-      if (error) throw error;
-
-      // Download PDF
-      const byteCharacters = atob(data.pdf);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: "application/pdf" });
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `invoice-${data.poNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("ไม่สามารถสร้าง PDF ได้: " + error.message);
-    } finally {
-      setGeneratingPuppeteer(false);
-    }
-  };
-
   const handlePOGenerated = () => {
     if (onPOGenerated) {
       onPOGenerated();
@@ -387,8 +340,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     }
   };
 
-  // แก้ไข handleConfirmPrint ให้รองรับ Puppeteer
-  const handleConfirmPrint = async (usePuppeteer = false) => {
+  const handleConfirmPrint = async () => {
     setGenerating(true);
 
     try {
@@ -407,13 +359,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
         }
 
         setShowPrintConfirm(false);
-
-        // เลือกวิธีสร้าง PDF
-        if (usePuppeteer) {
-          await generatePuppeteerPDF();
-        } else {
-          setShowPrintModal(true);
-        }
+        setShowPrintModal(true); // ใช้แค่วิธีเดิม
       } else {
         alert("ไม่สามารถสร้าง PO Number ได้: " + poResult.error);
       }
@@ -424,7 +370,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
       setGenerating(false);
     }
   };
-
   const handleCancelPrint = () => {
     setShowPrintConfirm(false);
   };
@@ -563,36 +508,6 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                 onClick={handlePrintClick}
               >
                 <Printer size={20} />
-              </button>
-
-              {/* ปุ่มพิมพ์ใหม่ - Puppeteer */}
-              <button
-                className={`p-2 rounded-md transition-colors ${
-                  generatingPuppeteer
-                    ? "bg-green-700 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
-                title="พิมพ์ (แบบใหม่ - Puppeteer)"
-                onClick={handlePuppeteerPrint}
-                disabled={generatingPuppeteer}
-              >
-                {generatingPuppeteer ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <polyline points="6,9 6,2 18,2 18,9"></polyline>
-                    <path d="M6,18H4a2,2,0,0,1-2-2V11a2,2,0,0,1,2-2H20a2,2,0,0,1,2,2v5a2,2,0,0,1-2,2H18"></path>
-                    <rect x="6" y="14" width="12" height="8"></rect>
-                    <circle cx="8" cy="17" r="1" fill="currentColor"></circle>
-                  </svg>
-                )}
               </button>
 
               <button
