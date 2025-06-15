@@ -971,87 +971,75 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
                 <tbody>
                   {/* NAME Section */}
                   <tr>
-                    <td
-                      colSpan={4}
-                      style={documentStyles.sectionHeader}
-                      className="print-section-header"
-                    >
+                    <td style={documentStyles.sectionHeader}>
                       NAME /ชื่อผู้โดยสาร
                     </td>
+                    <td
+                      style={{
+                        ...documentStyles.tdQuantity,
+                      }}
+                    ></td>
+                    <td
+                      style={{
+                        ...documentStyles.tdPrice,
+                      }}
+                    ></td>
+                    <td
+                      style={{
+                        ...documentStyles.tdTotal,
+                      }}
+                    ></td>
                   </tr>
                   {invoiceData.passengers.map((passenger, index) => (
                     <tr key={`passenger-${index}`}>
-                      <td
-                        style={documentStyles.sectionItem}
-                        className="print-section-item"
-                      >
+                      <td style={documentStyles.sectionItem}>
                         {passenger.display}
                       </td>
-                      <td
-                        style={documentStyles.tdQuantity}
-                        className="col-quantity"
-                      ></td>
-                      <td
-                        style={documentStyles.tdPrice}
-                        className="col-price"
-                      ></td>
-                      <td
-                        style={documentStyles.tdTotal}
-                        className="col-total"
-                      ></td>
+                      <td style={documentStyles.tdQuantity}></td>
+                      <td style={documentStyles.tdPrice}></td>
+                      <td style={documentStyles.tdTotal}></td>
                     </tr>
                   ))}
 
                   {/* AIR TICKET Section */}
                   <tr>
-                    <td
-                      colSpan={4}
-                      style={documentStyles.sectionHeader}
-                      className="print-section-header"
-                    >
+                    <td style={documentStyles.sectionHeader}>
                       AIR TICKET /ตั๋วเครื่องบิน
                     </td>
+                    <td
+                      style={{
+                        ...documentStyles.tdQuantity,
+                      }}
+                    ></td>
+                    <td
+                      style={{
+                        ...documentStyles.tdPrice,
+                      }}
+                    ></td>
+                    <td
+                      style={{
+                        ...documentStyles.tdTotal,
+                      }}
+                    ></td>
                   </tr>
                   {invoiceData.flights.map((flight, index) => (
                     <tr key={`flight-${index}`}>
-                      <td
-                        style={documentStyles.sectionItem}
-                        className="print-section-item"
-                      >
+                      <td style={documentStyles.sectionItem}>
                         {flight.display}
                       </td>
-                      <td
-                        style={documentStyles.tdQuantity}
-                        className="col-quantity"
-                      ></td>
-                      <td
-                        style={documentStyles.tdPrice}
-                        className="col-price"
-                      ></td>
-                      <td
-                        style={documentStyles.tdTotal}
-                        className="col-total"
-                      ></td>
+                      <td style={documentStyles.tdQuantity}></td>
+                      <td style={documentStyles.tdPrice}></td>
+                      <td style={documentStyles.tdTotal}></td>
                     </tr>
                   ))}
                   {invoiceData.passengerTypes.map((type, index) => (
                     <tr key={`type-${index}`}>
-                      <td
-                        style={documentStyles.sectionItem}
-                        className="print-section-item"
-                      >
-                        {type.type}
-                      </td>
-                      <td
-                        style={documentStyles.tdQuantity}
-                        className="col-quantity"
-                      >
-                        {type.quantity}
-                      </td>
-                      <td style={documentStyles.tdPrice} className="col-price">
+                      <td style={documentStyles.sectionItem}>{type.type}</td>
+                      <td style={documentStyles.tdQuantity}>{type.quantity}</td>
+                      <td style={documentStyles.tdPrice}>
                         {formatCurrency(type.unitPrice)}.-
                       </td>
-                      <td style={documentStyles.tdTotal} className="col-total">
+                      <td style={documentStyles.tdTotal}>
                         {formatCurrency(type.amount)}.-
                       </td>
                     </tr>
@@ -1061,45 +1049,41 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
                   {invoiceData.extras.length > 0 && (
                     <>
                       <tr>
+                        <td style={documentStyles.sectionHeader}>Other</td>
                         <td
-                          colSpan={4}
-                          style={documentStyles.sectionHeader}
-                          className="print-section-header"
-                        >
-                          Other
-                        </td>
+                          style={{
+                            ...documentStyles.tdQuantity,
+                          }}
+                        ></td>
+                        <td
+                          style={{
+                            ...documentStyles.tdPrice,
+                          }}
+                        ></td>
+                        <td
+                          style={{
+                            ...documentStyles.tdTotal,
+                          }}
+                        ></td>
                       </tr>
                       {invoiceData.extras.map((extra, index) => (
                         <tr key={`extra-${index}`}>
-                          <td
-                            style={documentStyles.sectionItem}
-                            className="print-section-item"
-                          >
+                          <td style={documentStyles.sectionItem}>
                             {extra.description}
                           </td>
-                          <td
-                            style={documentStyles.tdQuantity}
-                            className="col-quantity"
-                          >
+                          <td style={documentStyles.tdQuantity}>
                             {extra.quantity}
                           </td>
-                          <td
-                            style={documentStyles.tdPrice}
-                            className="col-price"
-                          >
+                          <td style={documentStyles.tdPrice}>
                             {formatCurrency(extra.unitPrice)}.-
                           </td>
-                          <td
-                            style={documentStyles.tdTotal}
-                            className="col-total"
-                          >
+                          <td style={documentStyles.tdTotal}>
                             {formatCurrency(extra.amount)}.-
                           </td>
                         </tr>
                       ))}
                     </>
                   )}
-
                   {/* Summary Rows */}
                   <tr
                     style={documentStyles.summaryRow}
