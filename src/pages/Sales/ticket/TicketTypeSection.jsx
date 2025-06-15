@@ -2,8 +2,18 @@ import React from "react";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 
 const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
+  // ✅ เพิ่มฟังก์ชัน helper สำหรับเปรียบเทียบ ticket type (ไม่สนใจตัวเล็ก-ใหญ่)
+  const normalizeTicketType = (type) => (type || "").toLowerCase();
+  const isTicketTypeMatch = (type1, type2) => {
+    return normalizeTicketType(type1) === normalizeTicketType(type2);
+  };
+
   // เพิ่มการล็อกเพื่อดูการเปลี่ยนแปลงค่า
   console.log("Current ticketType:", formData.ticketType);
+  console.log(
+    "Normalized ticketType:",
+    normalizeTicketType(formData.ticketType)
+  );
   console.log("Current details:", {
     b2bDetails: formData.b2bDetails,
     otherDetails: formData.otherDetails,
@@ -50,7 +60,7 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
   const handleTicketTypeChange = (newTicketType) => {
     setFormData({
       ...formData,
-      ticketType: newTicketType,
+      ticketType: newTicketType, // เก็บค่าเป็นตัวเล็ก (value ของ radio)
       // ไม่ต้องล้างค่า details - ให้เก็บไว้
     });
   };
@@ -73,21 +83,21 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               id="bsp"
               value="bsp"
               label="BSP"
-              checked={formData.ticketType === "bsp"}
+              checked={isTicketTypeMatch(formData.ticketType, "bsp")}
               onChange={() => handleTicketTypeChange("bsp")}
             />
             <RadioButton
               id="airline"
               value="airline"
               label="AIRLINE"
-              checked={formData.ticketType === "airline"}
+              checked={isTicketTypeMatch(formData.ticketType, "airline")}
               onChange={() => handleTicketTypeChange("airline")}
             />
             <RadioButton
               id="web"
               value="web"
               label="WEB"
-              checked={formData.ticketType === "web"}
+              checked={isTicketTypeMatch(formData.ticketType, "web")}
               onChange={() => handleTicketTypeChange("web")}
             />
           </div>
@@ -98,27 +108,27 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               id="tg"
               value="tg"
               label="TG"
-              checked={formData.ticketType === "tg"}
+              checked={isTicketTypeMatch(formData.ticketType, "tg")}
               onChange={() => handleTicketTypeChange("tg")}
             />
             <RadioButton
               id="b2b"
               value="b2b"
               label="B2B"
-              checked={formData.ticketType === "b2b"}
+              checked={isTicketTypeMatch(formData.ticketType, "b2b")}
               onChange={() => handleTicketTypeChange("b2b")}
             />
             <RadioButton
               id="other"
               value="other"
               label="OTHER"
-              checked={formData.ticketType === "other"}
+              checked={isTicketTypeMatch(formData.ticketType, "other")}
               onChange={() => handleTicketTypeChange("other")}
             />
           </div>
 
-          {/* Input ที่ขึ้นบรรทัดใหม่เมื่อถูกเลือก - ซ่อนใน readOnly mode */}
-          {!readOnly && formData.ticketType === "tg" && (
+          {/* ✅ Input ที่ขึ้นบรรทัดใหม่เมื่อถูกเลือก - ใช้ฟังก์ชัน normalize */}
+          {!readOnly && isTicketTypeMatch(formData.ticketType, "tg") && (
             <div className="grid grid-cols-3 gap-2">
               <div
                 className={combineClasses(
@@ -132,7 +142,7 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
                     SaleStyles.form.input,
                     "flex-1 w-full"
                   )}
-                  disabled={formData.ticketType !== "tg"}
+                  disabled={!isTicketTypeMatch(formData.ticketType, "tg")}
                   value={formData.tgDetails || ""}
                   onChange={(e) => {
                     console.log("Updating tgDetails to:", e.target.value);
@@ -146,7 +156,8 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               </div>
             </div>
           )}
-          {!readOnly && formData.ticketType === "b2b" && (
+
+          {!readOnly && isTicketTypeMatch(formData.ticketType, "b2b") && (
             <div className="grid grid-cols-3 gap-2">
               <div
                 className={combineClasses(
@@ -160,7 +171,7 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
                     SaleStyles.form.input,
                     "flex-1 w-full"
                   )}
-                  disabled={formData.ticketType !== "b2b"}
+                  disabled={!isTicketTypeMatch(formData.ticketType, "b2b")}
                   value={formData.b2bDetails || ""}
                   onChange={(e) => {
                     console.log("Updating b2bDetails to:", e.target.value);
@@ -174,7 +185,8 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
               </div>
             </div>
           )}
-          {!readOnly && formData.ticketType === "other" && (
+
+          {!readOnly && isTicketTypeMatch(formData.ticketType, "other") && (
             <div className="grid grid-cols-3 gap-2">
               <div
                 className={combineClasses(
@@ -188,7 +200,7 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
                     SaleStyles.form.input,
                     "flex-1 w-full"
                   )}
-                  disabled={formData.ticketType !== "other"}
+                  disabled={!isTicketTypeMatch(formData.ticketType, "other")}
                   value={formData.otherDetails || ""}
                   onChange={(e) => {
                     console.log("Updating otherDetails to:", e.target.value);

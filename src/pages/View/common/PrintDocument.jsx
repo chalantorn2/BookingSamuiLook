@@ -11,6 +11,7 @@ const PrintDocument = ({
   documentType,
   ticketId,
   onPOGenerated,
+  onEmailSent,
 }) => {
   // เลือก component ตาม documentType
   const renderDocument = () => {
@@ -22,6 +23,7 @@ const PrintDocument = ({
             onClose={onClose}
             ticketId={ticketId}
             onPOGenerated={onPOGenerated}
+            onEmailSent={onEmailSent}
           />
         );
 

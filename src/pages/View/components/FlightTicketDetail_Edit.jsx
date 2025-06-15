@@ -168,15 +168,15 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
       vatPercent: String(detail.vat_percent || 0),
       code: additional.code || "",
       b2bDetails:
-        additional.ticket_type === "b2b"
+        additional.ticket_type?.toLowerCase() === "b2b"
           ? additional.ticket_type_details || ""
           : "",
       otherDetails:
-        additional.ticket_type === "other"
+        additional.ticket_type?.toLowerCase() === "other"
           ? additional.ticket_type_details || ""
           : "",
       tgDetails:
-        additional.ticket_type === "tg"
+        additional.ticket_type?.toLowerCase() === "tg"
           ? additional.ticket_type_details || ""
           : "",
     });
