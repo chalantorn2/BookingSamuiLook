@@ -125,7 +125,7 @@ const createPrintInvoiceHTML = (invoiceData) => {
               63/27 ม.3 ต.บ่อผุด อ.เกาะสมุย จ.สุราษฎร์ธานี 84320
             </div>
             <div style="font-size: 12px; margin: 2px 0; font-family: Prompt, sans-serif;">
-              โทร 077-950550 email :samuilook@yahoo.com
+                โทร 077-950550 Email: samuilook@yahoo.com
             </div>
             <div style="font-size: 12px; margin: 2px 0; font-family: Prompt, sans-serif;">
               เลขประจำตัวผู้เสียภาษี 0845545002700
@@ -326,31 +326,44 @@ const createPrintInvoiceHTML = (invoiceData) => {
       </div>
 
       <!-- Payment & Signatures -->
-      <div style="display: flex; justify-content: space-between; margin-top: 24px;">
-        <div>
-          <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px;">ข้อมูลการชำระเงิน</div>
-          <div style="font-size: 12px; margin-bottom: 3px;">- ชื่อบัญชี คิมเบอร์ลี่ เหงียน</div>
-          <div style="font-size: 12px; margin-bottom: 3px;">- ธนาคาร Larana เลขที่บัญชี 0123456789</div>
-          <div style="font-size: 12px; margin-bottom: 3px; margin-top: 3px;">- ชื่อบัญชี คิมเบอร์ลี่ เหงียน</div>
-          <div style="font-size: 12px;">- ธนาคาร Borcelle เลขที่บัญชี 0123456789</div>
-        </div>
-        <div style="display: flex; gap: 24px;">
-          <div style="text-align: center; font-size: 11px;">
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 6px;">อนุมัติโดย</div>
-            <div style="border-bottom: 1px solid #6b7280; padding-bottom: 12px; margin-bottom: 6px; height: 50px;"></div>
-            <div style="font-size: 12px;">วันที่: ${new Date().toLocaleDateString(
-              "th-TH"
-            )}</div>
-          </div>
-          <div style="text-align: center; font-size: 11px;">
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 6px;">ผู้ว่าจ้าง</div>
-            <div style="border-bottom: 1px solid #6b7280; padding-bottom: 12px; margin-bottom: 6px; height: 50px;"></div>
-            <div style="font-size: 12px;">วันที่: ${new Date().toLocaleDateString(
-              "th-TH"
-            )}</div>
-          </div>
-        </div>
-      </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 24px;">
+  <div>
+    <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px;">ข้อมูลการชำระเงิน</div>
+    
+    {/* ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล */}
+    <div style="font-size: 12px; font-weight: bold; margin-top: 6px; margin-bottom: 3px;">
+      ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล
+    </div>
+    <div style="font-size: 12px; margin-bottom: 3px;">• ธนาคารกสิกรไทย เลขบัญชี 502-207768-8</div>
+    <div style="font-size: 12px; margin-bottom: 3px;">• ธนาคารไทยพาณิชย์ เลขบัญชี 836-200976-4</div>
+    <div style="font-size: 12px; margin-bottom: 3px;">• ธนาคารกรุงไทย เลขบัญชี 829-002106-2</div>
+    
+    {/* ชื่อบัญชี: Mr. Hajime Watanabe */}
+    <div style="font-size: 12px; font-weight: bold; margin-top: 6px; margin-bottom: 3px;">
+      ชื่อบัญชี: Mr. Hajime Watanabe
+    </div>
+    <div style="font-size: 12px; margin-bottom: 3px;">• ธนาคารกรุงศรี เลขบัญชี 423-125269-8</div>
+    <div style="font-size: 12px; margin-bottom: 3px;">• ธนาคารกรุงเทพ เลขบัญชี 691-001639-0</div>
+    <div style="font-size: 12px;">• ธนาคารทหารไทย เลขบัญชี 585-200121-2</div>
+  </div>
+  
+  <div style="display: flex; gap: 24px;">
+    <div style="text-align: center; font-size: 11px;">
+      <div style="font-size: 12px; font-weight: bold; margin-bottom: 6px;">อนุมัติโดย</div>
+      <div style="border-bottom: 1px solid #6b7280; padding-bottom: 12px; margin-bottom: 6px; height: 50px;"></div>
+      <div style="font-size: 12px;">วันที่: ${new Date().toLocaleDateString(
+        "th-TH"
+      )}</div>
+    </div>
+    <div style="text-align: center; font-size: 11px;">
+      <div style="font-size: 12px; font-weight: bold; margin-bottom: 6px;">ผู้ว่าจ้าง</div>
+      <div style="border-bottom: 1px solid #6b7280; padding-bottom: 12px; margin-bottom: 6px; height: 50px;"></div>
+      <div style="font-size: 12px;">วันที่: ${new Date().toLocaleDateString(
+        "th-TH"
+      )}</div>
+    </div>
+  </div>
+</div>
 
       <!-- Footer -->
       <div style="margin-top: 24px; padding-top: 12px; text-align: right; font-size: 12px;">

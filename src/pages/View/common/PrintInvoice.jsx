@@ -20,7 +20,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
   const [error, setError] = useState(null);
   const [zoomLevel, setZoomLevel] = useState("fitToWidth");
   const [currentViewPage, setCurrentViewPage] = useState(1);
-  const PASSENGERS_PER_PAGE = 20; // 🔧 แก้ไขตัวเลขนี้เพื่อเปลี่ยนจำนวนผู้โดยสารต่อหน้า
+  const PASSENGERS_PER_PAGE = 9;
 
   useEffect(() => {
     if (isOpen && ticketId) {
@@ -108,7 +108,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         <style>
           @page {
             size: A4;
-            margin: 15mm;
+            margin: 10mm 15mm 10mm 15mm;
           }
           
           * {
@@ -259,14 +259,14 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
       .print-table {
         width: 100%;
         border-collapse: collapse;
-        border-top: 2px solid #000;
-        border-bottom: 2px solid #000;
+        border-top: 1px solid #000;
+        border-bottom: 1px solid #000;
       }
 
       .print-table th {
         background-color: #e5e7eb !important;
-        border-top: 2px solid #000;
-        border-bottom: 2px solid #000;
+        border-top: 1px solid #000;
+        border-bottom: 1px solid #000;
         font-weight: bold;
         text-align: center;
         padding: 6px 4px;
@@ -311,7 +311,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
       }
 
       .print-summary-row {
-        border-top: 2px solid #000;
+        border-top: 1px solid #000;
       }
 
       .print-summary-label {
@@ -324,8 +324,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
       .print-total-row {
         background-color: #e5e7eb !important;
-        border-top: 2px solid #000;
-        border-bottom: 2px solid #000;
+        border-top: 1px solid #000;
+        border-bottom: 1px solid #000;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -333,7 +333,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
       .print-bottom-section {
         display: flex;
         justify-content: space-between;
-        margin-top: 32px;
+        margin-top: 15px;
         gap: 24px;
       }
 
@@ -384,7 +384,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
       }
 
       .print-footer {
-        margin-top: 32px;
+     
         text-align: right;
         font-size: 12px;
         color: #6b7280;
@@ -561,7 +561,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
               63/27 ม.3 ต.บ่อผุด อ.เกาะสมุย จ.สุราษฎร์ธานี 84320
             </div>
             <div className="print-company-text">
-              โทร 077-950550 email :samuilook@yahoo.com
+              โทร 077-950550 Email: samuilook@yahoo.com
             </div>
             <div className="print-company-text">
               เลขประจำตัวผู้เสียภาษี 0845545002700
@@ -634,13 +634,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     </>
   );
 
-  // 👥 ฟังก์ชันสร้างตารางผู้โดยสาร (รับ passengers และ pageNumber)
-  const renderPassengerTable = (
-    passengers,
-    pageNumber,
-    totalPages,
-    isLastPage = false
-  ) => (
+  const renderPassengerTable = (passengers, pageNumber, totalPages) => (
     <div className="print-items-table">
       <table className="print-table">
         <thead>
@@ -652,7 +646,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
           </tr>
         </thead>
         <tbody>
-          {/* NAME Section */}
+          {/* NAME Section - แสดงผู้โดยสารของหน้านี้ */}
           <tr>
             <td className="print-section-header">NAME /ชื่อผู้โดยสาร</td>
             <td className="print-td-quantity"></td>
@@ -668,147 +662,171 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
             </tr>
           ))}
 
-          {/* เฉพาะหน้าสุดท้าย: แสดงเที่ยวบิน, ราคา, summary */}
-          {isLastPage && (
+          {/* AIR TICKET Section - แสดงทุกหน้า */}
+          <tr>
+            <td className="print-section-header">AIR TICKET /ตั๋วเครื่องบิน</td>
+            <td className="print-td-quantity"></td>
+            <td className="print-td-price"></td>
+            <td className="print-td-total"></td>
+          </tr>
+          {invoiceData.flights.map((flight, index) => (
+            <tr key={`flight-${index}`}>
+              <td className="print-section-item">{flight.display}</td>
+              <td className="print-td-quantity"></td>
+              <td className="print-td-price"></td>
+              <td className="print-td-total"></td>
+            </tr>
+          ))}
+          {invoiceData.passengerTypes.map((type, index) => (
+            <tr key={`type-${index}`}>
+              <td className="print-section-item">{type.type}</td>
+              <td className="print-td-quantity">{type.quantity}</td>
+              <td className="print-td-price">
+                {formatCurrency(type.unitPrice)}.-
+              </td>
+              <td className="print-td-total">
+                {formatCurrency(type.amount)}.-
+              </td>
+            </tr>
+          ))}
+
+          {/* Other Section - แสดงทุกหน้า */}
+          {invoiceData.extras.length > 0 && (
             <>
-              {/* AIR TICKET Section */}
               <tr>
-                <td className="print-section-header">
-                  AIR TICKET /ตั๋วเครื่องบิน
-                </td>
+                <td className="print-section-header">Other</td>
                 <td className="print-td-quantity"></td>
                 <td className="print-td-price"></td>
                 <td className="print-td-total"></td>
               </tr>
-              {invoiceData.flights.map((flight, index) => (
-                <tr key={`flight-${index}`}>
-                  <td className="print-section-item">{flight.display}</td>
-                  <td className="print-td-quantity"></td>
-                  <td className="print-td-price"></td>
-                  <td className="print-td-total"></td>
-                </tr>
-              ))}
-              {invoiceData.passengerTypes.map((type, index) => (
-                <tr key={`type-${index}`}>
-                  <td className="print-section-item">{type.type}</td>
-                  <td className="print-td-quantity">{type.quantity}</td>
+              {invoiceData.extras.map((extra, index) => (
+                <tr key={`extra-${index}`}>
+                  <td className="print-section-item">{extra.description}</td>
+                  <td className="print-td-quantity">{extra.quantity}</td>
                   <td className="print-td-price">
-                    {formatCurrency(type.unitPrice)}.-
+                    {formatCurrency(extra.unitPrice)}.-
                   </td>
                   <td className="print-td-total">
-                    {formatCurrency(type.amount)}.-
+                    {formatCurrency(extra.amount)}.-
                   </td>
                 </tr>
               ))}
-
-              {/* Other Section */}
-              {invoiceData.extras.length > 0 && (
-                <>
-                  <tr>
-                    <td className="print-section-header">Other</td>
-                    <td className="print-td-quantity"></td>
-                    <td className="print-td-price"></td>
-                    <td className="print-td-total"></td>
-                  </tr>
-                  {invoiceData.extras.map((extra, index) => (
-                    <tr key={`extra-${index}`}>
-                      <td className="print-section-item">
-                        {extra.description}
-                      </td>
-                      <td className="print-td-quantity">{extra.quantity}</td>
-                      <td className="print-td-price">
-                        {formatCurrency(extra.unitPrice)}.-
-                      </td>
-                      <td className="print-td-total">
-                        {formatCurrency(extra.amount)}.-
-                      </td>
-                    </tr>
-                  ))}
-                </>
-              )}
-
-              {/* Summary */}
-              <tr className="print-summary-row">
-                <td colSpan="2" className="print-section-header">
-                  Remark
-                </td>
-                <td className="print-td-price print-summary-label">
-                  ราคารวมสินค้า (บาท)
-                </td>
-                <td className="print-td-total print-summary-value">
-                  {formatCurrency(invoiceData.summary.subtotal)}.-
-                </td>
-              </tr>
-              <tr className="print-summary-row">
-                <td colSpan="2"></td>
-                <td className="print-td-price print-summary-label">
-                  ภาษีมูลค่าเพิ่ม {invoiceData.summary.vatPercent}%
-                </td>
-                <td className="print-td-total print-summary-value">
-                  {formatCurrency(invoiceData.summary.vat)}.-
-                </td>
-              </tr>
-              <tr className="print-total-row">
-                <td colSpan="2"></td>
-                <td className="print-td-price print-summary-label">
-                  จำนวนเงินรวมทั้งสิ้น (บาท)
-                </td>
-                <td className="print-td-total print-summary-value">
-                  {formatCurrency(invoiceData.summary.total)}.-
-                </td>
-              </tr>
             </>
           )}
+
+          {/* Summary - แสดงทุกหน้า */}
+          <tr className="print-summary-row">
+            <td className="print-section-header">Remark</td>
+            <td colSpan="2" className="print-td-price print-summary-label">
+              ราคารวมสินค้า (บาท)
+            </td>
+            <td className="print-td-total print-summary-value">
+              {formatCurrency(invoiceData.summary.subtotal)}.-
+            </td>
+          </tr>
+          <tr className="print-summary-row">
+            <td></td>
+            <td colSpan="2" className="print-td-price print-summary-label">
+              ภาษีมูลค่าเพิ่ม {invoiceData.summary.vatPercent}%
+            </td>
+            <td className="print-td-total print-summary-value">
+              {formatCurrency(invoiceData.summary.vat)}.-
+            </td>
+          </tr>
+          <tr className="print-total-row">
+            <td></td>
+            <td colSpan="2" className="print-td-price print-summary-label">
+              จำนวนเงินรวมทั้งสิ้น (บาท)
+            </td>
+            <td className="print-td-total print-summary-value">
+              {formatCurrency(invoiceData.summary.total)}.-
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
   );
 
   // 📄 ฟังก์ชันสร้าง Footer (รับหมายเลขหน้า)
-  const renderPageFooter = (pageNumber, totalPages, isLastPage = false) => (
+  const renderPageFooter = (pageNumber, totalPages) => (
     <>
-      {/* Payment Info & Signatures - เฉพาะหน้าสุดท้าย */}
-      {isLastPage && (
-        <div className="print-bottom-section">
-          <div className="print-payment-info">
-            <div className="print-payment-title">ข้อมูลการชำระเงิน</div>
-            <div className="print-payment-item">
-              - ชื่อบัญชี คิมเบอร์ลี่ เหงียน
+      {/* Payment Info & Signatures - แสดงทุกหน้า */}
+      <div className="print-bottom-section">
+        <div className="print-payment-info">
+          <div
+            className="print-payment-title"
+            style={{ textDecoration: "underline" }}
+          >
+            ข้อมูลการชำระเงิน
+          </div>
+
+          {/* ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล */}
+          <div
+            className="print-payment-item"
+            style={{
+              fontWeight: "bold",
+              marginTop: "6px",
+              marginBottom: "3px",
+            }}
+          >
+            ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล
+          </div>
+          <div className="print-payment-item">
+            • ธนาคารกสิกรไทย เลขบัญชี 502-207768-8
+          </div>
+          <div className="print-payment-item">
+            • ธนาคารไทยพาณิชย์ เลขบัญชี 836-200976-4
+          </div>
+          <div className="print-payment-item">
+            • ธนาคารกรุงไทย เลขบัญชี 829-002106-2
+          </div>
+
+          {/* ชื่อบัญชี: Mr. Hajime Watanabe */}
+          <div
+            className="print-payment-item"
+            style={{
+              fontWeight: "bold",
+              marginTop: "6px",
+              marginBottom: "3px",
+            }}
+          >
+            ชื่อบัญชี: Mr. Hajime Watanabe
+          </div>
+          <div className="print-payment-item">
+            • ธนาคารกรุงศรี เลขบัญชี 423-125269-8
+          </div>
+          <div className="print-payment-item">
+            • ธนาคารกรุงเทพ เลขบัญชี 691-001639-0
+          </div>
+          <div className="print-payment-item">
+            • ธนาคารทหารไทย เลขบัญชี 585-200121-2
+          </div>
+        </div>
+
+        {/* Signatures section - แสดงทุกหน้า */}
+        <div className="print-signatures">
+          <div className="print-signature">
+            <div className="print-signature-title">อนุมัติโดย</div>
+            <div className="print-signature-area">
+              <img
+                src={logo}
+                alt="Approved Signature"
+                className="print-signature-logo"
+              />
             </div>
-            <div className="print-payment-item">
-              - ธนาคาร Larana เลขที่บัญชี 0123456789
-            </div>
-            <div className="print-payment-item">
-              - ชื่อบัญชี คิมเบอร์ลี่ เหงียน
-            </div>
-            <div className="print-payment-item">
-              - ธนาคาร Borcelle เลขที่บัญชี 0123456789
+            <div className="print-signature-date">
+              วันที่: {new Date().toLocaleDateString("th-TH")}
             </div>
           </div>
-          <div className="print-signatures">
-            <div className="print-signature">
-              <div className="print-signature-title">อนุมัติโดย</div>
-              <div className="print-signature-area">
-                <img
-                  src={logo}
-                  alt="Approved Signature"
-                  className="print-signature-logo"
-                />
-              </div>
-              <div className="print-signature-date">
-                วันที่: {new Date().toLocaleDateString("th-TH")}
-              </div>
-            </div>
-            <div className="print-signature">
-              <div className="print-signature-title">ผู้ว่าจ้าง</div>
-              <div className="print-signature-area"></div>
-              <div className="print-signature-date">
-                วันที่: {new Date().toLocaleDateString("th-TH")}
-              </div>
+          <div className="print-signature">
+            <div className="print-signature-title">ผู้ว่าจ้าง</div>
+            <div className="print-signature-area"></div>
+            <div className="print-signature-date">
+              วันที่: {new Date().toLocaleDateString("th-TH")}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Page Footer */}
       <div className="print-footer">
@@ -1006,7 +1024,6 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
             <div className="print-document" ref={printRef}>
               {passengerPages.map((passengers, pageIndex) => {
                 const pageNumber = pageIndex + 1;
-                const isLastPage = pageNumber === totalPages;
 
                 return (
                   <div
@@ -1016,19 +1033,9 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
                       pageNumber > 1 ? "page-break" : ""
                     }`}
                   >
-                    {/* Header + Customer Info */}
                     {renderPageHeader()}
-
-                    {/* Passenger Table */}
-                    {renderPassengerTable(
-                      passengers,
-                      pageNumber,
-                      totalPages,
-                      isLastPage
-                    )}
-
-                    {/* Footer */}
-                    {renderPageFooter(pageNumber, totalPages, isLastPage)}
+                    {renderPassengerTable(passengers, pageNumber, totalPages)}
+                    {renderPageFooter(pageNumber, totalPages)}
                   </div>
                 );
               })}
@@ -1214,8 +1221,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
           height: 297mm;
           position: relative;
           background: white;
-          margin: 0 auto 20px auto;
-          padding: 15mm;
+          margin: 10mm 15mm 15mm 15mm;
+          padding: 10mm 15mm 10mm 15mm;
           box-sizing: border-box;
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
             0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -1392,14 +1399,14 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         .print-table {
           width: 100%;
           border-collapse: collapse;
-          border-top: 2px solid #000;
-          border-bottom: 2px solid #000;
+          border-top: 1px solid #000;
+          border-bottom: 1px solid #000;
         }
 
         .print-table th {
           background-color: #e5e7eb;
-          border-top: 2px solid #000;
-          border-bottom: 2px solid #000;
+          border-top: 1px solid #000;
+          border-bottom: 1px solid #000;
           font-weight: bold;
           text-align: center;
           padding: 6px 4px;
@@ -1453,7 +1460,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         }
 
         .print-summary-row {
-          border-top: 2px solid #000;
+          border-top: 1px solid #000;
         }
 
         .print-summary-label {
@@ -1466,14 +1473,14 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
         .print-total-row {
           background-color: #e5e7eb;
-          border-top: 2px solid #000;
-          border-bottom: 2px solid #000;
+          border-top: 1px solid #000;
+          border-bottom: 1px solid #000;
         }
 
         .print-bottom-section {
           display: flex;
           justify-content: space-between;
-          margin-top: 32px;
+          margin-top: 15px;
           gap: 24px;
         }
 
@@ -1524,7 +1531,6 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         }
 
         .print-footer {
-          margin-top: 32px;
           text-align: right;
           font-size: 12px;
           color: #6b7280;
@@ -1557,7 +1563,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         @media print {
           @page {
             size: A4;
-            margin: 15mm;
+            margin: 10mm 15mm 15mm 15mm;
           }
 
           body * {

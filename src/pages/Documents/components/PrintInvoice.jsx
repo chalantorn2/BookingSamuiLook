@@ -110,7 +110,7 @@ const PrintInvoice = ({ invoiceData, onClose }) => {
                       63/27 ม.3 ต.บ่อผุด อ.เกาะสมุย จ.สุราษฎร์ธานี 84320
                     </p>
                     <p className="text-sm">
-                      โทร 077-950550 email :samuilook@yahoo.com
+                      โทร 077-950550 Email: samuilook@yahoo.com
                     </p>
                     <p className="text-sm">
                       เลขประจำตัวผู้เสียภาษี 0845545002700
@@ -327,14 +327,14 @@ const PrintInvoice = ({ invoiceData, onClose }) => {
               </div>
 
               {/* Payment Info and Signatures */}
-              <div className="mt-8">
+              <div className="mt-4">
                 <h3 className="font-bold mb-2">ข้อมูลการชำระเงิน</h3>
                 <p className="mb-1">- ชื่อบัญชี คิมเบอร์ลี่ เหงียน</p>
                 <p className="mb-1">- ธนาคาร Larana เลขที่บัญชี 0123456789</p>
                 <p className="mb-1">- ชื่อบัญชี คิมเบอร์ลี่ เหงียน</p>
                 <p>- ธนาคาร Borcelle เลขที่บัญชี 0123456789</p>
 
-                <div className="mt-12 grid grid-cols-2 gap-8">
+                <div className="mt-4 grid grid-cols-2 gap-8">
                   <div className="text-center">
                     <div className="border-b border-gray-500 pb-4 mb-2">
                       <p>อนุมัติโดย</p>
