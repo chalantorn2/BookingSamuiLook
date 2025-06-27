@@ -401,14 +401,13 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     // ปรับเป็น UTC+7 (เวลาไทย)
     const thaiTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
 
-    return thaiTime.toLocaleString("th-TH", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false, // ใช้รูปแบบ 24 ชั่วโมง
-    });
+    const day = thaiTime.getDate().toString().padStart(2, "0");
+    const month = (thaiTime.getMonth() + 1).toString().padStart(2, "0");
+    const year = thaiTime.getFullYear(); // ค.ศ. (ไม่บวก 543)
+    const hours = thaiTime.getHours().toString().padStart(2, "0");
+    const minutes = thaiTime.getMinutes().toString().padStart(2, "0");
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const getBranchDisplay = (branchType, branchNumber) => {

@@ -20,36 +20,42 @@ export const getInvoiceData = async (ticketId) => {
       .from("bookings_ticket")
       .select(
         `
-        id,
-        reference_number,
-        po_number,
-        po_generated_at,
-        created_at,
-        customer:customer_id(name, address_line1, address_line2, address_line3, phone, id_number, branch_type, branch_number, code),
-        supplier:information_id(name, code, numeric_code),
-        tickets_detail(issue_date, due_date, credit_days, subtotal_before_vat, vat_percent, vat_amount, grand_total),
-        ticket_additional_info(code, ticket_type, ticket_type_details, company_payment_method, company_payment_details, customer_payment_method, customer_payment_details),
-        tickets_pricing(adult_sale_price, adult_pax, adult_total, child_sale_price, child_pax, child_total, infant_sale_price, infant_pax, infant_total),
-        tickets_passengers(passenger_name, age, ticket_number, ticket_code),
-        tickets_routes(flight_number, rbd, date, origin, destination, departure_time, arrival_time),
-        tickets_extras(description, sale_price, quantity, total_amount),
-        user:created_by(fullname)
-      `
+    id,
+    reference_number,
+    po_number,
+    po_generated_at,
+    created_at,
+    customer:customer_id(name, address_line1, address_line2, address_line3, phone, id_number, branch_type, branch_number, code),
+    supplier:information_id(name, code, numeric_code),
+    tickets_detail(issue_date, due_date, credit_days, subtotal_before_vat, vat_percent, vat_amount, grand_total),
+    ticket_additional_info(code, ticket_type, ticket_type_details, company_payment_method, company_payment_details, customer_payment_method, customer_payment_details),
+    tickets_pricing(adult_sale_price, adult_pax, adult_total, child_sale_price, child_pax, child_total, infant_sale_price, infant_pax, infant_total),
+    tickets_passengers(passenger_name, age, ticket_number, ticket_code),
+    tickets_routes(flight_number, rbd, date, origin, destination, departure_time, arrival_time),
+    tickets_extras(description, sale_price, quantity, total_amount),
+    user:created_by(fullname)
+  `
       )
       .eq("id", ticketId)
       .single();
 
     if (error) throw error;
 
-    // ขั้นตอนที่ 3: แปลงข้อมูลให้พร้อมสำหรับการพิมพ์
     const detail = ticket.tickets_detail?.[0] || {};
     const additional = ticket.ticket_additional_info?.[0] || {};
     const pricing = ticket.tickets_pricing?.[0] || {};
+
+    // *** เพิ่มส่วนนี้ ***
+    console.log("=== DEBUG ADDRESS FROM DATABASE ===");
+    console.log("Raw ticket.customer:", ticket.customer);
 
     // แปลงข้อมูลลูกค้า - รองรับที่อยู่หลายบรรทัด
     const customerInfo = {
       name: ticket.customer?.name || "",
       address: formatCustomerAddressForPrint(ticket.customer),
+      address_line1: ticket.customer?.address_line1 || "",
+      address_line2: ticket.customer?.address_line2 || "",
+      address_line3: ticket.customer?.address_line3 || "",
       phone: ticket.customer?.phone || "",
       taxId: ticket.customer?.id_number || "",
       branch: getBranchDisplay(
@@ -57,6 +63,8 @@ export const getInvoiceData = async (ticketId) => {
         ticket.customer?.branch_number
       ),
     };
+
+    console.log("Final customerInfo:", customerInfo);
 
     // แปลงข้อมูลใบแจ้งหนี้
     const invoiceInfo = {

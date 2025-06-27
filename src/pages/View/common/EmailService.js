@@ -161,7 +161,7 @@ function formatCurrency(amount) {
 export function generateDefaultEmailContent(invoiceData) {
   if (!invoiceData) return "";
 
-  return `เรียน คุณ${invoiceData.customer?.name || "ลูกค้า"}
+  return `เรียน ${invoiceData.customer?.name || "ลูกค้า"}
 
 บริษัท สมุย ลุค จำกัด ขอส่ง Invoice ดังรายละเอียดต่อไปนี้:
 
@@ -191,8 +191,14 @@ ${invoiceData.flights?.map((f) => `- ${f.display}`).join("\n") || ""}
  * @returns {string} - หัวข้ออีเมล
  */
 export function generateDefaultEmailSubject(invoiceData) {
+  const firstFlight = invoiceData?.flights?.[0];
+
+  if (firstFlight?.flightNumber && firstFlight?.route) {
+    return `Invoice ${firstFlight.flightNumber} ${firstFlight.route}`;
+  }
+
+  // fallback ถ้าไม่มีข้อมูลเที่ยวบิน
   const poNumber = invoiceData?.invoice?.poNumber || "";
   const customerName = invoiceData?.customer?.name || "ลูกค้า";
-
-  return `Invoice ${poNumber} - ${customerName} - SamuiLookBooking`;
+  return `Invoice ${poNumber} - ${customerName}`;
 }

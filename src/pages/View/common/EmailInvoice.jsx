@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Mail, X, Send, FileText, Eye, AlertTriangle } from "lucide-react";
+import {
+  Mail,
+  X,
+  Send,
+  FileText,
+  Eye,
+  AlertTriangle,
+  RefreshCw,
+} from "lucide-react";
 import {
   sendInvoiceEmail,
   generateDefaultEmailContent,
@@ -7,6 +15,7 @@ import {
   initializeBrevo,
 } from "./EmailService";
 import { generatePDFSafely } from "./PDFGenerator";
+import { getInvoiceData } from "./documentDataMapper";
 
 const EmailInvoice = ({
   isOpen,
@@ -26,42 +35,95 @@ const EmailInvoice = ({
   const [pdfBase64, setPdfBase64] = useState(null);
   const [pdfReady, setPdfReady] = useState(false);
   const [sendWithoutPDF, setSendWithoutPDF] = useState(false);
+  const [pdfGenerationAttempts, setPdfGenerationAttempts] = useState(0);
+  const [currentInvoiceData, setCurrentInvoiceData] = useState(null);
+  const MAX_PDF_ATTEMPTS = 3;
 
   useEffect(() => {
     initializeBrevo();
   }, []);
 
   useEffect(() => {
-    if (isOpen && invoiceData) {
-      setFormData({
-        to: invoiceData.customer?.email || "chalantorn.work@gmail.com",
-        subject: generateDefaultEmailSubject(invoiceData),
-        message: generateDefaultEmailContent(invoiceData),
-      });
-      generatePDF();
-    }
-  }, [isOpen, invoiceData]);
+    if (isOpen && ticketId) {
+      // Reset states ก่อน
+      setPdfBase64(null);
+      setPdfReady(false);
+      setError(null);
+      setSendWithoutPDF(false);
+      setPdfGenerationAttempts(0);
 
-  const generatePDF = async () => {
-    setIsGeneratingPDF(true);
+      // เปลี่ยนจากใช้ invoiceData ที่ส่งมา เป็นดึงใหม่จาก database
+      fetchInvoiceDataFromDB();
+    }
+  }, [isOpen, ticketId]);
+
+  const fetchInvoiceDataFromDB = async () => {
+    try {
+      setError(null);
+      const result = await getInvoiceData(ticketId);
+
+      if (result.success) {
+        const dbInvoiceData = result.data;
+        setCurrentInvoiceData(dbInvoiceData); // เก็บข้อมูลใหม่
+
+        setFormData({
+          to: dbInvoiceData.customer?.email || "",
+          subject: generateDefaultEmailSubject(dbInvoiceData),
+          message: generateDefaultEmailContent(dbInvoiceData),
+        });
+
+        generatePDF(false, dbInvoiceData);
+      } else {
+        setError("ไม่สามารถดึงข้อมูล Invoice ได้: " + result.error);
+      }
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการดึงข้อมูล: " + err.message);
+    }
+  };
+
+  const generatePDF = async (isRetry = false, customInvoiceData = null) => {
+    if (!isRetry) {
+      setIsGeneratingPDF(true);
+    }
     setError(null);
     setPdfReady(false);
 
     try {
-      const result = await generatePDFSafely(invoiceData, ticketId);
+      console.log("Starting PDF generation...");
+      // ใช้ข้อมูลที่ส่งมา หรือข้อมูลเดิม
+      const dataToUse = customInvoiceData || invoiceData;
+      const result = await generatePDFSafely(dataToUse, ticketId);
 
       if (result.success) {
         setPdfBase64(result.pdfBase64);
         setPdfReady(true);
+        setPdfGenerationAttempts(0);
         console.log("PDF generated successfully");
       } else {
-        setError(`ไม่สามารถสร้าง PDF ได้: ${result.message}`);
+        throw new Error(result.message || "ไม่สามารถสร้าง PDF ได้");
       }
     } catch (err) {
-      setError(`เกิดข้อผิดพลาดในการสร้าง PDF: ${err.message}`);
+      const currentAttempts = pdfGenerationAttempts + 1;
+      setPdfGenerationAttempts(currentAttempts);
+
+      console.error("PDF generation failed:", err);
+
+      if (currentAttempts < MAX_PDF_ATTEMPTS) {
+        setError(
+          `การสร้าง PDF ล้มเหลว (ครั้งที่ ${currentAttempts}/${MAX_PDF_ATTEMPTS}): ${err.message}`
+        );
+      } else {
+        setError(
+          `ไม่สามารถสร้าง PDF ได้หลังจากพยายาม ${MAX_PDF_ATTEMPTS} ครั้ง: ${err.message}`
+        );
+      }
     } finally {
       setIsGeneratingPDF(false);
     }
+  };
+
+  const retryPDFGeneration = () => {
+    generatePDF(true, null); // เพิ่ม parameter ที่ 2
   };
 
   const handleChange = (e) => {
@@ -105,7 +167,7 @@ const EmailInvoice = ({
         subject: formData.subject,
         message: formData.message,
         pdfBase64: sendWithoutPDF ? null : pdfBase64,
-        invoiceData: invoiceData,
+        invoiceData: currentInvoiceData || invoiceData, // ใช้ข้อมูลใหม่
       };
 
       const result = await sendInvoiceEmail(emailData);
@@ -145,6 +207,33 @@ const EmailInvoice = ({
     } catch (err) {
       setError("ไม่สามารถเปิด PDF ได้");
     }
+  };
+
+  const getPDFStatusMessage = () => {
+    if (isGeneratingPDF) {
+      return "กำลังสร้าง PDF...";
+    }
+
+    if (pdfReady) {
+      return "✓ PDF พร้อมส่ง";
+    }
+
+    if (error && pdfGenerationAttempts >= MAX_PDF_ATTEMPTS) {
+      return "⚠️ ไม่สามารถสร้าง PDF ได้";
+    }
+
+    if (error && pdfGenerationAttempts < MAX_PDF_ATTEMPTS) {
+      return `⚠️ กำลังลองใหม่... (${pdfGenerationAttempts}/${MAX_PDF_ATTEMPTS})`;
+    }
+
+    return "กำลังเตรียม PDF...";
+  };
+
+  const getPDFStatusColor = () => {
+    if (isGeneratingPDF) return "text-blue-600";
+    if (pdfReady) return "text-green-600";
+    if (error) return "text-red-600";
+    return "text-gray-600";
   };
 
   if (!isOpen) return null;
@@ -205,17 +294,26 @@ const EmailInvoice = ({
 
             {error && (
               <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
-                <div className="flex items-center">
-                  <AlertTriangle className="text-red-400 mr-2" size={16} />
-                  <p className="text-red-700 text-sm">
-                    {error}
-                    {error.includes("ที่อยู่อีเมล") && (
-                      <span>
-                        {" "}
-                        กรุณาตรวจสอบที่อยู่อีเมลหรือลองใช้ที่อยู่อีเมลอื่น
-                      </span>
-                    )}
-                  </p>
+                <div className="flex items-start">
+                  <AlertTriangle
+                    className="text-red-400 mr-2 mt-1 flex-shrink-0"
+                    size={16}
+                  />
+                  <div className="flex-1">
+                    <p className="text-red-700 text-sm">{error}</p>
+                    {pdfGenerationAttempts < MAX_PDF_ATTEMPTS &&
+                      error.includes("PDF") && (
+                        <button
+                          type="button"
+                          onClick={retryPDFGeneration}
+                          className="mt-2 text-sm text-red-600 hover:text-red-800 underline flex items-center"
+                          disabled={isGeneratingPDF}
+                        >
+                          <RefreshCw size={14} className="mr-1" />
+                          ลองสร้าง PDF ใหม่
+                        </button>
+                      )}
+                  </div>
                 </div>
               </div>
             )}
@@ -230,32 +328,39 @@ const EmailInvoice = ({
                   {isGeneratingPDF && (
                     <div className="flex items-center text-sm text-blue-600">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                      กำลังสร้าง PDF...
+                      {/* กำลังสร้าง PDF... */}
                     </div>
                   )}
+
+                  <span className={`text-sm ${getPDFStatusColor()}`}>
+                    {getPDFStatusMessage()}
+                  </span>
+
                   {pdfReady && (
-                    <>
-                      <span className="text-sm text-green-600">
-                        ✓ PDF พร้อมส่ง
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handlePreviewPDF}
-                        className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm flex items-center transition-colors"
-                      >
-                        <Eye size={14} className="mr-1" />
-                        ดูตัวอย่าง
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      onClick={handlePreviewPDF}
+                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm flex items-center transition-colors"
+                    >
+                      <Eye size={14} className="mr-1" />
+                      ดูตัวอย่าง
+                    </button>
                   )}
-                  {typeof error === "string" &&
-                    error.includes("ใหญ่เกินไป") && (
-                      <span className="text-sm text-red-600">
-                        ⚠️ ไฟล์ PDF ใหญ่เกินไป
-                      </span>
-                    )}
+
+                  {error && pdfGenerationAttempts < MAX_PDF_ATTEMPTS && (
+                    <button
+                      type="button"
+                      onClick={retryPDFGeneration}
+                      className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-600 rounded text-sm flex items-center transition-colors"
+                      disabled={isGeneratingPDF}
+                    >
+                      <RefreshCw size={14} className="mr-1" />
+                      ลองใหม่
+                    </button>
+                  )}
                 </div>
               </div>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -271,6 +376,12 @@ const EmailInvoice = ({
                   ส่งอีเมลโดยไม่แนบไฟล์ PDF
                 </label>
               </div>
+
+              {sendWithoutPDF && (
+                <div className="mt-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded">
+                  ⚠️ อีเมลจะถูกส่งโดยไม่มีไฟล์ PDF แนบ
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">

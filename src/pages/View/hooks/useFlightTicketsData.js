@@ -44,10 +44,6 @@ export const useFlightTicketsData = ({
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString());
 
-      if (filterStatus && filterStatus !== "all") {
-        query = query.eq("status", filterStatus);
-      }
-
       const { data: tickets, error: ticketError } = await query;
 
       if (ticketError) {
@@ -245,9 +241,9 @@ export const useFlightTicketsData = ({
     if (filterStatus && filterStatus !== "all") {
       filtered = filtered.filter((ticket) => {
         if (filterStatus === "invoiced") {
-          return ticket.status === "invoiced";
+          return ticket.po_number && ticket.po_number.trim() !== "";
         } else if (filterStatus === "not_invoiced") {
-          return ticket.status === "not_invoiced";
+          return !ticket.po_number || ticket.po_number.trim() === "";
         }
         return true;
       });
