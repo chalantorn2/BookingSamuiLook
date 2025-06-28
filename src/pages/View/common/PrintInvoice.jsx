@@ -307,8 +307,8 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
       }
 
       .print-section-item {
-        padding-left: 40px;
-      }
+          padding-left: 30px !important;
+        }
 
       .print-summary-row {
         border-top: 1px solid #000;
@@ -1456,7 +1456,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         }
 
         .print-section-item {
-          padding-left: 40px !important;
+          padding-left: 30px !important;
         }
 
         .print-summary-row {

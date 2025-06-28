@@ -660,7 +660,7 @@ const getDocumentStyles = () => {
     }
 
     .print-section-item {
-      padding-left: 40px !important;
+      padding-left: 30px !important;
     }
 
     .print-summary-row {
