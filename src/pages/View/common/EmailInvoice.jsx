@@ -64,6 +64,12 @@ const EmailInvoice = ({
 
       if (result.success) {
         const dbInvoiceData = result.data;
+
+        console.log("=== EMAIL DEBUG ===");
+        console.log("dbInvoiceData.customer:", dbInvoiceData.customer);
+        console.log("customer email:", dbInvoiceData.customer?.email);
+        console.log("===================");
+
         setCurrentInvoiceData(dbInvoiceData); // เก็บข้อมูลใหม่
 
         setFormData({

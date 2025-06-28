@@ -25,7 +25,7 @@ export const getInvoiceData = async (ticketId) => {
     po_number,
     po_generated_at,
     created_at,
-    customer:customer_id(name, address_line1, address_line2, address_line3, phone, id_number, branch_type, branch_number, code),
+    customer:customer_id(name, address_line1, address_line2, address_line3, phone, id_number, branch_type, branch_number, code, email),
     supplier:information_id(name, code, numeric_code),
     tickets_detail(issue_date, due_date, credit_days, subtotal_before_vat, vat_percent, vat_amount, grand_total),
     ticket_additional_info(code, ticket_type, ticket_type_details, company_payment_method, company_payment_details, customer_payment_method, customer_payment_details),
@@ -57,6 +57,7 @@ export const getInvoiceData = async (ticketId) => {
       address_line2: ticket.customer?.address_line2 || "",
       address_line3: ticket.customer?.address_line3 || "",
       phone: ticket.customer?.phone || "",
+      email: ticket.customer?.email,
       taxId: ticket.customer?.id_number || "",
       branch: getBranchDisplay(
         ticket.customer?.branch_type,
