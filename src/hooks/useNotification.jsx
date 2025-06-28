@@ -75,7 +75,7 @@ export const useNotification = () => {
     if (notifications.length === 0) return null;
 
     return (
-      <div className="fixed top-4 right-4 z-50 flex flex-col space-y-2">
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col space-y-2">
         {notifications.map((notification) => {
           // กำหนดสีของข้อความแจ้งเตือนตามประเภท
           const baseClasses =
@@ -104,7 +104,22 @@ export const useNotification = () => {
               className={`${baseClasses} ${colorClasses}`}
               onClick={() => removeNotification(notification.id)}
             >
-              <span className="flex-1">{notification.message}</span>
+              {/* แก้ไขตรงนี้ - เปลี่ยนจาก <span className="flex-1"> */}
+              <div className="flex-1">
+                {typeof notification.message === "object" ? (
+                  <div>
+                    <div className="font-medium">
+                      {notification.message.title}
+                    </div>
+                    <div className="text-sm">
+                      {notification.message.details}
+                    </div>
+                    <div className="text-xs">{notification.message.time}</div>
+                  </div>
+                ) : (
+                  <span>{notification.message}</span>
+                )}
+              </div>
               <button className="ml-2 focus:outline-none">×</button>
             </div>
           );

@@ -83,7 +83,6 @@ export async function sendInvoiceEmail(emailData) {
           day: "2-digit",
           hour: "2-digit",
           minute: "2-digit",
-          second: "2-digit",
         }),
       },
     };
@@ -118,7 +117,11 @@ export async function sendInvoiceEmail(emailData) {
 
     return {
       success: true,
-      message: `ส่งอีเมลสำเร็จถึง ${toEmail} เมื่อ ${sendSmtpEmail.params.sent_time}`,
+      message: {
+        title: "ส่งอีเมลสำเร็จ!",
+        details: `ถึง: ${toEmail}`,
+        time: `เมื่อ: ${sendSmtpEmail.params.sent_time}`,
+      },
       result: result,
     };
   } catch (error) {
