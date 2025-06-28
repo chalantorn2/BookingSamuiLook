@@ -189,7 +189,7 @@ const renderPageHeader = (invoiceData) => {
     <!-- Header -->
     <div class="print-header">
       <div class="print-company-info">
-        <img src="/src/assets/logo-print.png" alt="Company Logo" class="print-company-logo" crossorigin="anonymous" />
+      <img src="/assets/logo-print.png" alt="Company Logo" class="print-company-logo" crossorigin="anonymous" />
         <div class="print-company-details">
           <div class="print-company-title">บริษัท สมุย ลุค จำกัด</div>
           <div class="print-company-text">63/27 ม.3 ต.บ่อผุด อ.เกาะสมุย จ.สุราษฎร์ธานี 84320</div>
@@ -448,7 +448,7 @@ const renderPageFooter = (pageNumber, totalPages) => {
         <div class="print-signature">
           <div class="print-signature-title">อนุมัติโดย</div>
           <div class="print-signature-area">
-            <img src="/src/assets/logo-print.png" alt="Approved Signature" class="print-signature-logo" crossorigin="anonymous" />
+          <img src="/assets/logo-print.png" alt="Approved Signature" class="print-signature-logo" crossorigin="anonymous" />
           </div>
           <div class="print-signature-date">วันที่: ${new Date().toLocaleDateString(
             "th-TH"

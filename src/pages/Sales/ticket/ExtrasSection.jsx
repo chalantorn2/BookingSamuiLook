@@ -95,7 +95,9 @@ const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
         <div className={SaleStyles.subsection.content}>
           <div
             className={combineClasses(
-              "grid grid-cols-20 gap-3 text-center font-medium text-sm",
+              `grid ${
+                readOnly ? "grid-cols-19" : "grid-cols-20"
+              } gap-3 text-center font-medium text-sm`,
               SaleStyles.spacing.mb2,
               SaleStyles.spacing.mx2
             )}

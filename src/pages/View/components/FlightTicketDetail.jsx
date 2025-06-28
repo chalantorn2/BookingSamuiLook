@@ -737,7 +737,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                               <span className="text-sm text-gray-600">
                                 รายละเอียด:
                               </span>
-                              <div className="font-medium text-base mt-1 p-2 bg-gray-50 rounded border border-gray-200">
+                              <div className="font-medium text-base mt-1 p-2 bg-gray-50 rounded border border-gray-200 uppercase">
                                 {formData.companyPaymentDetails}
                               </div>
                             </div>
@@ -793,7 +793,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
                               <span className="text-sm text-gray-600">
                                 รายละเอียด:
                               </span>
-                              <div className="font-medium text-base mt-1 p-2 bg-gray-50 rounded border border-gray-200">
+                              <div className="font-medium text-base mt-1 p-2 bg-gray-50 rounded border border-gray-200 uppercase">
                                 {formData.customerPaymentDetails}
                               </div>
                             </div>
