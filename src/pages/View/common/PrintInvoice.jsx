@@ -1002,7 +1002,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
               พิมพ์
             </button>
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-gray-200 text-white font-medium rounded-lg transition-colors"
               onClick={onClose}
               title="ปิด (Esc)"
             >
