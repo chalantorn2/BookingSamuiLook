@@ -107,15 +107,6 @@ export const validateFlightTicket = (data) => {
     errors.otherDetails = "กรุณาระบุรายละเอียดประเภทตั๋ว";
   }
 
-  // ตรวจสอบวิธีการชำระเงิน
-  if (!data.paymentMethod) {
-    errors.paymentMethod = "กรุณาเลือกวิธีการชำระเงินของบริษัท";
-  }
-
-  if (!data.customerPayment) {
-    errors.customerPayment = "กรุณาเลือกวิธีการชำระเงินของลูกค้า";
-  }
-
   return {
     isValid: Object.keys(errors).length === 0,
     errors,

@@ -303,8 +303,6 @@ const SaleTicket = () => {
       ticketType: formData.ticketType,
       b2bDetails: formData.b2bDetails,
       otherDetails: formData.otherDetails,
-      paymentMethod: formData.paymentMethod,
-      customerPayment: formData.customerPayment,
     });
 
     if (!isValid) {
