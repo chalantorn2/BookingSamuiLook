@@ -457,7 +457,7 @@ const SaleTicket = () => {
 
       if (result.success) {
         alert(`บันทึกข้อมูลสำเร็จ เลขที่อ้างอิง: ${result.referenceNumber}`);
-        resetForm();
+        window.location.reload();
       } else {
         alert(`เกิดข้อผิดพลาด: ${result.error}`);
       }
