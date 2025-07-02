@@ -471,7 +471,15 @@ const SaleHeader = ({
         </div>
         <div className="grid grid-cols-5 gap-2">
           <div className="col-span-3">
-            <label className={SaleStyles.form.labelRequired}>Address</label>
+            <label
+              className={
+                globalEditMode
+                  ? SaleStyles.form.label
+                  : SaleStyles.form.labelRequired
+              }
+            >
+              Address
+            </label>
             <textarea
               ref={textareaRef}
               className={`${SaleStyles.form.input} ${
@@ -479,7 +487,7 @@ const SaleHeader = ({
               } resize-none`}
               value={formData.contactDetails}
               onChange={handleContactDetailsChange}
-              required
+              required={!globalEditMode}
               disabled={readOnly || !globalEditMode}
               style={{
                 minHeight: "38px",
@@ -728,7 +736,15 @@ const SaleHeader = ({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className={SaleStyles.form.labelRequired}>Address</label>
+          <label
+            className={
+              globalEditMode
+                ? SaleStyles.form.label
+                : SaleStyles.form.labelRequired
+            }
+          >
+            Address
+          </label>
           <textarea
             ref={textareaRef}
             className={`${SaleStyles.form.input} ${
@@ -737,7 +753,7 @@ const SaleHeader = ({
             placeholder="ที่อยู่"
             value={formData.contactDetails}
             onChange={handleContactDetailsChange}
-            required
+            required={!globalEditMode}
             disabled={readOnly || !globalEditMode}
             style={{
               minHeight: "38px",

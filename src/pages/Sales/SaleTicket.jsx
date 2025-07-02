@@ -395,8 +395,11 @@ const SaleTicket = () => {
         paymentStatus: "unpaid",
         createdBy: userId,
         updatedBy: userId,
-        bookingDate: formData.date,
-        dueDate: formData.dueDate,
+        bookingDate: formData.date || new Date().toISOString().split("T")[0],
+        dueDate:
+          formData.dueDate ||
+          formData.date ||
+          new Date().toISOString().split("T")[0], // ✅ ป้องกัน empty string
         creditDays: formData.creditDays,
         totalAmount: totalAmount,
         code: formData.code || "",
