@@ -129,28 +129,28 @@ const FlightTicketsView = () => {
     }
   };
 
-  // ฟังก์ชันแสดง Ticket Number จากผู้โดยสารคนแรก
-  const getTicketNumberDisplay = (ticket) => {
-    // ดึงข้อมูลผู้โดยสารคนแรกจาก firstPassengerTicketInfo ที่มีใน ticket object
-    if (ticket.firstPassengerTicketInfo) {
-      const { ticket_number, ticket_code } = ticket.firstPassengerTicketInfo;
+  // // ฟังก์ชันแสดง Ticket Number จากผู้โดยสารคนแรก
+  // const getTicketNumberDisplay = (ticket) => {
+  //   // ดึงข้อมูลผู้โดยสารคนแรกจาก firstPassengerTicketInfo ที่มีใน ticket object
+  //   if (ticket.firstPassengerTicketInfo) {
+  //     const { ticket_number, ticket_code } = ticket.firstPassengerTicketInfo;
 
-      // ถ้ามีทั้ง ticket_number และ ticket_code
-      if (ticket_number && ticket_code) {
-        return `${ticket_number}-${ticket_code}`;
-      }
-      // ถ้ามีแค่ ticket_number
-      else if (ticket_number) {
-        return ticket_number;
-      }
-      // ถ้ามีแค่ ticket_code
-      else if (ticket_code) {
-        return ticket_code;
-      }
-    }
+  //     // ถ้ามีทั้ง ticket_number และ ticket_code
+  //     if (ticket_number && ticket_code) {
+  //       return `${ticket_number}-${ticket_code}`;
+  //     }
+  //     // ถ้ามีแค่ ticket_number
+  //     else if (ticket_number) {
+  //       return ticket_number;
+  //     }
+  //     // ถ้ามีแค่ ticket_code
+  //     else if (ticket_code) {
+  //       return ticket_code;
+  //     }
+  //   }
 
-    return "-";
-  };
+  //   return "-";
+  // };
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -329,29 +329,22 @@ const FlightTicketsView = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                         {ticket.reference_number || "-"}
                       </td>
-                      <td className="px-2 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <User size={16} className="text-gray-400 mr-2" />
-                          <div className="text-sm font-medium text-gray-900">
-                            {ticket.customer?.code ||
-                              ticket.customer?.name ||
-                              "-"}
-                          </div>
+                      <td className="px-2 py-4 whitespace-nowrap text-center">
+                        <div className="text-sm font-medium text-gray-900">
+                          {ticket.customer?.code ||
+                            ticket.customer?.name ||
+                            "-"}
                         </div>
                       </td>
-                      <td className="px-2 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Plane size={16} className="text-gray-400 mr-2" />
-                          <div className="text-sm font-medium text-gray-900">
-                            {ticket.supplier?.code ||
-                              ticket.supplier?.name ||
-                              "-"}
-                          </div>
+                      <td className="px-2 py-4 whitespace-nowrap text-center">
+                        <div className="text-sm font-medium text-gray-900">
+                          {ticket.supplier?.code ||
+                            ticket.supplier?.name ||
+                            "-"}
                         </div>
                       </td>
-                      <td className="px-2 py-4 whitespace-nowrap">
+                      <td className="px-2 py-4 whitespace-nowrap text-center">
                         <div className="flex items-center">
-                          <Users size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
                             {ticket.passengersDisplay || "-"}
                           </div>
@@ -359,19 +352,14 @@ const FlightTicketsView = () => {
                       </td>
                       <td className="px-2 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <MapPin size={16} className="text-gray-400 mr-2" />
                           <div className="text-sm font-medium text-gray-900">
                             {ticket.routingDisplay || "-"}
                           </div>
                         </div>
                       </td>
-                      {/* เพิ่มเซลล์ TICKET NUMBER ใหม่ */}
-                      <td className="px-2 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Ticket size={16} className="text-gray-400 mr-2" />
-                          <div className="text-sm font-medium text-gray-900">
-                            {getTicketNumberDisplay(ticket)}
-                          </div>
+                      <td className="px-2 py-4  whitespace-nowrap ">
+                        <div className="text-sm font-medium text-gray-900">
+                          {ticket.ticketNumberDisplay || "-"}
                         </div>
                       </td>
                       <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">

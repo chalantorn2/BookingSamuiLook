@@ -154,14 +154,31 @@ export const useFlightTicketsData = ({
         // สร้างเส้นทาง (แสดงเฉพาะ 2 เส้นทางแรก)
         let routingDisplay = "";
         if (ticketRoutes.length > 0) {
-          if (ticketRoutes.length === 1) {
-            routingDisplay = ticketRoutes[0].origin || "";
-          } else {
-            const firstRoute = ticketRoutes[0];
-            const secondRoute = ticketRoutes[1];
-            routingDisplay = `${firstRoute.origin || ""}-${
-              secondRoute.origin || ""
-            }`;
+          const maxRoutes = Math.min(ticketRoutes.length, 5);
+          const origins = [];
+
+          for (let i = 0; i < maxRoutes; i++) {
+            if (ticketRoutes[i].origin) {
+              origins.push(ticketRoutes[i].origin);
+            }
+          }
+
+          routingDisplay = origins.join("-");
+        }
+
+        let ticketNumberDisplay = "-";
+        if (ticketPassengers.length > 0) {
+          const ticketCodes = ticketPassengers
+            .map((p) => p.ticket_code)
+            .filter((code) => code && code.trim() !== "");
+
+          if (ticketCodes.length === 1) {
+            ticketNumberDisplay = ticketCodes[0];
+          } else if (ticketCodes.length > 1) {
+            const firstCode = ticketCodes[0];
+            const lastCode = ticketCodes[ticketCodes.length - 1];
+            const lastThreeDigits = lastCode.slice(-3);
+            ticketNumberDisplay = `${firstCode}-${lastThreeDigits}`;
           }
         }
 
@@ -171,7 +188,8 @@ export const useFlightTicketsData = ({
           passengersDisplay,
           routingDisplay,
           passengersCount: ticketPassengers.length,
-          firstPassengerTicketInfo, // เพิ่มข้อมูล ticket ของผู้โดยสารคนแรก
+          ticketNumberDisplay, // เพิ่มฟิลด์ใหม่
+          firstPassengerTicketInfo,
         };
       });
 
