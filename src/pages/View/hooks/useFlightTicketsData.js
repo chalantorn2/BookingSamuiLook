@@ -29,17 +29,21 @@ export const useFlightTicketsData = ({
         .from("bookings_ticket")
         .select(
           `
-        id,
-        reference_number,
-        status,
-        payment_status,
-        created_at,
-        updated_at,
-        po_number,
-        po_generated_at,
-        customer:customer_id(name, code),
-        supplier:information_id(name, code)
-      `
+  id,
+  reference_number,
+  status,
+  payment_status,
+  created_at,
+  updated_at,
+  po_number,
+  po_generated_at,
+  cancelled_at,
+  cancelled_by,
+  cancel_reason,
+  customer:customer_id(name, code),
+  supplier:information_id(name, code),
+  cancelled_user:cancelled_by(fullname)
+`
         )
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString());
@@ -190,6 +194,7 @@ export const useFlightTicketsData = ({
           passengersCount: ticketPassengers.length,
           ticketNumberDisplay, // เพิ่มฟิลด์ใหม่
           firstPassengerTicketInfo,
+          cancelled_by_name: ticket.cancelled_user?.fullname,
         };
       });
 

@@ -5,6 +5,7 @@ import DateRangeSelector from "./components/DateRangeSelector";
 import ServiceTypeFilter from "./components/ServiceTypeFilter";
 import TransactionsTable from "./components/TransactionsTable";
 import { useOverviewData } from "./hooks/useOverviewData";
+import CancelledDetailsModal from "../View/components/CancelledDetailsModal";
 
 const Overview = () => {
   const getCurrentMonthRange = () => {
@@ -29,6 +30,8 @@ const Overview = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [showCancelledDetails, setShowCancelledDetails] = useState(false);
+  const [selectedCancelledTicket, setSelectedCancelledTicket] = useState(null);
 
   const { loading, filteredData, fetchData } = useOverviewData({
     startDate,
@@ -109,6 +112,10 @@ const Overview = () => {
             indexOfFirstItem={indexOfFirstItem}
             indexOfLastItem={indexOfLastItem}
             filteredData={filteredData}
+            showCancelledDetails={showCancelledDetails} // เพิ่ม
+            setShowCancelledDetails={setShowCancelledDetails} // เพิ่ม
+            selectedCancelledTicket={selectedCancelledTicket} // เพิ่ม
+            setSelectedCancelledTicket={setSelectedCancelledTicket} // เพิ่ม
           />
         </div>
       </div>

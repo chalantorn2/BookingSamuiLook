@@ -19,7 +19,7 @@ export const serviceTypes = [
 export const statusMap = {
   not_invoiced: { label: "Not Invoiced", color: "yellow" },
   invoiced: { label: "Invoiced", color: "green" },
-  // ลบ cancelled และ pending ออก
+  cancelled: { label: "Cancelled", color: "red" },
 };
 
 export const useOverviewData = ({
@@ -40,7 +40,7 @@ export const useOverviewData = ({
     totalAmount: 0,
     not_invoiced: 0,
     invoiced: 0,
-    // ลบ cancelled และ pending
+    cancelled: 0,
     flight: 0,
     boat: 0,
     bus: 0,
@@ -148,18 +148,22 @@ export const useOverviewData = ({
         .from("bookings_ticket")
         .select(
           `
-          id,
-          reference_number,
-          status,
-          created_at,
-          updated_at,
-          created_by,
-          po_number,
-          user:created_by(fullname),
-          customer:customer_id(name),
-          supplier:information_id(name),
-          tickets_detail(issue_date, total_price)
-        `
+    id,
+    reference_number,
+    status,
+    created_at,
+    updated_at,
+    created_by,
+    po_number,
+    cancelled_at,
+    cancelled_by,
+    cancel_reason,
+    user:created_by(fullname),
+    customer:customer_id(name),
+    supplier:information_id(name),
+    tickets_detail(issue_date, total_price),
+    cancelled_user:cancelled_by(fullname)
+  `
         )
         .gte("created_at", startISO)
         .lte("created_at", endISO);
@@ -205,14 +209,16 @@ export const useOverviewData = ({
           new Date(item.created_at).getTime() + 7 * 60 * 60 * 1000
         );
 
-        // ปรับสถานะให้เป็น not_invoiced หรือ invoiced เท่านั้น
-        let normalizedStatus = "not_invoiced"; // ค่าเริ่มต้น
+        // ปรับสถานะให้แสดงตามที่ได้จากฐานข้อมูล
+        let normalizedStatus = item.status; // ใช้สถานะจริงจากฐานข้อมูล
 
-        if (item.status === "confirmed" || item.status === "invoiced") {
-          normalizedStatus = "invoiced";
-        } else {
-          // สำหรับ pending, draft, หรือสถานะอื่นๆ ให้เป็น not_invoiced
-          normalizedStatus = "not_invoiced";
+        // ถ้าไม่ใช่ cancelled ให้ใช้ logic เดิม
+        if (item.status !== "cancelled") {
+          if (item.status === "confirmed" || item.status === "invoiced") {
+            normalizedStatus = "invoiced";
+          } else {
+            normalizedStatus = "not_invoiced";
+          }
         }
 
         return {
@@ -221,13 +227,16 @@ export const useOverviewData = ({
           date: issueDate || timestamp,
           customer: item.customer?.name || "N/A",
           supplier: item.supplier?.name || "N/A",
-          status: normalizedStatus,
+          status: normalizedStatus, // ใช้สถานะที่ปรับแล้ว
           createdBy: item.user?.fullname || "System",
           timestamp: timestamp,
           serviceType: serviceType,
           amount: amount,
-          po_number: item.po_number, // เพิ่มบรรทัดนี้
-          po_generated_at: item.po_generated_at, // เพิ่มบรรทัดนี้
+          po_number: item.po_number,
+          po_generated_at: item.po_generated_at,
+          cancelled_at: item.cancelled_at,
+          cancel_reason: item.cancel_reason,
+          cancelled_by_name: item.cancelled_user?.fullname || null,
         };
       });
 
@@ -306,6 +315,7 @@ export const useOverviewData = ({
         // นับเฉพาะสถานะ not_invoiced และ invoiced
         if (item.status === "not_invoiced") summary.not_invoiced++;
         else if (item.status === "invoiced") summary.invoiced++;
+        else if (item.status === "cancelled") summary.cancelled++;
 
         if (
           item.serviceType &&
@@ -321,7 +331,7 @@ export const useOverviewData = ({
         totalAmount: 0,
         not_invoiced: 0,
         invoiced: 0,
-        // ลบ cancelled และ pending
+        cancelled: 0,
         flight: 0,
         boat: 0,
         bus: 0,

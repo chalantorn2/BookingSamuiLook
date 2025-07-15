@@ -24,8 +24,11 @@ import ExtrasSection from "../../Sales/ticket/ExtrasSection";
 import PricingSummarySection from "../../Sales/ticket/PricingSummarySection";
 import SaleHeader from "../../Sales/common/SaleHeader";
 import { formatCustomerAddress } from "../../../utils/helpers";
+import CancelReasonModal from "./CancelReasonModal";
+import { useAuth } from "../../Login/AuthContext";
 
 const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
+  const { user } = useAuth();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [globalEditMode, setGlobalEditMode] = useState(false);
   const showAlert = useAlertDialogContext();
@@ -35,6 +38,8 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // Use same pricing hook as SaleTicket
   const { pricing, updatePricing, calculateSubtotal, calculateTotal } =
@@ -448,6 +453,33 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
     (calculatedSubtotal * parseFloat(formData.vatPercent || 0)) / 100;
   const calculatedTotal = calculatedSubtotal + calculatedVatAmount;
 
+  // เพิ่มฟังก์ชันนี้ก่อน handleSubmit
+  const updateCustomerData = async () => {
+    if (!selectedCustomer?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from("customers")
+        .update({
+          name: formData.customer?.toUpperCase() || "",
+          code: formData.customerCode?.toUpperCase() || null,
+          address_line1: formData.contactDetails?.toUpperCase() || "",
+          phone: formData.phone?.toUpperCase() || "",
+          id_number: formData.id || "",
+          branch_type: formData.branchType || "Head Office",
+          branch_number: formData.branchNumber || null,
+          credit_days: parseInt(formData.creditDays) || 0,
+        })
+        .eq("id", selectedCustomer.id);
+
+      if (error) throw error;
+      console.log("Customer data updated successfully");
+    } catch (err) {
+      console.error("Error updating customer:", err);
+      // ไม่ต้อง throw error เพราะไม่ต้องการให้หยุดการบันทึก ticket
+    }
+  };
+
   // Save changes with confirmation
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -465,6 +497,7 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
     setSaving(true);
 
     try {
+      await updateCustomerData();
       // Update tickets_detail
       await supabase
         .from("tickets_detail")
@@ -615,66 +648,47 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
   };
 
   // Delete ticket
-  const handleDelete = async () => {
-    const confirmed = await showAlert({
-      title: "ยืนยันการลบตั๋ว",
-      description: `คุณต้องการลบตั๋วเครื่องบินรหัส ${ticketData.reference_number} ใช่หรือไม่?`,
-      confirmText: "ลบถาวร",
-      cancelText: "ยกเลิก",
-      actionVariant: "destructive",
-    });
-
-    if (!confirmed) return;
-
-    setDeleting(true);
+  const handleCancel = async (reason) => {
+    setCancelling(true);
     try {
-      // Delete all related records
-      await Promise.all([
-        supabase
-          .from("tickets_passengers")
-          .delete()
-          .eq("bookings_ticket_id", ticketId),
-        supabase
-          .from("tickets_routes")
-          .delete()
-          .eq("bookings_ticket_id", ticketId),
-        supabase
-          .from("tickets_extras")
-          .delete()
-          .eq("bookings_ticket_id", ticketId),
-        supabase
-          .from("tickets_pricing")
-          .delete()
-          .eq("bookings_ticket_id", ticketId),
-        supabase
-          .from("tickets_detail")
-          .delete()
-          .eq("bookings_ticket_id", ticketId),
-        supabase
-          .from("ticket_additional_info")
-          .delete()
-          .eq("bookings_ticket_id", ticketId),
-      ]);
+      // ดึงข้อมูล user ปัจจุบันจาก AuthContext แทน supabase.auth
+      const currentUserId = user?.id; // ใช้จาก useAuth()
 
-      await supabase.from("bookings_ticket").delete().eq("id", ticketId);
+      if (!currentUserId) {
+        throw new Error("ไม่พบข้อมูลผู้ใช้งาน");
+      }
 
-      await showAlert({
-        title: "ลบข้อมูลสำเร็จ",
-        description: `ตั๋วเครื่องบินรหัส ${ticketData.reference_number} ถูกลบออกจากระบบแล้ว`,
-        confirmText: "ตกลง",
-      });
+      // Update ticket status to cancelled
+      const { error } = await supabase
+        .from("bookings_ticket")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: currentUserId, // ใช้ user id จาก context
+          cancel_reason: reason,
+        })
+        .eq("id", ticketId);
 
+      if (error) throw error;
+
+      // await showAlert({
+      //   title: "ยกเลิกตั๋วสำเร็จ",
+      //   description: `ตั๋วเครื่องบินรหัส ${ticketData.reference_number} ถูกยกเลิกแล้ว`,
+      //   confirmText: "ตกลง",
+      // });
+
+      setShowCancelModal(false);
       onSave?.();
       onClose();
     } catch (err) {
       setError(err.message);
       await showAlert({
         title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถลบข้อมูลได้: " + err.message,
+        description: "ไม่สามารถยกเลิกตั๋วได้: " + err.message,
         confirmText: "ตกลง",
       });
     } finally {
-      setDeleting(false);
+      setCancelling(false);
     }
   };
 
@@ -794,9 +808,10 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                   section="customer"
                   selectedCustomer={selectedCustomer}
                   setSelectedCustomer={setSelectedCustomer}
-                  globalEditMode={globalEditMode}
+                  globalEditMode={true} // เปลี่ยนเป็น true เพื่อให้แก้ไขได้
                   setGlobalEditMode={setGlobalEditMode}
-                  readOnly={true} // true เพื่อให้เป็น readonly
+                  readOnly={false} // เปลี่ยนเป็น false เพื่อให้แก้ไขได้
+                  isEditMode={true} // เพิ่ม prop ใหม่
                 />
               </div>
               <div>
@@ -953,12 +968,12 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
           <div className="bg-gray-50 px-6 py-4 border-t flex justify-between items-center shrink-0">
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setShowCancelModal(true)}
               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
-              disabled={saving || deleting}
+              disabled={saving || cancelling}
             >
               <Trash2 size={16} className="mr-2" />
-              {deleting ? "กำลังลบ..." : "ลบรายการ"}
+              {cancelling ? "กำลังยกเลิก..." : "ยกเลิกรายการ"}
             </button>
 
             <div className="flex space-x-3">
@@ -984,6 +999,14 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
           </div>
         </form>
       </div>
+      {/* Cancel Reason Modal */}
+      <CancelReasonModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancel}
+        ticketNumber={ticketData?.reference_number}
+        loading={cancelling}
+      />
     </div>
   );
 };

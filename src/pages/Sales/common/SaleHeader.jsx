@@ -21,6 +21,7 @@ const SaleHeader = ({
   globalEditMode,
   setGlobalEditMode,
   readOnly = false,
+  isEditMode = false,
 }) => {
   const { user: currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,6 +29,8 @@ const SaleHeader = ({
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [codeSearchResults, setCodeSearchResults] = useState([]);
+  const [showCodeResults, setShowCodeResults] = useState(false);
   const [dueDateError, setDueDateError] = useState("");
   const [tempDueDate, setTempDueDate] = useState("");
   const today = new Date().toISOString().split("T")[0];
@@ -83,6 +86,25 @@ const SaleHeader = ({
     return "";
   };
 
+  const handleCustomerCodeSearch = async (e) => {
+    const value = e.target.value.toUpperCase().substring(0, 5);
+    setFormData({ ...formData, customerCode: value });
+
+    if (value.length >= 1 && !readOnly) {
+      try {
+        const results = await getCustomers(value, 3);
+        setCodeSearchResults(results);
+        setShowCodeResults(results.length > 0);
+      } catch (err) {
+        console.error("Error searching by code:", err);
+        setShowCodeResults(false);
+      }
+    } else {
+      setCodeSearchResults([]);
+      setShowCodeResults(false);
+    }
+  };
+
   const debouncedSearch = useCallback(
     debounce(async (term) => {
       if (term.length >= 1) {
@@ -102,7 +124,7 @@ const SaleHeader = ({
         setSearchResults([]);
         setShowResults(false);
       }
-    }, 300),
+    }, 150),
     []
   );
 
@@ -130,10 +152,18 @@ const SaleHeader = ({
       branchNumber: customer.branch_number || "",
       salesName: currentUser?.fullname || formData.salesName,
     });
+
     setSearchTerm("");
     setShowResults(false);
+
+    // เพิ่มบรรทัดเหล่านี้เพื่อซ่อน dropdown ของ Customer Code
+    setCodeSearchResults([]);
+    setShowCodeResults(false);
+
     setTempDueDate(formatDate(dueDate));
-    setGlobalEditMode(false);
+    if (!isEditMode) {
+      setGlobalEditMode(false);
+    }
   };
 
   const clearSearch = (e) => {
@@ -142,6 +172,9 @@ const SaleHeader = ({
     setShowResults(false);
     setSearchResults([]);
     setSelectedCustomer(null);
+
+    setCodeSearchResults([]);
+    setShowCodeResults(false);
 
     setFormData({
       ...formData,
@@ -194,7 +227,9 @@ const SaleHeader = ({
   const handleCustomerNameChange = (e) => {
     const value = e.target.value;
     setFormData({ ...formData, customer: value });
-    if (!globalEditMode && value.length > 1) {
+
+    // แก้จาก value.length > 1 เป็น value.length >= 1
+    if (!readOnly && value.length >= 1) {
       handleSearchCustomer(value);
     }
   };
@@ -376,97 +411,160 @@ const SaleHeader = ({
     }
   }, [formData.contactDetails]);
 
+  // เพิ่ม useEffect นี้เพื่อปิด dropdown เมื่อคลิกข้างนอก
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // ถ้าคลิกข้างนอก dropdown ให้ปิด
+      if (
+        !event.target.closest(".information-dropdown") &&
+        !event.target.closest("input")
+      ) {
+        setShowResults(false);
+        setShowCodeResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (section === "customer") {
     return (
       <div className="space-y-4">
-        <div>
-          {!readOnly && ( // เพิ่มเงื่อนไขนี้
-            <div className="flex justify-between">
-              <label className={SaleStyles.form.labelRequired}>
-                Customer Name
-              </label>
-              <button
-                type="button"
-                className="px-2 text-xs text-blue-600 hover:text-blue-800"
-                onClick={toggleEditMode}
-              >
-                {globalEditMode ? "ค้นหาลูกค้าที่มีอยู่" : "กรอกข้อมูลเอง"}
-              </button>
-            </div>
-          )}{" "}
-          {/* ปิดเงื่อนไข */}
-          {readOnly && ( // เพิ่มกรณี readOnly
-            <label className={SaleStyles.form.labelRequired}>
-              Customer Name
-            </label>
-          )}
-          <div className="relative">
-            <input
-              type="text"
-              className={SaleStyles.form.input}
-              value={formData.customer}
-              onChange={handleCustomerNameChange}
-              required
-              placeholder="ชื่อลูกค้า"
-              disabled={readOnly || false}
-            />
-            {formData.customer && !readOnly && (
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={clearSearch}
-              >
-                <FiX className="text-gray-400 hover:text-gray-600" />
-              </button>
-            )}
-            {!readOnly && showResults && searchResults.length > 0 && (
-              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
-                {isLoading ? (
-                  <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
-                ) : error ? (
-                  <div className="px-4 py-2 text-red-500">{error}</div>
-                ) : (
+        {/* Customer Code และ Customer Name - อยู่บรรทัดเดียวกัน */}
+        <div className="grid grid-cols-10 gap-2">
+          {/* Customer Code - 2 คอลัมน์ */}
+          <div className="col-span-2">
+            <label className={SaleStyles.form.label}>Customer Code</label>
+            <div className="relative">
+              <input
+                type="text"
+                className={SaleStyles.form.input}
+                value={formData.customerCode}
+                onChange={handleCustomerCodeSearch}
+                placeholder="รหัสลูกค้า"
+                maxLength={5}
+                disabled={readOnly}
+              />
+              {!readOnly && showCodeResults && codeSearchResults.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
                   <ul>
-                    {searchResults.map((customer) => (
+                    {codeSearchResults.map((customer) => (
                       <li
                         key={customer.id}
                         className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col"
                         onClick={() => selectCustomer(customer)}
                       >
                         <span className="font-medium">
-                          {customer.name}{" "}
-                          {customer.code ? `[${customer.code}] ` : ""}
+                          [{customer.code}] {customer.name}
                         </span>
                         <span className="text-sm text-gray-500">
                           {formatCustomerAddress(customer) || "ไม่มีที่อยู่"}
                         </span>
-                        {customer.phone && (
-                          <span className="text-sm text-gray-500">
-                            โทร: {customer.phone}
-                          </span>
-                        )}
-                        {customer.email /* เพิ่มการแสดง email */ && (
-                          <span className="text-sm text-gray-500">
-                            อีเมล: {customer.email}
-                          </span>
-                        )}
-                        {customer.credit_days > 0 && (
-                          <span className="text-sm text-blue-500">
-                            เครดิต: {customer.credit_days} วัน
-                          </span>
-                        )}
-                        {customer.branch_type === "Branch" &&
-                          customer.branch_number && (
-                            <span className="text-sm text-purple-500">
-                              {customer.branch_type} {customer.branch_number}
-                            </span>
-                          )}
                       </li>
                     ))}
                   </ul>
-                )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Customer Name - 8 คอลัมน์ */}
+          <div className="col-span-8">
+            {!readOnly && !isEditMode && (
+              <div className="flex justify-between">
+                <label className={SaleStyles.form.labelRequired}>
+                  Customer Name
+                </label>
+                <button
+                  type="button"
+                  className="px-2 text-xs text-blue-600 hover:text-blue-800"
+                  onClick={toggleEditMode}
+                >
+                  {globalEditMode ? "ค้นหาลูกค้าที่มีอยู่" : "กรอกข้อมูลเอง"}
+                </button>
               </div>
             )}
+            {!readOnly && isEditMode && (
+              <label className={SaleStyles.form.labelRequired}>
+                Customer Name
+              </label>
+            )}
+            {readOnly && (
+              <label className={SaleStyles.form.labelRequired}>
+                Customer Name
+              </label>
+            )}
+            <div className="relative">
+              <input
+                type="text"
+                className={SaleStyles.form.input}
+                value={formData.customer}
+                onChange={handleCustomerNameChange}
+                required
+                placeholder="ชื่อลูกค้า"
+                disabled={readOnly || false}
+              />
+              {formData.customer && !readOnly && (
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={clearSearch}
+                >
+                  <FiX className="text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
+              {!readOnly && showResults && searchResults.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
+                  {isLoading ? (
+                    <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
+                  ) : error ? (
+                    <div className="px-4 py-2 text-red-500">{error}</div>
+                  ) : (
+                    <ul>
+                      {searchResults.map((customer) => (
+                        <li
+                          key={customer.id}
+                          className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col"
+                          onClick={() => selectCustomer(customer)}
+                        >
+                          <span className="font-medium">
+                            {customer.name}{" "}
+                            {customer.code ? `[${customer.code}] ` : ""}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {formatCustomerAddress(customer) || "ไม่มีที่อยู่"}
+                          </span>
+                          {customer.phone && (
+                            <span className="text-sm text-gray-500">
+                              โทร: {customer.phone}
+                            </span>
+                          )}
+                          {customer.email && (
+                            <span className="text-sm text-gray-500">
+                              อีเมล: {customer.email}
+                            </span>
+                          )}
+                          {customer.credit_days > 0 && (
+                            <span className="text-sm text-blue-500">
+                              เครดิต: {customer.credit_days} วัน
+                            </span>
+                          )}
+                          {customer.branch_type === "Branch" &&
+                            customer.branch_number && (
+                              <span className="text-sm text-purple-500">
+                                {customer.branch_type} {customer.branch_number}
+                              </span>
+                            )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-5 gap-2">
@@ -659,70 +757,110 @@ const SaleHeader = ({
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className={SaleStyles.form.labelRequired}>Customer Name</label>
-        <div className="relative">
-          <input
-            type="text"
-            className={SaleStyles.form.input}
-            value={formData.customer}
-            onChange={handleCustomerNameChange}
-            required
-            placeholder="ชื่อลูกค้า"
-            disabled={readOnly || false}
-          />
-          {formData.customer && (
-            <button
-              type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              onClick={clearSearch}
-            >
-              <FiX className="text-gray-400 hover:text-gray-600" />
-            </button>
-          )}
-          {showResults && searchResults.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
-              {isLoading ? (
-                <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
-              ) : error ? (
-                <div className="px-4 py-2 text-red-500">{error}</div>
-              ) : (
+      {/* Customer Code และ Customer Name - อยู่บรรทัดเดียวกัน */}
+      <div className="grid grid-cols-10 gap-2">
+        {/* Customer Code - 2 คอลัมน์ */}
+        <div className="col-span-2">
+          <label className={SaleStyles.form.label}>Customer Code</label>
+          <div className="relative">
+            <input
+              type="text"
+              className={SaleStyles.form.input}
+              value={formData.customerCode}
+              onChange={handleCustomerCodeSearch}
+              placeholder="รหัสลูกค้า"
+              maxLength={5}
+              disabled={readOnly}
+            />
+            {!readOnly && showCodeResults && codeSearchResults.length > 0 && (
+              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
                 <ul>
-                  {searchResults.map((customer) => (
+                  {codeSearchResults.map((customer) => (
                     <li
                       key={customer.id}
                       className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col"
                       onClick={() => selectCustomer(customer)}
                     >
                       <span className="font-medium">
-                        {customer.code ? `[${customer.code}] ` : ""}
-                        {customer.name}
+                        [{customer.code}] {customer.name}
                       </span>
                       <span className="text-sm text-gray-500">
-                        {customer.address || "ไม่มีที่อยู่"}
+                        {formatCustomerAddress(customer) || "ไม่มีที่อยู่"}
                       </span>
-                      {customer.phone && (
-                        <span className="text-sm text-gray-500">
-                          โทร: {customer.phone}
-                        </span>
-                      )}
-                      {customer.credit_days > 0 && (
-                        <span className="text-sm text-blue-500">
-                          เครดิต: {customer.credit_days} วัน
-                        </span>
-                      )}
-                      {customer.branch_type === "Branch" &&
-                        customer.branch_number && (
-                          <span className="text-sm text-purple-500">
-                            {customer.branch_type} {customer.branch_number}
-                          </span>
-                        )}
                     </li>
                   ))}
                 </ul>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Customer Name - 8 คอลัมน์ */}
+        <div className="col-span-8">
+          <label className={SaleStyles.form.labelRequired}>Customer Name</label>
+          <div className="relative">
+            <input
+              type="text"
+              className={SaleStyles.form.input}
+              value={formData.customer}
+              onChange={handleCustomerNameChange}
+              required
+              placeholder="ชื่อลูกค้า"
+              disabled={readOnly || false}
+            />
+            {formData.customer && (
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={clearSearch}
+              >
+                <FiX className="text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+            {!readOnly && showResults && searchResults.length > 0 && (
+              <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-y-auto information-dropdown">
+                {isLoading ? (
+                  <div className="px-4 py-2 text-gray-500">กำลังค้นหา...</div>
+                ) : error ? (
+                  <div className="px-4 py-2 text-red-500">{error}</div>
+                ) : (
+                  <ul>
+                    {searchResults.map((customer) => (
+                      <li
+                        key={customer.id}
+                        className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col"
+                        onClick={() => selectCustomer(customer)}
+                      >
+                        <span className="font-medium">
+                          {customer.code ? `[${customer.code}] ` : ""}
+                          {customer.name}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {customer.address || "ไม่มีที่อยู่"}
+                        </span>
+                        {customer.phone && (
+                          <span className="text-sm text-gray-500">
+                            โทร: {customer.phone}
+                          </span>
+                        )}
+                        {customer.credit_days > 0 && (
+                          <span className="text-sm text-blue-500">
+                            เครดิต: {customer.credit_days} วัน
+                          </span>
+                        )}
+                        {customer.branch_type === "Branch" &&
+                          customer.branch_number && (
+                            <span className="text-sm text-purple-500">
+                              {customer.branch_type} {customer.branch_number}
+                            </span>
+                          )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
           <div className="mt-1 text-right">
             <button
               type="button"

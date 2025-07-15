@@ -27,10 +27,21 @@ export const getCustomers = async (search = "", limit = 10) => {
       .order("name");
 
     if (search) {
-      // เพิ่มการค้นหาด้วยรหัส (code) และ email
-      query = query.or(
-        `name.ilike.%${search}%,code.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,address_line1.ilike.%${search}%`
-      );
+      // ตรวจสอบว่าเป็นการค้นหาด้วย code หรือไม่
+      const isCodeSearch = search.length <= 5 && /^[A-Za-z0-9]+$/.test(search);
+
+      if (isCodeSearch) {
+        // ถ้าเป็นการค้นหาด้วย code ให้จำกัดผลลัพธ์และเรียงตามวันที่ล่าสุด
+        query = query
+          .eq("code", search.toUpperCase())
+          .order("created_at", { ascending: false })
+          .limit(3);
+      } else {
+        // การค้นหาปกติ
+        query = query.or(
+          `name.ilike.%${search}%,code.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,address_line1.ilike.%${search}%`
+        );
+      }
     }
 
     if (limit) {

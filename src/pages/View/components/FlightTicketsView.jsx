@@ -20,6 +20,7 @@ import FlightStatusFilter from "./FlightStatusFilter";
 import FlightTicketDetail from "./FlightTicketDetail";
 import { useFlightTicketsData } from "../hooks/useFlightTicketsData";
 import FlightTicketDetail_Edit from "./FlightTicketDetail_Edit";
+import CancelledDetailsModal from "./CancelledDetailsModal";
 
 const FlightTicketsView = () => {
   const formatDateTime = (dateTime) => {
@@ -58,6 +59,8 @@ const FlightTicketsView = () => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [selectedTicketForEdit, setSelectedTicketForEdit] = useState(null);
+  const [showCancelledDetails, setShowCancelledDetails] = useState(false);
+  const [selectedCancelledTicket, setSelectedCancelledTicket] = useState(null);
 
   const openTicketEditDetail = (ticketId) => {
     setSelectedTicketForEdit(ticketId);
@@ -109,9 +112,31 @@ const FlightTicketsView = () => {
     }
   };
 
-  // ฟังก์ชันแสดงสถานะ - แสดง PO Number หรือ Not Invoiced
   const getStatusDisplay = (ticket) => {
-    // แสดง PO Number ถ้ามี หรือแสดง Not Invoiced ถ้าไม่มี
+    // ตรวจสอบสถานะยกเลิก
+    if (ticket.status === "cancelled") {
+      return (
+        <button
+          onClick={() => {
+            setSelectedCancelledTicket({
+              referenceNumber: ticket.reference_number,
+              cancelledAt: ticket.cancelled_at,
+              cancelledBy: ticket.cancelled_by_name,
+              cancelReason: ticket.cancel_reason,
+              poNumber: ticket.po_number,
+              customer: ticket.customer?.name,
+              supplier: ticket.supplier?.name,
+            });
+            setShowCancelledDetails(true);
+          }}
+          className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+        >
+          Cancelled
+        </button>
+      );
+    }
+
+    // แสดง PO Number หรือ Not Invoiced สำหรับสถานะปกติ
     if (ticket.po_number && ticket.po_number.trim() !== "") {
       return (
         <div className="flex items-center">
@@ -128,29 +153,6 @@ const FlightTicketsView = () => {
       );
     }
   };
-
-  // // ฟังก์ชันแสดง Ticket Number จากผู้โดยสารคนแรก
-  // const getTicketNumberDisplay = (ticket) => {
-  //   // ดึงข้อมูลผู้โดยสารคนแรกจาก firstPassengerTicketInfo ที่มีใน ticket object
-  //   if (ticket.firstPassengerTicketInfo) {
-  //     const { ticket_number, ticket_code } = ticket.firstPassengerTicketInfo;
-
-  //     // ถ้ามีทั้ง ticket_number และ ticket_code
-  //     if (ticket_number && ticket_code) {
-  //       return `${ticket_number}-${ticket_code}`;
-  //     }
-  //     // ถ้ามีแค่ ticket_number
-  //     else if (ticket_number) {
-  //       return ticket_number;
-  //     }
-  //     // ถ้ามีแค่ ticket_code
-  //     else if (ticket_code) {
-  //       return ticket_code;
-  //     }
-  //   }
-
-  //   return "-";
-  // };
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -377,13 +379,17 @@ const FlightTicketsView = () => {
                           >
                             <Eye size={18} />
                           </button>
-                          <button
-                            className="text-yellow-600 hover:text-yellow-900"
-                            onClick={() => openTicketEditDetail(ticket.id)}
-                            title="Edit"
-                          >
-                            <Edit2 size={18} />
-                          </button>
+
+                          {/* แสดงปุ่ม Edit เฉพาะตั๋วที่ไม่ใช่สถานะ cancelled */}
+                          {ticket.status !== "cancelled" && (
+                            <button
+                              className="text-yellow-600 hover:text-yellow-900"
+                              onClick={() => openTicketEditDetail(ticket.id)}
+                              title="Edit"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -510,6 +516,15 @@ const FlightTicketsView = () => {
           }}
         />
       )}
+      {/* Cancelled Details Modal */}
+      <CancelledDetailsModal
+        isOpen={showCancelledDetails}
+        onClose={() => {
+          setShowCancelledDetails(false);
+          setSelectedCancelledTicket(null);
+        }}
+        cancelledData={selectedCancelledTicket}
+      />
     </div>
   );
 };

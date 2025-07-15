@@ -2,6 +2,7 @@ import React from "react";
 import { Activity, Clock, User, Building, Shield } from "lucide-react";
 // import { StatusBadge } from "./StatusBadges";
 import Pagination from "./Pagination";
+import CancelledDetailsModal from "../../View/components/CancelledDetailsModal";
 
 const TransactionsTable = ({
   loading,
@@ -17,6 +18,10 @@ const TransactionsTable = ({
   indexOfFirstItem,
   indexOfLastItem,
   filteredData,
+  showCancelledDetails, // เพิ่ม
+  setShowCancelledDetails, // เพิ่ม
+  selectedCancelledTicket, // เพิ่ม
+  setSelectedCancelledTicket, // เพิ่ม
 }) => {
   const handleSort = (field) => {
     if (sortField === field) {
@@ -49,6 +54,30 @@ const TransactionsTable = ({
   };
 
   const getStatusDisplay = (item) => {
+    // ตรวจสอบสถานะยกเลิก
+    if (item.status === "cancelled") {
+      return (
+        <button
+          onClick={() => {
+            setSelectedCancelledTicket({
+              referenceNumber: item.referenceNumber,
+              cancelledAt: item.cancelled_at,
+              cancelledBy: item.cancelled_by_name,
+              cancelReason: item.cancel_reason,
+              poNumber: item.po_number,
+              customer: item.customer,
+              supplier: item.supplier,
+            });
+            setShowCancelledDetails(true);
+          }}
+          className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+        >
+          Cancelled
+        </button>
+      );
+    }
+
+    // แสดง PO Number หรือ Not Invoiced สำหรับสถานะปกติ
     if (item.po_number && item.po_number.trim() !== "") {
       return (
         <div className="flex items-center justify-center">
@@ -207,6 +236,14 @@ const TransactionsTable = ({
           )}
         </div>
       )}
+      <CancelledDetailsModal
+        isOpen={showCancelledDetails}
+        onClose={() => {
+          setShowCancelledDetails(false);
+          setSelectedCancelledTicket(null);
+        }}
+        cancelledData={selectedCancelledTicket}
+      />
     </div>
   );
 };

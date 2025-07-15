@@ -430,6 +430,20 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
   };
 
   const getStatusBadge = (status, poNumber, poGeneratedAt) => {
+    // ตรวจสอบสถานะยกเลิกก่อน
+    if (status === "cancelled") {
+      return (
+        <div className="flex items-center">
+          <AlertTriangle className="text-red-500 mr-2" size={18} />
+          <div>
+            <div className="text-base font-medium text-red-800">Cancelled</div>
+            <div className="text-sm text-red-600">ตั๋วถูกยกเลิกแล้ว</div>
+          </div>
+        </div>
+      );
+    }
+
+    // สำหรับสถานะปกติ
     if (poNumber) {
       return (
         <div className="flex items-center">
@@ -500,33 +514,37 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
               {ticketData.reference_number || `#${ticketData.id}`}
             </h1>
             <div className="flex items-center space-x-2">
-              {/* ปุ่มพิมพ์เดิม */}
-              <button
-                className="p-2 hover:bg-blue-700 rounded-md transition-colors"
-                title="พิมพ์ (แบบเดิม)"
-                onClick={handlePrintClick}
-              >
-                <Printer size={20} />
-              </button>
+              {ticketData.status !== "cancelled" && (
+                <button
+                  className="p-2 hover:bg-blue-700 rounded-md transition-colors"
+                  title="พิมพ์ (แบบเดิม)"
+                  onClick={handlePrintClick}
+                >
+                  <Printer size={20} />
+                </button>
+              )}
 
-              <button
-                className={`p-2 rounded-md transition-colors ${
-                  ticketData.po_number && ticketData.po_number.trim() !== ""
-                    ? "hover:bg-blue-700"
-                    : "opacity-50 cursor-not-allowed"
-                }`}
-                title={
-                  ticketData.po_number && ticketData.po_number.trim() !== ""
-                    ? "ส่งอีเมล"
-                    : "ต้องออกเลข PO ก่อนส่งอีเมล"
-                }
-                onClick={handleEmailClick}
-                disabled={
-                  !ticketData.po_number || ticketData.po_number.trim() === ""
-                }
-              >
-                <Mail size={20} />
-              </button>
+              {/* ปุ่มส่งอีเมล - ซ่อนถ้าสถานะเป็น cancelled */}
+              {ticketData.status !== "cancelled" && (
+                <button
+                  className={`p-2 rounded-md transition-colors ${
+                    ticketData.po_number && ticketData.po_number.trim() !== ""
+                      ? "hover:bg-blue-700"
+                      : "opacity-50 cursor-not-allowed"
+                  }`}
+                  title={
+                    ticketData.po_number && ticketData.po_number.trim() !== ""
+                      ? "ส่งอีเมล"
+                      : "ต้องออกเลข PO ก่อนส่งอีเมล"
+                  }
+                  onClick={handleEmailClick}
+                  disabled={
+                    !ticketData.po_number || ticketData.po_number.trim() === ""
+                  }
+                >
+                  <Mail size={20} />
+                </button>
+              )}
 
               <button
                 onClick={onClose}
@@ -856,7 +874,7 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
             </div>
 
             <div className="flex space-x-3">
-              {onEdit && (
+              {onEdit && ticketData.status !== "cancelled" && (
                 <button
                   onClick={() => onEdit(ticketData.id)}
                   className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors flex items-center text-sm font-medium"
