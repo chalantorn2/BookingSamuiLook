@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import SaleStyles, { combineClasses } from "../common/SaleStyles";
 import { formatNumber, parseInput } from "../common/FormatNumber";
 
 const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
+  const inputRefs = useRef([]);
   const addExtra = () => {
     if (readOnly) return;
+    const newExtraIndex = extras.length;
     setExtras([
       ...extras,
       {
@@ -17,6 +19,13 @@ const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
         total_amount: "",
       },
     ]);
+    setTimeout(() => {
+      const descriptionInput =
+        inputRefs.current[`description-${newExtraIndex}`];
+      if (descriptionInput) {
+        descriptionInput.focus();
+      }
+    }, 100);
   };
 
   const removeExtra = (id) => {
@@ -137,6 +146,7 @@ const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
                   onChange={(e) =>
                     handleDescriptionChange(index, e.target.value)
                   }
+                  ref={(el) => (inputRefs.current[`description-${index}`] = el)}
                   disabled={readOnly}
                 />
               </div>

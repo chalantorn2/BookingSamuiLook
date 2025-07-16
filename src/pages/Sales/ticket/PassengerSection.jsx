@@ -58,13 +58,24 @@ const PassengerSection = ({
       id: passengers.length + 1,
       name: "",
       type: "ADT",
-      ticketNumber: formData.supplierNumericCode || "", // ใช้เลขจาก supplier
+      ticketNumber: formData.supplierNumericCode || "",
       ticketCode: "",
     };
 
     const updatedPassengers = [...passengers, newPassenger];
     setPassengers(updatedPassengers);
     updatePassengerCount(updatedPassengers);
+
+    // ✅ เพิ่มส่วนนี้ - ให้ cursor ไปที่ชื่อผู้โดยสารคนใหม่
+    setTimeout(() => {
+      const newPassengerIndex = updatedPassengers.length - 1;
+      const nameInput = document.querySelector(
+        `input[data-passenger-name="${newPassengerIndex}"]`
+      );
+      if (nameInput) {
+        nameInput.focus();
+      }
+    }, 100);
   };
 
   const removePassenger = (id) => {
@@ -102,6 +113,18 @@ const PassengerSection = ({
       ...prev,
       supplierNumericCode: cleanValue,
     }));
+
+    // ✅ เพิ่มส่วนนี้ - ถ้าพิมพ์ครบ 3 หลัก ให้ cursor เด้งไป ticketCode
+    if (cleanValue.length === 3) {
+      setTimeout(() => {
+        const ticketCodeInput = document.querySelector(
+          'input[data-passenger-ticketcode="0"]'
+        );
+        if (ticketCodeInput) {
+          ticketCodeInput.focus();
+        }
+      }, 100);
+    }
 
     // ถ้าลบเลขออกหมด ให้ clear supplier info
     if (cleanValue === "") {
@@ -175,6 +198,7 @@ const PassengerSection = ({
                     updatedPassengers[index].name = e.target.value;
                     setPassengers(updatedPassengers);
                   }}
+                  data-passenger-name={index}
                   disabled={readOnly}
                 />
               </div>
@@ -237,6 +261,7 @@ const PassengerSection = ({
                     updatedPassengers[index].ticketCode = e.target.value;
                     setPassengers(updatedPassengers);
                   }}
+                  data-passenger-ticketcode={index}
                   disabled={readOnly}
                 />
               </div>

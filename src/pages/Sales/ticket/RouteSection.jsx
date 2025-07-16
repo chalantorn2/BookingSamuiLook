@@ -13,6 +13,7 @@ const RouteSection = ({
 
   const addRoute = () => {
     if (readOnly) return;
+    const newRouteIndex = routes.length;
     setRoutes([
       ...routes,
       {
@@ -26,6 +27,12 @@ const RouteSection = ({
         arrival: "",
       },
     ]);
+    setTimeout(() => {
+      const flightInput = inputRefs.current[`${newRouteIndex}-flight`];
+      if (flightInput) {
+        flightInput.focus();
+      }
+    }, 100);
   };
 
   const removeRoute = (id) => {
