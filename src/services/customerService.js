@@ -92,22 +92,13 @@ export const getCustomerById = async (id) => {
 export const createCustomer = async (customerData) => {
   try {
     // ตรวจสอบรหัสลูกค้า
+
     if (customerData.code) {
       // ตรวจสอบความยาว 3-5 ตัว
       if (customerData.code.length < 3 || customerData.code.length > 5) {
         return { success: false, error: "รหัสลูกค้าต้องเป็น 3-5 ตัวอักษร" };
       }
-
-      // ตรวจสอบว่ามีรหัสซ้ำหรือไม่
-      const { data: existingCustomer } = await supabase
-        .from("customers")
-        .select("*")
-        .eq("code", customerData.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
-        .eq("active", true);
-
-      if (existingCustomer && existingCustomer.length > 0) {
-        return { success: false, error: "รหัสลูกค้านี้มีอยู่ในระบบแล้ว" };
-      }
+      // ลบการเช็ครหัสซ้ำออก - อนุญาตให้ซ้ำกันได้
     }
 
     // ตรวจสอบรูปแบบอีเมล
@@ -176,17 +167,7 @@ export const updateCustomer = async (id, customerData) => {
         throw new Error("รหัสลูกค้าต้องเป็น 3-5 ตัวอักษร");
       }
 
-      // ตรวจสอบว่ามีรหัสซ้ำหรือไม่
-      const { data: existingCustomer } = await supabase
-        .from("customers")
-        .select("*")
-        .eq("code", customerData.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
-        .eq("active", true)
-        .neq("id", id); // ไม่นับรหัสของลูกค้าคนนี้
-
-      if (existingCustomer && existingCustomer.length > 0) {
-        throw new Error("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
-      }
+      // อนุญาตให้รหัสลูกค้าซ้ำกันได้ - ไม่ต้องเช็ค
     }
 
     // ตรวจสอบรูปแบบอีเมล
