@@ -2,6 +2,67 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../services/supabase";
 import { toThaiTimeZone } from "../../../utils/helpers";
 
+/**
+ * สร้าง Multi-Segment Route Format (จำกัดแสดงสูงสุด 5 airports)
+ * @param {Array} routes - array ของเส้นทาง
+ * @returns {string} - route ในรูปแบบ Multi-Segment
+ */
+const generateMultiSegmentRoute = (routes) => {
+  if (!routes || routes.length === 0) return "";
+
+  const routeSegments = [];
+  let currentSegment = [];
+  let totalAirports = 0; // นับจำนวน airports ทั้งหมด
+  const MAX_AIRPORTS = 5;
+
+  for (let index = 0; index < routes.length; index++) {
+    const route = routes[index];
+    const origin = route.origin;
+    const destination = route.destination;
+
+    if (currentSegment.length === 0) {
+      // เริ่มต้น segment ใหม่
+      currentSegment = [origin, destination];
+      totalAirports = 2; // origin + destination
+    } else {
+      // ตรวจสอบว่าต่อเนื่องกับ segment ปัจจุบันหรือไม่
+      const lastDestination = currentSegment[currentSegment.length - 1];
+
+      if (origin === lastDestination) {
+        // ต่อเนื่อง - ตรวจสอบว่าเพิ่ม destination แล้วจะเกิน 5 airports ไหม
+        if (totalAirports + 1 <= MAX_AIRPORTS) {
+          currentSegment.push(destination);
+          totalAirports++;
+        } else {
+          // เกิน 5 airports แล้ว - หยุดและบันทึก segment ปัจจุบัน
+          routeSegments.push(currentSegment.join("-"));
+          break;
+        }
+      } else {
+        // ไม่ต่อเนื่อง - บันทึก segment เดิมและตรวจสอบว่าเริ่ม segment ใหม่ได้ไหม
+        routeSegments.push(currentSegment.join("-"));
+
+        // ตรวจสอบว่าเริ่ม segment ใหม่แล้วจะเกิน 5 airports ไหม
+        if (totalAirports + 2 <= MAX_AIRPORTS) {
+          currentSegment = [origin, destination];
+          totalAirports += 2;
+        } else {
+          // เกิน 5 airports แล้ว - หยุด
+          break;
+        }
+      }
+    }
+
+    // ถ้าเป็นเส้นทางสุดท้าย ให้บันทึก segment ปัจจุบัน
+    if (index === routes.length - 1 && currentSegment.length > 0) {
+      routeSegments.push(currentSegment.join("-"));
+    }
+  }
+
+  // รวม segments ด้วย "//"
+  return routeSegments.join("//");
+};
+
 export const useFlightTicketsData = ({
   startDate,
   endDate,
@@ -155,19 +216,9 @@ export const useFlightTicketsData = ({
           }
         }
 
-        // สร้างเส้นทาง (แสดงเฉพาะ 2 เส้นทางแรก)
         let routingDisplay = "";
         if (ticketRoutes.length > 0) {
-          const maxRoutes = Math.min(ticketRoutes.length, 5);
-          const origins = [];
-
-          for (let i = 0; i < maxRoutes; i++) {
-            if (ticketRoutes[i].origin) {
-              origins.push(ticketRoutes[i].origin);
-            }
-          }
-
-          routingDisplay = origins.join("-");
+          routingDisplay = generateMultiSegmentRoute(ticketRoutes);
         }
 
         let ticketNumberDisplay = "-";
