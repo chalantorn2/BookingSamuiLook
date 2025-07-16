@@ -278,20 +278,6 @@ const Information = () => {
       }
 
       try {
-        if (editingItem.code) {
-          const { data: existingCode } = await supabase
-            .from("customers")
-            .select("id")
-            .eq("code", editingItem.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
-            .eq("active", true)
-            .neq("id", editingItem.id);
-
-          if (existingCode && existingCode.length > 0) {
-            alert("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
-            return;
-          }
-        }
-
         // แก้ไขส่วน update - เปลี่ยนจาก address เป็น address_line1, 2, 3 และแปลงเป็นตัวพิมพ์ใหญ่
         const { error } = await supabase
           .from("customers")
@@ -432,19 +418,6 @@ const Information = () => {
       }
 
       try {
-        if (newItem.code) {
-          const { data: existingCode } = await supabase
-            .from("customers")
-            .select("id")
-            .eq("code", newItem.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
-            .eq("active", true);
-
-          if (existingCode && existingCode.length > 0) {
-            alert("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
-            return;
-          }
-        }
-
         // แก้ไขส่วน insert - เปลี่ยนจาก address เป็น address_line1, 2, 3 และแปลงเป็นตัวพิมพ์ใหญ่
         const { error } = await supabase.from("customers").insert({
           name: newItem.name ? newItem.name.toUpperCase() : null,

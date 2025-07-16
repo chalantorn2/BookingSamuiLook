@@ -71,11 +71,14 @@ export async function sendInvoiceEmail(emailData) {
           emailData.invoiceData?.summary?.total || 0
         ),
         passengers:
-          emailData.invoiceData?.passengers?.map((p) => p.display).join("\n") ||
-          "",
-        flights:
-          emailData.invoiceData?.flights?.map((f) => f.display).join("\n") ||
-          "",
+          emailData.invoiceData?.passengers
+            ?.filter((p) => p.hasData)
+            .map(
+              (p) =>
+                `${p.displayData.index} ${p.displayData.name} ${p.displayData.age} ${p.displayData.ticketNumber} ${p.displayData.ticketCode}`
+            )
+            .join("\n") || "",
+        flights: emailData.invoiceData?.flights?.routeDisplay || "",
         sent_time: new Date().toLocaleString("th-TH", {
           timeZone: "Asia/Bangkok",
           year: "numeric",
@@ -173,10 +176,18 @@ export function generateDefaultEmailContent(invoiceData) {
 วันครบกำหนด: ${invoiceData.invoice?.dueDate || ""}
 
 รายการผู้โดยสาร:
-${invoiceData.passengers?.map((p) => `- ${p.display}`).join("\n") || ""}
+${
+  invoiceData.passengers
+    ?.filter((p) => p.hasData)
+    .map(
+      (p) =>
+        `- ${p.displayData.index} ${p.displayData.name} ${p.displayData.age} ${p.displayData.ticketNumber} ${p.displayData.ticketCode}`
+    )
+    .join("\n") || ""
+}
 
 เส้นทางการเดินทาง:
-${invoiceData.flights?.map((f) => `- ${f.display}`).join("\n") || ""}
+- ${invoiceData.flights?.routeDisplay || ""}
 
 จำนวนเงินรวมทั้งสิ้น: ${formatCurrency(invoiceData.summary?.total || 0)} บาท
 
@@ -194,10 +205,10 @@ ${invoiceData.flights?.map((f) => `- ${f.display}`).join("\n") || ""}
  * @returns {string} - หัวข้ออีเมล
  */
 export function generateDefaultEmailSubject(invoiceData) {
-  const firstFlight = invoiceData?.flights?.[0];
+  const flights = invoiceData?.flights;
 
-  if (firstFlight?.flightNumber && firstFlight?.route) {
-    return `Invoice ${firstFlight.flightNumber} ${firstFlight.route}`;
+  if (flights?.supplierName && flights?.routeDisplay) {
+    return `Invoice ${flights.supplierName} ${flights.routeDisplay}`;
   }
 
   // fallback ถ้าไม่มีข้อมูลเที่ยวบิน

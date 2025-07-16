@@ -293,122 +293,121 @@ const renderPassengerTable = (
         <thead>
           <tr>
             <th class="print-th-detail">รายละเอียด</th>
-            <th class="print-th-quantity">จำนวน</th>
-            <th class="print-th-price">ราคาต่อหน่วย</th>
-            <th class="print-th-total">รวมเป็นเงิน</th>
+            <th class="print-th-amount">จำนวน</th>
           </tr>
         </thead>
         <tbody>
           
-          <!-- NAME Section - ผู้โดยสารของหน้านี้ -->
+          <!-- NAME Section - แสดง 6 บรรทัดเสมอ -->
           <tr>
             <td class="print-section-header">NAME /ชื่อผู้โดยสาร</td>
-            <td class="print-td-quantity"></td>
-            <td class="print-td-price"></td>
-            <td class="print-td-total"></td>
+            <td class="print-td-amount"></td>
           </tr>
           ${passengers
             .map(
               (passenger, index) => `
             <tr>
-              <td class="print-section-item">${passenger.display || ""}</td>
-              <td class="print-td-quantity"></td>
-              <td class="print-td-price"></td>
-              <td class="print-td-total"></td>
+    <td class="print-passenger-item">
+              ${
+                passenger.hasData
+                  ? `
+                <div class="print-passenger-grid">
+                  <span class="passenger-index">${passenger.displayData.index}</span>
+                  <span class="passenger-name">${passenger.displayData.name}</span>
+                  <span class="passenger-age">${passenger.displayData.age}</span>
+                  <span class="passenger-ticket">${passenger.displayData.ticketNumber}</span>
+                  <span class="passenger-code">${passenger.displayData.ticketCode}</span>
+                </div>
+              `
+                  : ""
+              }
+            </td>
+              <td class="print-td-amount"></td>
             </tr>
           `
             )
             .join("")}
 
-          <!-- AIR TICKET Section - แสดงทุกหน้า -->
+          <!-- AIR TICKET Section -->
           <tr>
             <td class="print-section-header">AIR TICKET /ตั๋วเครื่องบิน</td>
-            <td class="print-td-quantity"></td>
-            <td class="print-td-price"></td>
-            <td class="print-td-total"></td>
+            <td class="print-td-amount"></td>
           </tr>
-          ${(invoiceData.flights || [])
+          
+          <!-- บรรทัดที่ 1: Supplier + ADULT -->
+          <tr>
+            <td class="print-section-item print-airline-row">
+              <span class="print-airline-name">${
+                invoiceData.flights?.supplierName || ""
+              }</span>
+              <span class="print-passenger-type">ADULT</span>
+            </td>
+            <td class="print-td-amount">
+              ${invoiceData.passengerTypes?.[0]?.priceDisplay || ""}
+            </td>
+          </tr>
+          
+          <!-- บรรทัดที่ 2: Route + CHILD -->
+          <tr>
+            <td class="print-section-item print-airline-row">
+              <span class="print-airline-name">${
+                invoiceData.flights?.routeDisplay || ""
+              }</span>
+              <span class="print-passenger-type">CHILD</span>
+            </td>
+            <td class="print-td-amount">
+              ${invoiceData.passengerTypes?.[1]?.priceDisplay || ""}
+            </td>
+          </tr>
+          
+          <!-- บรรทัดที่ 3: ว่าง + INFANT -->
+          <tr>
+            <td class="print-section-item print-airline-row">
+              <span class="print-airline-name"></span>
+              <span class="print-passenger-type">INFANT</span>
+            </td>
+            <td class="print-td-amount">
+              ${invoiceData.passengerTypes?.[2]?.priceDisplay || ""}
+            </td>
+          </tr>
+
+          <!-- OTHER Section - 3 บรรทัดเสมอ -->
+          <tr>
+            <td class="print-section-header">Other</td>
+            <td class="print-td-amount"></td>
+          </tr>
+          ${(invoiceData.extras || [])
+            .slice(0, 4)
             .map(
-              (flight, index) => `
+              (extra, index) => `
             <tr>
-              <td class="print-section-item">${flight.display || ""}</td>
-              <td class="print-td-quantity"></td>
-              <td class="print-td-price"></td>
-              <td class="print-td-total"></td>
-            </tr>
-          `
-            )
-            .join("")}
-          ${(invoiceData.passengerTypes || [])
-            .map(
-              (type, index) => `
-            <tr>
-              <td class="print-section-item">${type.type || ""}</td>
-              <td class="print-td-quantity">${type.quantity || ""}</td>
-              <td class="print-td-price">${formatCurrency(
-                type.unitPrice || 0
-              )}.-</td>
-              <td class="print-td-total">${formatCurrency(
-                type.amount || 0
-              )}.-</td>
+              <td class="print-section-item">${extra.description || ""}</td>
+              <td class="print-td-amount">${extra.priceDisplay || ""}</td>
             </tr>
           `
             )
             .join("")}
 
-          <!-- Other Section - แสดงทุกหน้า -->
-          ${
-            (invoiceData.extras || []).length > 0
-              ? `
-            <tr>
-              <td class="print-section-header">Other</td>
-              <td class="print-td-quantity"></td>
-              <td class="print-td-price"></td>
-              <td class="print-td-total"></td>
-            </tr>
-            ${(invoiceData.extras || [])
-              .map(
-                (extra, index) => `
-              <tr>
-                <td class="print-section-item">${extra.description || ""}</td>
-                <td class="print-td-quantity">${extra.quantity || ""}</td>
-                <td class="print-td-price">${formatCurrency(
-                  extra.unitPrice || 0
-                )}.-</td>
-                <td class="print-td-total">${formatCurrency(
-                  extra.amount || 0
-                )}.-</td>
-              </tr>
-            `
-              )
-              .join("")}
-          `
-              : ""
-          }
-
-          <!-- Summary - แสดงทุกหน้า -->
+          <!-- Summary -->
           <tr class="print-summary-row">
-            <td class="print-section-header">Remark</td>
-            <td colspan="2" class="print-td-price print-summary-label">ราคารวมสินค้า (บาท)</td>
-            <td class="print-td-total print-summary-value">${formatCurrency(
-              invoiceData.summary?.subtotal || 0
-            )}.-</td>
+            <td class="print-td-amount print-summary-label">ราคารวมสินค้า (บาท)</td>
+            <td class="print-td-amount print-summary-value">
+              ${formatCurrencyWithDecimal(invoiceData.summary?.subtotal || 0)}
+            </td>
           </tr>
           <tr class="print-summary-row">
-            <td></td>
-            <td colspan="2" class="print-td-price print-summary-label">ภาษีมูลค่าเพิ่ม ${
+            <td class="print-td-amount print-summary-label">ภาษีมูลค่าเพิ่ม ${
               invoiceData.summary?.vatPercent || 0
             }%</td>
-            <td class="print-td-total print-summary-value">${formatCurrency(
-              invoiceData.summary?.vat || 0
-            )}.-</td>
+            <td class="print-td-amount print-summary-value">
+              ${formatCurrencyWithDecimal(invoiceData.summary?.vat || 0)}
+            </td>
           </tr>
           <tr class="print-total-row">
-            <td></td>
-            <td colspan="2" class="print-td-price print-summary-label">จำนวนเงินรวมทั้งสิ้น (บาท)</td>
-            <td class="print-td-total print-summary-value">${formatCurrency(
-              invoiceData.summary?.total || 0
-            )}.-</td>
+            <td class="print-td-amount print-summary-label">จำนวนเงินรวมทั้งสิ้น (บาท)</td>
+            <td class="print-td-amount print-summary-value">
+              ${formatCurrency(invoiceData.summary?.total || 0)}.-
+            </td>
           </tr>
         </tbody>
       </table>
@@ -608,80 +607,141 @@ const getDocumentStyles = () => {
       margin: 18px 0;
     }
 
-    .print-table {
-      width: 100%;
-      border-collapse: collapse;
-      border-top: 1px solid #000;
-      border-bottom: 1px solid #000;
-    }
+  .print-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+}
 
-    .print-table th {
+.print-table th {
   background-color: #e5e7eb !important;
   border-top: 1px solid #000;
   border-bottom: 1px solid #000;
   font-weight: bold;
-  text-align: center !important;
-  padding: 8px 4px !important;  /* เพิ่ม padding บน-ล่าง */
+  text-align: center;
+  padding: 6px 4px;
   font-size: 12px;
-  line-height: 1.2 !important;  /* กำหนด line-height */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 
-    .print-th-detail { width: 50%; }
-    .print-th-quantity { width: 10%; border-left: 1px solid #000; }
-    .print-th-price { width: 20%; border-left: 1px solid #000; }
-    .print-th-total { width: 20%; border-left: 1px solid #000; }
+.print-th-detail { 
+  width: 75%; 
+}
+.print-th-amount { 
+  width: 25%; 
+  border-left: 1px solid #000; 
+}
 
-    .print-table td {
-      padding: 4px;
-      font-size: 12px;
-      vertical-align: top;
-    }
+.print-table td {
+  padding: 4px;
+  font-size: 12px;
+  vertical-align: top;
+}
 
-    .print-td-quantity {
-      text-align: center;
-      border-left: 1px solid #000;
-    }
+.print-td-amount {
+          text-align: right;
+          padding-right: 8px;
+        }
 
-    .print-td-price {
-      text-align: right;
-      border-left: 1px solid #000;
-    }
+        /* เส้นแบ่งคอลัม - เฉพาะ td ที่ 2 ในแต่ละแถว */
+        .print-table td:nth-child(2) {
+          border-left: 1px solid #000;
+        }
 
-    .print-td-total {
-      text-align: right;
-      border-left: 1px solid #000;
-    }
+        /* ยกเลิกเส้นซ้ายสุดของตาราง */
+        .print-table {
+          border-left: none;
+        }
 
-    .print-section-header {
-      font-weight: bold;
-      background-color: transparent;
-    }
+.print-section-header {
+  font-weight: bold;
+  background-color: transparent;
+}
 
-    .print-section-item {
-      padding-left: 30px !important;
-    }
+.print-section-item {
+          padding-left: 30px !important;
+        }
 
-    .print-summary-row {
-      border-top: 1px solid #000;
-    }
+  .print-passenger-item {
+        padding-left: 30px !important;
+      }
 
-    .print-summary-label {
-      font-weight: bold;
-    }
+ .print-passenger-grid {
+          display: grid !important;
+          grid-template-columns: 10px minmax(200px, max-content) 50px 50px 40px !important;
+          gap: 8px !important;
+          align-items: center !important;
+        }
 
-    .print-summary-value {
-      font-weight: bold;
-    }
+        /* เอาการจัดการ text overflow ออก */
+        .passenger-name {
+          text-align: left !important;
+          white-space: nowrap; /* ไม่ให้ขึ้นบรรทัดใหม่ */
+        }
+          
+      .passenger-index {
+        text-align: left !important;
+      }
 
-    .print-total-row {
-      background-color: #e5e7eb !important;
-      border-top: 1px solid #000;
-      border-bottom: 1px solid #000;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+      .passenger-name {
+        text-align: left !important;
+      }
+
+      .passenger-age {
+        text-align: center !important;
+      }
+
+      .passenger-ticket {
+        text-align: center !important;
+      }
+
+      .passenger-code {
+        text-align: right !important;
+      }
+
+.print-airline-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-left: 30px !important;
+  padding-right: 8px !important;
+}
+
+.print-airline-name {
+  flex: 1;
+  text-align: left;
+}
+
+.print-passenger-type {
+  text-align: right;
+  min-width: 60px;
+}
+
+.print-summary-row {
+  border-top: 1px solid #000;
+}
+
+.print-summary-label {
+  font-weight: bold;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.print-summary-value {
+  font-weight: bold;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.print-total-row {
+  background-color: #e5e7eb !important;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 
     .print-bottom-section {
       display: flex;
@@ -790,7 +850,18 @@ export async function waitForImages(container) {
 }
 
 /**
- * จัดรูปแบบตัวเลขเป็นสกุลเงิน
+ * จัดรูปแบบตัวเลขมีทศนิยม 2 ตำแหน่ง (สำหรับยอดรวม)
+ */
+export function formatCurrencyWithDecimal(amount) {
+  if (amount === null || amount === undefined || isNaN(amount)) return "0.00";
+  return parseFloat(amount).toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * จัดรูปแบบตัวเลขไม่มีทศนิยม
  */
 export function formatCurrency(amount) {
   if (amount === null || amount === undefined || isNaN(amount)) return "0";

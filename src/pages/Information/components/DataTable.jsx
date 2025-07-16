@@ -192,21 +192,6 @@ const DataTable = ({
     }
 
     try {
-      // ตรวจสอบว่ามีรหัสซ้ำหรือไม่ (ถ้ามีการกรอกรหัส)
-      if (currentEditItem.code) {
-        const { data: existingCode } = await supabase
-          .from("customers")
-          .select("id")
-          .eq("code", currentEditItem.code.toUpperCase()) // แปลงเป็นตัวใหญ่ก่อนเช็ค
-          .eq("active", true)
-          .neq("id", currentEditItem.id);
-
-        if (existingCode && existingCode.length > 0) {
-          alert("รหัสลูกค้านี้มีอยู่ในระบบแล้ว");
-          return;
-        }
-      }
-
       // อัปเดตข้อมูล - แปลงเป็นตัวพิมพ์ใหญ่
       const { error } = await supabase
         .from("customers")

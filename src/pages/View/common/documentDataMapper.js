@@ -45,10 +45,6 @@ export const getInvoiceData = async (ticketId) => {
     const additional = ticket.ticket_additional_info?.[0] || {};
     const pricing = ticket.tickets_pricing?.[0] || {};
 
-    // *** เพิ่มส่วนนี้ ***
-    console.log("=== DEBUG ADDRESS FROM DATABASE ===");
-    console.log("Raw ticket.customer:", ticket.customer);
-
     // แปลงข้อมูลลูกค้า - รองรับที่อยู่หลายบรรทัด
     const customerInfo = {
       name: ticket.customer?.name || "",
@@ -65,8 +61,6 @@ export const getInvoiceData = async (ticketId) => {
       ),
     };
 
-    console.log("Final customerInfo:", customerInfo);
-
     // แปลงข้อมูลใบแจ้งหนี้
     const invoiceInfo = {
       poNumber: ticket.po_number || poResult.poNumber,
@@ -75,70 +69,139 @@ export const getInvoiceData = async (ticketId) => {
       salesPerson: ticket.user?.fullname || "System",
     };
 
-    // แปลงข้อมูลผู้โดยสาร - ปรับรูปแบบให้เหมือน PDF
-    const passengers =
-      ticket.tickets_passengers?.map((p, index) => ({
-        index: index + 1,
-        name: p.passenger_name || "",
-        age: p.age || "",
-        ticketNumber: p.ticket_number || "",
-        ticketCode: p.ticket_code || "",
-        display: `${index + 1}. ${p.passenger_name || ""} ${p.age || ""} ${
-          p.ticket_number || ""
-        } ${p.ticket_code || ""}`
-          .trim()
-          .replace(/\s+/g, " "),
-      })) || [];
+    const MAX_PASSENGERS_DISPLAY = 6;
+    const allPassengers = ticket.tickets_passengers || [];
+    const passengers = [];
 
-    // แปลงข้อมูลเที่ยวบิน - ปรับรูปแบบให้เหมือน PDF
-    const flights =
-      ticket.tickets_routes?.map((route) => ({
-        flightNumber: route.flight_number || "",
-        rbd: route.rbd || "",
-        date: formatRouteDate(route.date),
-        route: `${route.origin || ""}-${route.destination || ""}`,
-        display: `${route.flight_number || ""} ${formatRouteDate(route.date)} ${
-          route.origin || ""
-        }${route.destination || ""}`
-          .trim()
-          .replace(/\s+/g, " "),
-      })) || [];
+    // แสดงผู้โดยสารแค่ 6 คนแรก
+    const displayPassengers = allPassengers.slice(0, MAX_PASSENGERS_DISPLAY);
+
+    // สร้าง 6 บรรทัดเสมอ
+    for (let i = 0; i < MAX_PASSENGERS_DISPLAY; i++) {
+      if (i < displayPassengers.length) {
+        const p = displayPassengers[i];
+        passengers.push({
+          index: i + 1,
+          name: p.passenger_name || "",
+          age: p.age || "",
+          ticketNumber: p.ticket_number || "",
+          ticketCode: p.ticket_code || "",
+          hasData: true,
+          displayData: {
+            index: `${i + 1}.`,
+            name: p.passenger_name || "",
+            age: p.age || "",
+            ticketNumber: p.ticket_number || "",
+            ticketCode: p.ticket_code || "",
+          },
+        });
+      } else {
+        // เติมบรรทัดว่าง (ไม่แสดงเลขลำดับ)
+        passengers.push({
+          index: i + 1,
+          name: "",
+          age: "",
+          ticketNumber: "",
+          ticketCode: "",
+          hasData: false,
+          displayData: null,
+        });
+      }
+    }
+
+    // แปลงข้อมูลเที่ยวบิน - ใช้ Multi-Segment Route Format
+    const routes = ticket.tickets_routes || [];
+    const multiSegmentRoute = generateMultiSegmentRoute(routes);
+    const supplierName = ticket.supplier?.name || "";
+
+    // สร้างข้อมูล flights สำหรับแสดงในตาราง
+    const flights = {
+      supplierName,
+      multiSegmentRoute,
+      routeDisplay: multiSegmentRoute || "N/A",
+    };
 
     // แปลงข้อมูลราคาผู้โดยสาร (เฉพาะที่มี pax > 0)
     const passengerTypes = [];
     if (pricing.adult_pax > 0) {
       passengerTypes.push({
-        type: "Adult",
+        type: "ADULT",
         quantity: pricing.adult_pax,
         unitPrice: pricing.adult_sale_price || 0,
         amount: pricing.adult_total || 0,
+        priceDisplay: `${formatCurrencyNoDecimal(
+          pricing.adult_sale_price || 0
+        )} x ${pricing.adult_pax}`,
       });
     }
     if (pricing.child_pax > 0) {
       passengerTypes.push({
-        type: "Child",
+        type: "CHILD",
         quantity: pricing.child_pax,
         unitPrice: pricing.child_sale_price || 0,
         amount: pricing.child_total || 0,
+        priceDisplay: `${formatCurrencyNoDecimal(
+          pricing.child_sale_price || 0
+        )} x ${pricing.child_pax}`,
       });
     }
     if (pricing.infant_pax > 0) {
       passengerTypes.push({
-        type: "Infant",
+        type: "INFANT",
         quantity: pricing.infant_pax,
         unitPrice: pricing.infant_sale_price || 0,
         amount: pricing.infant_total || 0,
+        priceDisplay: `${formatCurrencyNoDecimal(
+          pricing.infant_sale_price || 0
+        )} x ${pricing.infant_pax}`,
       });
     }
 
-    // แปลงข้อมูลรายการเพิ่มเติม
-    const extras =
-      ticket.tickets_extras?.map((extra) => ({
-        description: extra.description || "",
-        quantity: extra.quantity || 1,
-        unitPrice: extra.sale_price || 0,
-        amount: extra.total_amount || 0,
-      })) || [];
+    // เพิ่มบรรทัดว่างให้ครบ 3 บรรทัด
+    while (passengerTypes.length < 3) {
+      passengerTypes.push({
+        type: "",
+        quantity: 0,
+        unitPrice: 0,
+        amount: 0,
+        priceDisplay: "",
+      });
+    }
+
+    // แปลงข้อมูลรายการเพิ่มเติม - แสดงครบทุกรายการ แต่ขั้นต่ำ 3 บรรทัด
+    const MIN_EXTRAS_DISPLAY = 3;
+    const allExtras = ticket.tickets_extras || [];
+    const extras = [];
+
+    // คำนวณจำนวนบรรทัดที่ต้องแสดง (แสดงครบทุกรายการ หรือขั้นต่ำ 3 บรรทัด)
+    const displayCount = Math.max(allExtras.length, MIN_EXTRAS_DISPLAY);
+
+    // สร้างรายการแสดงผล
+    for (let i = 0; i < displayCount; i++) {
+      if (i < allExtras.length) {
+        const extra = allExtras[i];
+        extras.push({
+          description: extra.description || "",
+          quantity: extra.quantity || 1,
+          unitPrice: extra.sale_price || 0,
+          amount: extra.total_amount || 0,
+          priceDisplay: extra.sale_price
+            ? `${formatCurrencyNoDecimal(extra.sale_price)} x ${
+                extra.quantity || 1
+              }`
+            : "",
+        });
+      } else {
+        // เติมบรรทัดว่าง
+        extras.push({
+          description: "",
+          quantity: 0,
+          unitPrice: 0,
+          amount: 0,
+          priceDisplay: "",
+        });
+      }
+    }
 
     // สรุปยอดเงิน
     const summary = {
@@ -168,6 +231,48 @@ export const getInvoiceData = async (ticketId) => {
       error: error.message,
     };
   }
+};
+
+/**
+ * สร้าง Multi-Segment Route Format
+ * @param {Array} routes - array ของเส้นทาง
+ * @returns {string} - route ในรูปแบบ Multi-Segment
+ */
+export const generateMultiSegmentRoute = (routes) => {
+  if (!routes || routes.length === 0) return "";
+
+  const routeSegments = [];
+  let currentSegment = [];
+
+  routes.forEach((route, index) => {
+    const origin = route.origin;
+    const destination = route.destination;
+
+    if (currentSegment.length === 0) {
+      // เริ่มต้น segment ใหม่
+      currentSegment = [origin, destination];
+    } else {
+      // ตรวจสอบว่าต่อเนื่องกับ segment ปัจจุบันหรือไม่
+      const lastDestination = currentSegment[currentSegment.length - 1];
+
+      if (origin === lastDestination) {
+        // ต่อเนื่อง - เพิ่ม destination
+        currentSegment.push(destination);
+      } else {
+        // ไม่ต่อเนื่อง - บันทึก segment เดิมและเริ่มใหม่
+        routeSegments.push(currentSegment.join("-"));
+        currentSegment = [origin, destination];
+      }
+    }
+
+    // ถ้าเป็นเส้นทางสุดท้าย ให้บันทึก segment ปัจจุบัน
+    if (index === routes.length - 1) {
+      routeSegments.push(currentSegment.join("-"));
+    }
+  });
+
+  // รวม segments ด้วย "//"
+  return routeSegments.join("//");
 };
 
 /**
@@ -241,9 +346,27 @@ const getBranchDisplay = (branchType, branchNumber) => {
 };
 
 /**
- * จัดรูปแบบตัวเลขไม่มีทศนิยม
+ * จัดรูปแบบตัวเลขไม่มีทศนิยม (สำหรับราคาต่อหน่วย)
  */
-export const formatCurrency = (amount) => {
+export const formatCurrencyNoDecimal = (amount) => {
   if (amount === null || amount === undefined || isNaN(amount)) return "0";
   return Math.floor(parseFloat(amount)).toLocaleString("th-TH");
+};
+
+/**
+ * จัดรูปแบบตัวเลขมีทศนิยม 2 ตำแหน่ง (สำหรับยอดรวม)
+ */
+export const formatCurrencyWithDecimal = (amount) => {
+  if (amount === null || amount === undefined || isNaN(amount)) return "0.00";
+  return parseFloat(amount).toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+/**
+ * จัดรูปแบบตัวเลขไม่มีทศนิยม (backward compatibility)
+ */
+export const formatCurrency = (amount) => {
+  return formatCurrencyNoDecimal(amount);
 };
