@@ -33,11 +33,9 @@ const CancelReasonModal = ({
           </div>
           <div className="ml-3">
             <h3 className="text-lg font-medium text-gray-900">
-              ยืนยันการยกเลิกตั๋ว
+              ยืนยันการยกเลิก
             </h3>
-            <p className="text-sm text-gray-500">
-              ตั๋วเครื่องบิน: {ticketNumber}
-            </p>
+            <p className="text-sm text-gray-500">Ticket ID: {ticketNumber}</p>
           </div>
         </div>
 
@@ -51,7 +49,7 @@ const CancelReasonModal = ({
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               rows="4"
-              placeholder="กรุณาระบุเหตุผลในการยกเลิกตั๋ว..."
+              placeholder="กรุณาระบุเหตุผลในการยกเลิก..."
               required
               disabled={loading}
             />

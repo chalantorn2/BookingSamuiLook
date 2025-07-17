@@ -26,10 +26,12 @@ import SaleHeader from "../../Sales/common/SaleHeader";
 import { formatCustomerAddress } from "../../../utils/helpers";
 import CancelReasonModal from "./CancelReasonModal";
 import { useAuth } from "../../Login/AuthContext";
+import { getCustomers } from "../../../services/customerService";
 
 const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
   const { user } = useAuth();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customers, setCustomers] = useState([]);
   const [globalEditMode, setGlobalEditMode] = useState(false);
   const showAlert = useAlertDialogContext();
   const [ticketData, setTicketData] = useState(null);
@@ -263,6 +265,20 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
           },
         ];
     setExtras(mappedExtras);
+
+    if (ticket.customer) {
+      setSelectedCustomer({
+        id: ticket.customer.id,
+        name: ticket.customer.name,
+        code: ticket.customer.code,
+        address: formatCustomerAddress(ticket.customer),
+        phone: ticket.customer.phone,
+        id_number: ticket.customer.id_number,
+        branch_type: ticket.customer.branch_type,
+        branch_number: ticket.customer.branch_number,
+        credit_days: ticket.customer.credit_days,
+      });
+    }
   };
 
   const searchSupplierByNumericCode = async (numericCode) => {
@@ -445,6 +461,24 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
     }
   }, [formData.supplierNumericCode]);
 
+  // Sync selectedCustomer with formData
+  useEffect(() => {
+    if (selectedCustomer) {
+      setFormData((prev) => ({
+        ...prev,
+        customer: selectedCustomer.name || "",
+        customerCode: selectedCustomer.code || "",
+        contactDetails:
+          selectedCustomer.address || formatCustomerAddress(selectedCustomer),
+        phone: selectedCustomer.phone || "",
+        id: selectedCustomer.id_number || "",
+        branchType: selectedCustomer.branch_type || "Head Office",
+        branchNumber: selectedCustomer.branch_number || "",
+        creditDays: String(selectedCustomer.credit_days || 0),
+      }));
+    }
+  }, [selectedCustomer]);
+
   // Calculate totals
   const calculatedSubtotal =
     calculateSubtotal() +
@@ -555,12 +589,12 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
         })
         .eq("bookings_ticket_id", ticketId);
 
-      // Update passengers, routes, extras
       await Promise.all([
-        // อัปเดต bookings_ticket รวมทั้ง information_id
+        // อัปเดต bookings_ticket รวมทั้ง customer_id และ information_id
         supabase
           .from("bookings_ticket")
           .update({
+            customer_id: selectedCustomer?.id,
             information_id: formData.supplierId,
           })
           .eq("id", ticketId),
@@ -808,10 +842,12 @@ const FlightTicketDetail_Edit = ({ ticketId, onClose, onSave }) => {
                   section="customer"
                   selectedCustomer={selectedCustomer}
                   setSelectedCustomer={setSelectedCustomer}
-                  globalEditMode={true} // เปลี่ยนเป็น true เพื่อให้แก้ไขได้
+                  globalEditMode={true}
                   setGlobalEditMode={setGlobalEditMode}
-                  readOnly={false} // เปลี่ยนเป็น false เพื่อให้แก้ไขได้
-                  isEditMode={true} // เพิ่ม prop ใหม่
+                  readOnly={false}
+                  isEditMode={true}
+                  customers={customers}
+                  setCustomers={setCustomers}
                 />
               </div>
               <div>

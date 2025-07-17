@@ -306,25 +306,29 @@ const renderPassengerTable = (
           ${passengers
             .map(
               (passenger, index) => `
-            <tr>
+  <tr>
     <td class="print-passenger-item">
-              ${
-                passenger.hasData
-                  ? `
-                <div class="print-passenger-grid">
-                  <span class="passenger-index">${passenger.displayData.index}</span>
-                  <span class="passenger-name">${passenger.displayData.name}</span>
-                  <span class="passenger-age">${passenger.displayData.age}</span>
-                  <span class="passenger-ticket">${passenger.displayData.ticketNumber}</span>
-                  <span class="passenger-code">${passenger.displayData.ticketCode}</span>
-                </div>
-              `
-                  : ""
-              }
-            </td>
-              <td class="print-td-amount"></td>
-            </tr>
-          `
+      <div class="print-passenger-grid">
+        <span class="passenger-index">
+          ${passenger.displayData?.index || ""}
+        </span>
+        <span class="passenger-name">
+       ${passenger.displayData?.name || "\u00A0"}
+        </span>
+        <span class="passenger-age">
+          ${passenger.displayData?.age || "\u00A0"}
+        </span>
+        <span class="passenger-ticket">
+          ${passenger.displayData?.ticketNumber || "\u00A0"}
+        </span>
+        <span class="passenger-code">
+          ${passenger.displayData?.ticketCode || "\u00A0"}
+        </span>
+      </div>
+    </td>
+    <td class="print-td-amount"></td>
+  </tr>
+`
             )
             .join("")}
 
@@ -376,17 +380,16 @@ const renderPassengerTable = (
             <td class="print-section-header">Other</td>
             <td class="print-td-amount"></td>
           </tr>
-          ${(invoiceData.extras || [])
-            .slice(0, 4)
-            .map(
-              (extra, index) => `
-            <tr>
-              <td class="print-section-item">${extra.description || ""}</td>
-              <td class="print-td-amount">${extra.priceDisplay || ""}</td>
-            </tr>
-          `
-            )
-            .join("")}
+         ${(invoiceData.extras || [])
+           .map(
+             (extra, index) => `
+  <tr>
+    <td class="print-section-item">${extra.description || "\u00A0"}</td>
+    <td class="print-td-amount">${extra.priceDisplay || "\u00A0"}</td>
+  </tr>
+`
+           )
+           .join("")}
 
           <!-- Summary -->
           <tr class="print-summary-row">

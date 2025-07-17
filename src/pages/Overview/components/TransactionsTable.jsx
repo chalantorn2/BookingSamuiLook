@@ -130,21 +130,21 @@ const TransactionsTable = ({
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("date")}
                   >
-                    <div className="flex items-center">วันที่</div>
+                    <div className="flex items-center">DATE</div>
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("customer")}
                   >
-                    <div className="flex items-center">ลูกค้า</div>
+                    <div className="flex items-center">CUSTOMER</div>
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("supplier")}
                   >
-                    <div className="flex items-center">ซัพพลายเออร์</div>
+                    <div className="flex items-center">SUPPLIER</div>
                   </th>
                   <th
                     scope="col"
@@ -152,7 +152,7 @@ const TransactionsTable = ({
                     onClick={() => handleSort("status")}
                   >
                     <div className="flex items-center justify-center">
-                      สถานะ
+                      STATUS
                     </div>
                   </th>
                   <th
