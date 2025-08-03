@@ -264,7 +264,7 @@ const Information = () => {
       }
 
       if (editingItem.branch_type === "Branch" && !editingItem.branch_number) {
-        alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
+        alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 4 หลัก)");
         return;
       }
 
@@ -404,7 +404,7 @@ const Information = () => {
       }
 
       if (newItem.branch_type === "Branch" && !newItem.branch_number) {
-        alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
+        alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 4 หลัก)");
         return;
       }
 

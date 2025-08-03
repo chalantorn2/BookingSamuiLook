@@ -122,13 +122,13 @@ const CustomerForm = ({ item, handleInputChange }) => {
               name="branch_number"
               value={item.branch_number || ""}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "").substring(0, 3);
+                const value = e.target.value.replace(/\D/g, "").substring(0, 4);
                 handleInputChange({
                   target: { name: "branch_number", value },
                 });
               }}
-              placeholder="เฉพาะตัวเลข 3 หลัก"
-              maxLength={3}
+              placeholder="เฉพาะตัวเลข 4 หลัก"
+              maxLength={4}
               className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
             />
           </div>

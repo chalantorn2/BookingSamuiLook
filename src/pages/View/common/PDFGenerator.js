@@ -1,5 +1,6 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { numberToEnglishText } from "./documentDataMapper";
 
 /**
  * สร้าง PDF จาก Invoice data โดยรองรับหลายหน้า
@@ -391,27 +392,34 @@ const renderPassengerTable = (
            )
            .join("")}
 
-          <!-- Summary -->
-          <tr class="print-summary-row">
-            <td class="print-td-amount print-summary-label">ราคารวมสินค้า (บาท)</td>
-            <td class="print-td-amount print-summary-value">
-              ${formatCurrencyWithDecimal(invoiceData.summary?.subtotal || 0)}
-            </td>
-          </tr>
-          <tr class="print-summary-row">
-            <td class="print-td-amount print-summary-label">ภาษีมูลค่าเพิ่ม ${
-              invoiceData.summary?.vatPercent || 0
-            }%</td>
-            <td class="print-td-amount print-summary-value">
-              ${formatCurrencyWithDecimal(invoiceData.summary?.vat || 0)}
-            </td>
-          </tr>
-          <tr class="print-total-row">
-            <td class="print-td-amount print-summary-label">จำนวนเงินรวมทั้งสิ้น (บาท)</td>
-            <td class="print-td-amount print-summary-value">
-              ${formatCurrency(invoiceData.summary?.total || 0)}.-
-            </td>
-          </tr>
+         <!-- Summary -->
+<tr class="print-summary-row">
+  <td class="print-td-amount print-summary-label">Sub-Total</td>
+  <td class="print-td-amount print-summary-value">
+    ${formatCurrencyWithDecimal(invoiceData.summary?.subtotal || 0)} Baht
+  </td>
+</tr>
+<tr class="print-summary-row">
+  <td class="print-td-amount print-summary-label">VAT ${
+    invoiceData.summary?.vatPercent || 0
+  }%</td>
+  <td class="print-td-amount print-summary-value">
+    ${formatCurrencyWithDecimal(invoiceData.summary?.vat || 0)} Baht
+  </td>
+</tr>
+<tr class="print-total-row">
+  <td class="print-total-label-cell">
+    <span class="print-total-english-text">
+      (${numberToEnglishText(invoiceData.summary?.total || 0)} Baht)
+    </span>
+    <span class="print-td-amount print-summary-label">
+      Total
+    </span>
+  </td>
+  <td class="print-td-amount print-summary-value">
+    ${formatCurrencyWithDecimal(invoiceData.summary?.total || 0)} Baht
+  </td>
+</tr>
         </tbody>
       </table>
     </div>
@@ -425,25 +433,7 @@ const renderPageFooter = (pageNumber, totalPages) => {
   return `
     <!-- Payment Info & Signatures -->
     <div class="print-bottom-section">
-      <div class="print-payment-info">
-        <div class="print-payment-title" style="text-decoration: underline;">ข้อมูลการชำระเงิน</div>
-        
-        <!-- ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล -->
-        <div class="print-payment-item" style="font-weight: bold; margin-top: 6px; margin-bottom: 3px;">
-          ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล
-        </div>
-        <div class="print-payment-item">• ธนาคารกสิกรไทย เลขบัญชี 502-207768-8</div>
-        <div class="print-payment-item">• ธนาคารไทยพาณิชย์ เลขบัญชี 836-200976-4</div>
-        <div class="print-payment-item">• ธนาคารกรุงไทย เลขบัญชี 829-002106-2</div>
-        
-        <!-- ชื่อบัญชี: Mr. Hajime Watanabe -->
-        <div class="print-payment-item" style="font-weight: bold; margin-top: 6px; margin-bottom: 3px;">
-          ชื่อบัญชี: Mr. Hajime Watanabe
-        </div>
-        <div class="print-payment-item">• ธนาคารกรุงศรี เลขบัญชี 423-125269-8</div>
-        <div class="print-payment-item">• ธนาคารกรุงเทพ เลขบัญชี 691-001639-0</div>
-        <div class="print-payment-item">• ธนาคารทหารไทย เลขบัญชี 585-200121-2</div>
-      </div>
+    <div class="print-spacer"></div>
       
       <!-- Signatures -->
       <div class="print-signatures">
@@ -673,7 +663,7 @@ const getDocumentStyles = () => {
 
  .print-passenger-grid {
           display: grid !important;
-          grid-template-columns: 10px minmax(200px, max-content) 50px 50px 40px !important;
+        grid-template-columns: 10px minmax(150px, max-content) 40px 30px 30px !important;
           gap: 8px !important;
           align-items: center !important;
         }
@@ -746,6 +736,12 @@ const getDocumentStyles = () => {
   print-color-adjust: exact;
 }
 
+.print-summary-text {
+  text-align: left;
+  padding-left: 8px;
+  font-weight: bold;
+}
+
     .print-bottom-section {
       display: flex;
       justify-content: space-between;
@@ -753,20 +749,6 @@ const getDocumentStyles = () => {
       gap: 24px;
     }
 
-    .print-payment-info {
-      flex: 1;
-    }
-
-    .print-payment-title {
-      font-weight: bold;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-
-    .print-payment-item {
-      font-size: 12px;
-      margin: 3px 0;
-    }
 
     .print-signatures {
       display: flex;
@@ -803,9 +785,23 @@ const getDocumentStyles = () => {
       text-align: right;
       font-size: 12px;
       color: #6b7280;
-      margin-top: 10px;
+      padding-top: 30px;
     }
+      .print-total-label-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 4px;
+}
 
+.print-total-english-text {
+  text-align: left;
+  font-weight: bold;
+  flex: 1;
+}
+.print-spacer {
+  flex: 1;
+}
   `;
 };
 

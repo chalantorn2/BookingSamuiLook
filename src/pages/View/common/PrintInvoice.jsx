@@ -16,6 +16,7 @@ import {
   formatCurrency,
   formatCurrencyWithDecimal,
 } from "./documentDataMapper";
+import { numberToEnglishText } from "./documentDataMapper";
 
 const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
   const printRef = useRef();
@@ -295,7 +296,6 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
     .print-td-amount {
           text-align: right;
-          padding-right: 8px;
         }
 
         /* เส้นแบ่งคอลัม - เฉพาะ td ที่ 2 ในแต่ละแถว */
@@ -323,7 +323,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
  .print-passenger-grid {
           display: grid !important;
-          grid-template-columns: 10px minmax(200px, max-content) 50px 50px 40px !important;
+         grid-template-columns: 10px minmax(150px, max-content) 40px 30px 30px !important;
           gap: 8px !important;
           align-items: center !important;
         }
@@ -375,12 +375,11 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
       .print-summary-row {
         border-top: 1px solid #000;
-      }
+         }
 
  .print-summary-label {
   font-weight: bold;
   text-align: right;
-  padding-right: 8px;
 }
 
 .print-summary-value {
@@ -404,20 +403,6 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         gap: 24px;
       }
 
-      .print-payment-info {
-        flex: 1;
-      }
-
-      .print-payment-title {
-        font-weight: bold;
-        font-size: 13px;
-        margin-bottom: 8px;
-      }
-
-      .print-payment-item {
-        font-size: 12px;
-        margin: 3px 0;
-      }
 
       .print-signatures {
         display: flex;
@@ -450,12 +435,33 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         opacity: 0.7;
       }
 
-      .print-footer {
-     
+      .print-footer {     
         text-align: right;
         font-size: 12px;
         color: #6b7280;
+         padding-top: 30px;
       }
+        .print-summary-text {
+  text-align: left;
+  padding-left: 8px;
+  font-weight: bold;
+}
+ .print-total-label-cell {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 6px 4px;
+        }
+
+        .print-total-english-text {
+          text-align: left;
+          font-weight: bold;
+          flex: 1;
+          margin-left: 4px;
+        }
+          .print-spacer {
+  flex: 1;
+}
     `;
   };
 
@@ -802,27 +808,29 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
           {/* Summary */}
           <tr className="print-summary-row">
-            <td className="print-td-amount print-summary-label">
-              ราคารวมสินค้า (บาท)
-            </td>
+            <td className="print-td-amount print-summary-label">Sub-Total</td>
             <td className="print-td-amount print-summary-value">
-              {formatCurrencyWithDecimal(invoiceData.summary?.subtotal || 0)}
+              {formatCurrencyWithDecimal(invoiceData.summary?.subtotal || 0)}{" "}
+              Baht
             </td>
           </tr>
           <tr className="print-summary-row">
             <td className="print-td-amount print-summary-label">
-              ภาษีมูลค่าเพิ่ม {invoiceData.summary?.vatPercent || 0}%
+              VAT {invoiceData.summary?.vatPercent || 0}%
             </td>
             <td className="print-td-amount print-summary-value">
-              {formatCurrencyWithDecimal(invoiceData.summary?.vat || 0)}
+              {formatCurrencyWithDecimal(invoiceData.summary?.vat || 0)} Baht
             </td>
           </tr>
           <tr className="print-total-row">
-            <td className="print-td-amount print-summary-label">
-              จำนวนเงินรวมทั้งสิ้น (บาท)
+            <td className="print-total-label-cell">
+              <span className="print-total-english-text">
+                ({numberToEnglishText(invoiceData.summary?.total || 0)} Baht)
+              </span>
+              <span className="print-td-amount print-summary-label">Total</span>
             </td>
             <td className="print-td-amount print-summary-value">
-              {formatCurrency(invoiceData.summary?.total || 0)}.-
+              {formatCurrencyWithDecimal(invoiceData.summary?.total || 0)} Baht
             </td>
           </tr>
         </tbody>
@@ -835,57 +843,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
     <>
       {/* Payment Info & Signatures - แสดงทุกหน้า */}
       <div className="print-bottom-section">
-        <div className="print-payment-info">
-          <div
-            className="print-payment-title"
-            style={{ textDecoration: "underline" }}
-          >
-            ข้อมูลการชำระเงิน
-          </div>
-
-          {/* ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล */}
-          <div
-            className="print-payment-item"
-            style={{
-              fontWeight: "bold",
-              marginTop: "6px",
-              marginBottom: "3px",
-            }}
-          >
-            ชื่อบัญชี: นิศารัตน์ ชัยชนะโชติวีรกุล
-          </div>
-          <div className="print-payment-item">
-            • ธนาคารกสิกรไทย เลขบัญชี 502-207768-8
-          </div>
-          <div className="print-payment-item">
-            • ธนาคารไทยพาณิชย์ เลขบัญชี 836-200976-4
-          </div>
-          <div className="print-payment-item">
-            • ธนาคารกรุงไทย เลขบัญชี 829-002106-2
-          </div>
-
-          {/* ชื่อบัญชี: Mr. Hajime Watanabe */}
-          <div
-            className="print-payment-item"
-            style={{
-              fontWeight: "bold",
-              marginTop: "6px",
-              marginBottom: "3px",
-            }}
-          >
-            ชื่อบัญชี: Mr. Hajime Watanabe
-          </div>
-          <div className="print-payment-item">
-            • ธนาคารกรุงศรี เลขบัญชี 423-125269-8
-          </div>
-          <div className="print-payment-item">
-            • ธนาคารกรุงเทพ เลขบัญชี 691-001639-0
-          </div>
-          <div className="print-payment-item">
-            • ธนาคารทหารไทย เลขบัญชี 585-200121-2
-          </div>
-        </div>
-
+        <div className="print-spacer"></div>
         {/* Signatures section - แสดงทุกหน้า */}
         <div className="print-signatures">
           <div className="print-signature">
@@ -1002,7 +960,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
                 {/* Page Selector Dropdown */}
                 <select
-                  className="text-sm font-medium text-gray-700 bg-transparent border-0 focus:outline-none cursor-pointer px-2 py-1 rounded hover:bg-gray-100"
+                  className="text-sm  font-medium text-gray-700 bg-transparent border-0 focus:outline-none cursor-pointer px-2 py-1 rounded hover:bg-gray-100"
                   value={currentViewPage}
                   onChange={(e) => scrollToPage(parseInt(e.target.value))}
                   title="เลือกหน้า"
@@ -1518,7 +1476,6 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
         .print-td-amount {
           text-align: right;
-          padding-right: 8px;
         }
 
         /* เส้นแบ่งคอลัม - เฉพาะ td ที่ 2 ในแต่ละแถว */
@@ -1545,7 +1502,7 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
 
         .print-passenger-grid {
           display: grid !important;
-          grid-template-columns: 10px minmax(200px, max-content) 50px 50px 40px !important;
+          grid-template-columns: 10px minmax(150px, max-content) 40px 30px 30px !important;
           gap: 8px !important;
           align-items: center !important;
         }
@@ -1602,7 +1559,6 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
         .print-summary-label {
           font-weight: bold;
           text-align: right;
-          padding-right: 8px;
         }
 
         .print-summary-value {
@@ -1624,21 +1580,6 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
           justify-content: space-between;
           margin-top: 15px;
           gap: 24px;
-        }
-
-        .print-payment-info {
-          flex: 1;
-        }
-
-        .print-payment-title {
-          font-weight: bold;
-          font-size: 13px;
-          margin-bottom: 8px;
-        }
-
-        .print-payment-item {
-          font-size: 12px;
-          margin: 3px 0;
         }
 
         .print-signatures {
@@ -1676,207 +1617,24 @@ const PrintInvoice = ({ isOpen, onClose, ticketId, onPOGenerated }) => {
           text-align: right;
           font-size: 12px;
           color: #6b7280;
+          padding-top: 30px;
         }
 
-        /* Responsive สำหรับหน้าจอเล็ก */
-        @media (max-width: 768px) {
-          .print-page {
-            width: 190mm;
-            height: 268mm;
-          }
-
-          .print-viewer-document-container {
-            padding: 10px;
-          }
+        .print-total-label-cell {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 6px 4px;
         }
 
-        @media (max-width: 480px) {
-          .print-page {
-            width: 170mm;
-            height: 240mm;
-          }
-
-          .print-viewer-document-container {
-            padding: 5px;
-          }
+        .print-total-english-text {
+          text-align: left;
+          font-weight: bold;
+          flex: 1;
+          margin-left: 4px;
         }
-
-        /* Print Styles */
-        @media print {
-          @page {
-            size: A4;
-            margin: 10mm 15mm 15mm 15mm;
-          }
-
-          body * {
-            visibility: hidden;
-          }
-
-          .print-document {
-            visibility: visible !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            transform: none !important;
-            background: white !important;
-          }
-
-          .print-document * {
-            visibility: visible !important;
-          }
-
-          .print-page {
-            width: 100% !important;
-            height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            border: none !important;
-            overflow: visible !important;
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-          }
-
-          .print-page:not(:first-child) {
-            page-break-before: always !important;
-            break-before: page !important;
-          }
-
-          .print-viewer-document-container {
-            background: white !important;
-            padding: 0 !important;
-          }
-
-          .print-viewer-toolbar,
-          .print-viewer-controls {
-            display: none !important;
-          }
-
-          .print-document-title {
-            background-color: #f4bb19 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          .print-document-title-text {
-            color: white !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          .print-company-info {
-            border-bottom: 4px solid #881f7e !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          .print-table th {
-            background-color: #e5e7eb !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          .print-total-row {
-            background-color: #e5e7eb !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .print-viewer-page-nav {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 4px;
-            background: white;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-          }
-
-          .print-viewer-page-info {
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-            padding: 4px 8px;
-            white-space: nowrap;
-            font-family: "Prompt", sans-serif;
-            min-width: 80px;
-            text-align: center;
-          }
-
-          .print-viewer-page-select {
-            border: 1px solid #d1d5db;
-            background: white;
-            padding: 4px 8px;
-            font-size: 12px;
-            color: #6b7280;
-            cursor: pointer;
-            outline: none;
-            border-radius: 4px;
-            font-family: "Prompt", sans-serif;
-            margin-left: 4px;
-          }
-
-          .print-viewer-page-select:hover {
-            background: #f9fafb;
-          }
-
-          .print-viewer-page-select:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 1px #3b82f6;
-          }
-
-          /* เพิ่ม smooth scroll behavior */
-          .print-viewer-content {
-            scroll-behavior: smooth;
-          }
-
-          /* Page indicator active state */
-          .print-page.active-page {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-              0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 2px #3b82f6;
-          }
-
-          /* Thumbnails */
-          .print-viewer-thumbnails {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            z-index: 60;
-          }
-
-          .print-viewer-thumbnail {
-            width: 40px;
-            height: 56px;
-            border: 2px solid #d1d5db;
-            border-radius: 4px;
-            background: white;
-            color: #6b7280;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .print-viewer-thumbnail:hover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-          }
-
-          .print-viewer-thumbnail.active {
-            border-color: #3b82f6;
-            background: #3b82f6;
-            color: white;
-          }
+        .print-spacer {
+          flex: 1;
         }
       `}</style>
     </div>

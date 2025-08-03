@@ -35,9 +35,9 @@ const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
 
   // ฟังก์ชันคำนวณราคารวม (ไม่มีทศนิยม)
   const calculateItemTotal = (price, quantity) => {
-    const numPrice = parseInt(price) || 0;
+    const numPrice = parseFloat(price) || 0;
     const numQuantity = parseInt(quantity) || 0;
-    return (numPrice * numQuantity).toString();
+    return (numPrice * numQuantity).toFixed(2);
   };
 
   const handleDescriptionChange = (index, value) => {
@@ -60,7 +60,7 @@ const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
     updatedExtras[index].sale_price = parseInput(value);
 
     // คำนวณยอดรวมใหม่
-    const salePrice = parseInt(updatedExtras[index].sale_price) || 0;
+    const salePrice = parseFloat(updatedExtras[index].sale_price) || 0;
     const quantity = parseInt(updatedExtras[index].quantity);
     updatedExtras[index].total_amount = calculateItemTotal(salePrice, quantity);
 
@@ -73,7 +73,7 @@ const ExtrasSection = ({ extras, setExtras, readOnly = false }) => {
     updatedExtras[index].quantity = value;
 
     // คำนวณยอดรวมใหม่
-    const salePrice = parseInt(updatedExtras[index].sale_price) || 0;
+    const salePrice = parseFloat(updatedExtras[index].sale_price) || 0;
     const quantity = parseInt(value);
     updatedExtras[index].total_amount = calculateItemTotal(salePrice, quantity);
 

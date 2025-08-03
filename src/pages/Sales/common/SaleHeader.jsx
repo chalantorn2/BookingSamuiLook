@@ -90,7 +90,7 @@ const SaleHeader = ({
     const value = e.target.value.toUpperCase().substring(0, 5);
     setFormData({ ...formData, customerCode: value });
 
-    if (value.length >= 1 && !readOnly) {
+    if (value.length >= 1 && !readOnly && value.toUpperCase() !== "WKIN") {
       try {
         const results = await getCustomers(value, 3);
         setCodeSearchResults(results);
@@ -260,7 +260,7 @@ const SaleHeader = ({
   };
 
   const handleBranchNumberChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "").substring(0, 3);
+    const value = e.target.value.replace(/\D/g, "").substring(0, 4);
     console.log("Branch number changed to:", value);
     setFormData({
       ...formData,
@@ -659,7 +659,7 @@ const SaleHeader = ({
               }`}
               value={formData.branchNumber || ""}
               onChange={handleBranchNumberChange}
-              maxLength={3}
+              maxLength={4}
               disabled={
                 readOnly || !globalEditMode || formData.branchType !== "Branch"
               }
@@ -959,7 +959,7 @@ const SaleHeader = ({
             }`}
             value={formData.branchNumber || ""}
             onChange={handleBranchNumberChange}
-            maxLength={3}
+            maxLength={4}
             disabled={
               readOnly || !globalEditMode || formData.branchType !== "Branch"
             }

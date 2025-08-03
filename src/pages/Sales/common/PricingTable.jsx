@@ -33,9 +33,9 @@ const PricingTable = ({
 }) => {
   // ฟังก์ชันคำนวณราคารวมต่อรายการ (ไม่มีทศนิยม)
   const calculateItemTotal = (price, quantity) => {
-    const numPrice = parseInt(price) || 0;
+    const numPrice = parseFloat(price) || 0;
     const numQuantity = parseInt(quantity) || 0;
-    return (numPrice * numQuantity).toString();
+    return (numPrice * numQuantity).toFixed(2);
   };
 
   // ฟังก์ชันอัพเดทข้อมูลราคา
@@ -58,11 +58,11 @@ const PricingTable = ({
 
   // คำนวณยอดรวมทั้งหมด (ไม่มีทศนิยม)
   const calculateTotal = () => {
-    const adultTotal = parseInt(pricing.adult?.total || 0);
-    const childTotal = parseInt(pricing.child?.total || 0);
-    const infantTotal = parseInt(pricing.infant?.total || 0);
+    const adultTotal = parseFloat(pricing.adult?.total || 0);
+    const childTotal = parseFloat(pricing.child?.total || 0);
+    const infantTotal = parseFloat(pricing.infant?.total || 0);
 
-    return (adultTotal + childTotal + infantTotal).toString();
+    return (adultTotal + childTotal + infantTotal).toFixed(2);
   };
 
   return (

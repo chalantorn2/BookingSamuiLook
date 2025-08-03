@@ -169,7 +169,7 @@ const DataTable = ({
       currentEditItem.branch_type === "Branch" &&
       !currentEditItem.branch_number
     ) {
-      alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 3 หลัก)");
+      throw new Error("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 4 หลัก)");
       return;
     }
 
@@ -244,7 +244,7 @@ const DataTable = ({
       setCurrentEditItem({ ...currentEditItem, [name]: updatedValue });
     } else if (name === "numeric_code") {
       // จำกัดให้เป็นตัวเลข 3 ตัว
-      const updatedValue = value.replace(/\D/g, "").substring(0, 3);
+      const updatedValue = value.replace(/\D/g, "").substring(0, 4);
       setCurrentEditItem({ ...currentEditItem, [name]: updatedValue });
     } else if (name === "branch_type" && value === "Head Office") {
       setCurrentEditItem({
@@ -390,14 +390,14 @@ const DataTable = ({
                       onChange={(e) => {
                         const value = e.target.value
                           .replace(/\D/g, "")
-                          .substring(0, 3);
+                          .substring(0, 4);
                         setCurrentEditItem({
                           ...currentEditItem,
                           branch_number: value,
                         });
                       }}
                       placeholder="หมายเลขสาขา"
-                      maxLength={3}
+                      maxLength={4}
                       className="mt-2 w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200 focus:border-blue-500"
                     />
                   )}

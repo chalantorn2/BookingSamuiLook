@@ -370,3 +370,94 @@ export const formatCurrencyWithDecimal = (amount) => {
 export const formatCurrency = (amount) => {
   return formatCurrencyNoDecimal(amount);
 };
+
+/**
+ * แปลงตัวเลขเป็นตัวอักษรภาษาอังกฤษ
+ */
+export const numberToEnglishText = (amount) => {
+  if (amount === 0) return "Zero";
+
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+  ];
+  const teens = [
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+  const thousands = ["", "Thousand", "Million", "Billion"];
+
+  function convertHundreds(num) {
+    let result = "";
+
+    if (num >= 100) {
+      result += ones[Math.floor(num / 100)] + " Hundred ";
+      num %= 100;
+    }
+
+    if (num >= 20) {
+      result += tens[Math.floor(num / 10)] + " ";
+      num %= 10;
+    } else if (num >= 10) {
+      result += teens[num - 10] + " ";
+      return result.trim();
+    }
+
+    if (num > 0) {
+      result += ones[num] + " ";
+    }
+
+    return result.trim();
+  }
+
+  let integerPart = Math.floor(amount); // เปลี่ยนจาก const เป็น let
+  let result = "";
+  let thousandIndex = 0;
+
+  if (integerPart === 0) {
+    return "Zero";
+  }
+
+  while (integerPart > 0) {
+    const chunk = integerPart % 1000;
+    if (chunk !== 0) {
+      const chunkText = convertHundreds(chunk);
+      result =
+        chunkText +
+        (thousands[thousandIndex] ? " " + thousands[thousandIndex] : "") +
+        (result ? " " + result : "");
+    }
+    integerPart = Math.floor(integerPart / 1000); // ตอนนี้สามารถ assign ได้แล้ว
+    thousandIndex++;
+  }
+
+  return result.trim();
+};

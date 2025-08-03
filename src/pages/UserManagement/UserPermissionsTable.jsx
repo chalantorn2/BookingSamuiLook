@@ -44,9 +44,9 @@ const UserPermissionsTable = ({ role = "viewer" }) => {
 
     // Viewer มีสิทธิ์เฉพาะบางโมดูล
     if (role === "viewer") {
-      // สำหรับ Sale และ Information ทำได้ทุกอย่าง
+      // สำหรับ Sale และ Information ทำได้ทุกอย่างยกเว้นลบ
       if (moduleId === "sale" || moduleId === "information") {
-        return true;
+        return action !== "delete";
       }
 
       // สำหรับโมดูลอื่นๆ ทำได้แค่ดูอย่างเดียว
