@@ -204,7 +204,7 @@ export const generatePOForTicket = async (ticketId) => {
       throw new Error("ไม่พบข้อมูลตั๋ว");
     }
 
-    const existingTicket = ticketResult.data;
+    const existingTicket = ticketResult.data.ticket;
 
     // ถ้ามี PO Number แล้ว ให้ return PO Number เดิม
     if (existingTicket.po_number) {

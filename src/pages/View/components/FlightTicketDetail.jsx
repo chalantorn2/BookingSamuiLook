@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../../services/supabase";
+import { ticketApi } from "../../../services/ticketApi";
 import { generatePOForTicket } from "../../../services/ticketService";
 import EmailInvoice from "../common/EmailInvoice";
 import {
@@ -109,52 +109,54 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
       setError(null);
 
       try {
-        // Fetch all ticket data in one query (same as Edit)
-        const { data: ticket, error } = await supabase
-          .from("bookings_ticket")
-          .select(
-            `
-            *,
-            customer:customer_id(*),
-            supplier:information_id(*),
-            tickets_detail(*),
-            ticket_additional_info(*),
-            tickets_pricing(*),
-            tickets_passengers(*),
-            tickets_routes(*),
-            tickets_extras(*)
-          `
-          )
-          .eq("id", ticketId)
-          .single();
+        // ✅ ใช้ ticketApi แทน supabase
+        const result = await ticketApi.getFlightTicket(ticketId);
 
-        if (error) throw error;
+        if (!result.success) {
+          throw new Error(result.error || "ไม่สามารถโหลดข้อมูลตั๋วได้");
+        }
 
-        // Fetch user information
-        const userIds = [
-          ticket.created_by,
-          ticket.updated_by,
-          ticket.cancelled_by,
-        ].filter(Boolean);
-        const { data: users, error: usersError } = await supabase
-          .from("users")
-          .select("id, fullname")
-          .in("id", userIds);
+        const ticket = result.data.ticket;
 
-        if (usersError) throw usersError;
-
-        const userMap = new Map(
-          users?.map((user) => [user.id, user.fullname]) || []
-        );
+        // Fetch user information - ใช้ API ใหม่หรือข้ามไปก่อน
+        // const userIds = [ticket.created_by, ticket.updated_by, ticket.cancelled_by].filter(Boolean);
+        // สำหรับตอนนี้ใช้ข้อมูลที่มีอยู่แล้ว
 
         setTicketData({
           ...ticket,
-          createdByName: userMap.get(ticket.created_by) || "-",
-          updatedByName: userMap.get(ticket.updated_by) || "-",
-          cancelledByName: userMap.get(ticket.cancelled_by) || "-",
+          createdByName: ticket.user?.fullname || "-",
+          updatedByName: "-", // จะต้องเพิ่ม API สำหรับดึงข้อมูล user
+          cancelledByName: ticket.cancelled_user?.fullname || "-",
+          // เพิ่มข้อมูลที่เกี่ยวข้อง
+          tickets_detail: result.data.ticket.tickets_detail
+            ? [result.data.ticket.tickets_detail]
+            : [],
+          ticket_additional_info: result.data.ticket.ticket_additional_info
+            ? [result.data.ticket.ticket_additional_info]
+            : [],
+          tickets_pricing: result.data.ticket.tickets_pricing
+            ? [result.data.ticket.tickets_pricing]
+            : [],
+          tickets_passengers: result.data.passengers || [],
+          tickets_routes: result.data.routes || [],
+          tickets_extras: result.data.extras || [],
         });
 
-        mapDataToFormState(ticket);
+        mapDataToFormState({
+          ...ticket,
+          tickets_detail: result.data.ticket.tickets_detail
+            ? [result.data.ticket.tickets_detail]
+            : [],
+          ticket_additional_info: result.data.ticket.ticket_additional_info
+            ? [result.data.ticket.ticket_additional_info]
+            : [],
+          tickets_pricing: result.data.ticket.tickets_pricing
+            ? [result.data.ticket.tickets_pricing]
+            : [],
+          tickets_passengers: result.data.passengers || [],
+          tickets_routes: result.data.routes || [],
+          tickets_extras: result.data.extras || [],
+        });
       } catch (err) {
         console.error("Error fetching ticket details:", err);
         setError(err.message || "ไม่สามารถโหลดข้อมูลตั๋วได้");
@@ -318,13 +320,11 @@ const FlightTicketDetail = ({ ticketId, onClose, onEdit, onPOGenerated }) => {
     if (ticketId) {
       const fetchUpdatedData = async () => {
         try {
-          const { data: updatedTicket, error } = await supabase
-            .from("bookings_ticket")
-            .select("po_number, po_generated_at, status")
-            .eq("id", ticketId)
-            .single();
+          // ✅ ใช้ ticketApi แทน supabase
+          const result = await ticketApi.getFlightTicket(ticketId);
 
-          if (!error && updatedTicket) {
+          if (result.success && result.data.ticket) {
+            const updatedTicket = result.data.ticket;
             setTicketData((prev) => ({
               ...prev,
               po_number: updatedTicket.po_number,

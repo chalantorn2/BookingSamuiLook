@@ -1,5 +1,5 @@
 // src/pages/View/common/documentDataMapper.js
-import { supabase } from "../../../services/supabase";
+import { ticketApi } from "../../../services/ticketApi";
 import { generatePOForTicket } from "../../../services/ticketService";
 
 /**
@@ -15,62 +15,60 @@ export const getInvoiceData = async (ticketId) => {
       throw new Error(poResult.error);
     }
 
-    // ขั้นตอนที่ 2: ดึงข้อมูลทั้งหมดจากฐานข้อมูล
-    const { data: ticket, error } = await supabase
-      .from("bookings_ticket")
-      .select(
-        `
-    id,
-    reference_number,
-    po_number,
-    po_generated_at,
-    created_at,
-    customer:customer_id(name, address_line1, address_line2, address_line3, phone, id_number, branch_type, branch_number, code, email),
-    supplier:information_id(name, code, numeric_code),
-    tickets_detail(issue_date, due_date, credit_days, subtotal_before_vat, vat_percent, vat_amount, grand_total),
-    ticket_additional_info(code, ticket_type, ticket_type_details, company_payment_method, company_payment_details, customer_payment_method, customer_payment_details),
-    tickets_pricing(adult_sale_price, adult_pax, adult_total, child_sale_price, child_pax, child_total, infant_sale_price, infant_pax, infant_total),
-    tickets_passengers(passenger_name, age, ticket_number, ticket_code),
-    tickets_routes(flight_number, rbd, date, origin, destination, departure_time, arrival_time),
-    tickets_extras(description, sale_price, quantity, total_amount),
-    user:created_by(fullname)
-  `
-      )
-      .eq("id", ticketId)
-      .single();
+    // ขั้นตอนที่ 2: ดึงข้อมูลทั้งหมดจาก API แทน Supabase
+    const result = await ticketApi.getFlightTicket(ticketId);
 
-    if (error) throw error;
+    if (!result.success) {
+      throw new Error(result.error || "ไม่สามารถดึงข้อมูลตั๋วได้");
+    }
 
-    const detail = ticket.tickets_detail?.[0] || {};
-    const additional = ticket.ticket_additional_info?.[0] || {};
-    const pricing = ticket.tickets_pricing?.[0] || {};
+    const ticketData = result.data;
+    const ticket = ticketData.ticket;
+
+    // แปลงข้อมูลให้ตรงกับ format เดิม
+    const transformedTicket = {
+      ...ticket,
+      tickets_detail: ticket.tickets_detail ? [ticket.tickets_detail] : [],
+      ticket_additional_info: ticket.ticket_additional_info
+        ? [ticket.ticket_additional_info]
+        : [],
+      tickets_pricing: ticket.tickets_pricing ? [ticket.tickets_pricing] : [],
+      tickets_passengers: ticketData.passengers || [],
+      tickets_routes: ticketData.routes || [],
+      tickets_extras: ticketData.extras || [],
+      user: ticket.user ? { fullname: ticket.user.fullname } : null,
+    };
+
+    const detail = transformedTicket.tickets_detail?.[0] || {};
+    const additional = transformedTicket.ticket_additional_info?.[0] || {};
+    const pricing = transformedTicket.tickets_pricing?.[0] || {};
 
     // แปลงข้อมูลลูกค้า - รองรับที่อยู่หลายบรรทัด
     const customerInfo = {
-      name: ticket.customer?.name || "",
-      address: formatCustomerAddressForPrint(ticket.customer),
-      address_line1: ticket.customer?.address_line1 || "",
-      address_line2: ticket.customer?.address_line2 || "",
-      address_line3: ticket.customer?.address_line3 || "",
-      phone: ticket.customer?.phone || "",
-      email: ticket.customer?.email,
-      taxId: ticket.customer?.id_number || "",
+      name: transformedTicket.customer?.name || "",
+      address: formatCustomerAddressForPrint(transformedTicket.customer),
+      address_line1: transformedTicket.customer?.address_line1 || "",
+      address_line2: transformedTicket.customer?.address_line2 || "",
+      address_line3: transformedTicket.customer?.address_line3 || "",
+      phone: transformedTicket.customer?.phone || "",
+      email: transformedTicket.customer?.email,
+      taxId: transformedTicket.customer?.id_number || "",
       branch: getBranchDisplay(
-        ticket.customer?.branch_type,
-        ticket.customer?.branch_number
+        transformedTicket.customer?.branch_type,
+        transformedTicket.customer?.branch_number
       ),
     };
 
     // แปลงข้อมูลใบแจ้งหนี้
     const invoiceInfo = {
-      poNumber: ticket.po_number || poResult.poNumber,
+      poNumber: transformedTicket.po_number || poResult.poNumber,
       date: formatDate(detail.issue_date),
       dueDate: formatDate(detail.due_date),
-      salesPerson: ticket.user?.fullname || "System",
+      salesPerson: transformedTicket.user?.fullname || "System",
     };
 
     const MAX_PASSENGERS_DISPLAY = 6;
-    const allPassengers = ticket.tickets_passengers || [];
+    const allPassengers = transformedTicket.tickets_passengers || [];
     const passengers = [];
 
     // แสดงผู้โดยสารแค่ 6 คนแรก
@@ -110,9 +108,9 @@ export const getInvoiceData = async (ticketId) => {
     }
 
     // แปลงข้อมูลเที่ยวบิน - ใช้ Multi-Segment Route Format
-    const routes = ticket.tickets_routes || [];
+    const routes = transformedTicket.tickets_routes || [];
     const multiSegmentRoute = generateMultiSegmentRoute(routes);
-    const supplierName = ticket.supplier?.name || "";
+    const supplierName = transformedTicket.supplier?.name || "";
 
     // สร้างข้อมูล flights สำหรับแสดงในตาราง
     const flights = {
@@ -170,7 +168,7 @@ export const getInvoiceData = async (ticketId) => {
 
     // แปลงข้อมูลรายการเพิ่มเติม - แสดงครบทุกรายการ แต่ขั้นต่ำ 3 บรรทัด
     const MIN_EXTRAS_DISPLAY = 3;
-    const allExtras = ticket.tickets_extras || [];
+    const allExtras = transformedTicket.tickets_extras || [];
     const extras = [];
 
     // คำนวณจำนวนบรรทัดที่ต้องแสดง (แสดงครบทุกรายการ หรือขั้นต่ำ 3 บรรทัด)

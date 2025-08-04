@@ -438,13 +438,26 @@ function getFlightTickets($params)
         $stmt->execute($bindings);
         $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-        // Get data with pagination
+        // 🔧 ปรับปรุง SQL ให้ส่งข้อมูล customer และ supplier ครบ
         $sql = "
             SELECT 
                 bt.*,
-                c.name as customer_name,
-                i.name as supplier_name,
-                td.grand_total, td.issue_date, td.due_date
+                JSON_OBJECT(
+                    'id', c.id,
+                    'name', c.name,
+                    'code', c.code,
+                    'phone', c.phone,
+                    'email', c.email
+                ) as customer,
+                JSON_OBJECT(
+                    'id', i.id,
+                    'name', i.name,
+                    'code', i.code,
+                    'numeric_code', i.numeric_code
+                ) as supplier,
+                td.grand_total, 
+                td.issue_date, 
+                td.due_date
             FROM bookings_ticket bt
             LEFT JOIN customers c ON bt.customer_id = c.id
             LEFT JOIN information i ON bt.information_id = i.id
@@ -457,6 +470,16 @@ function getFlightTickets($params)
         $stmt = $pdo->prepare($sql);
         $stmt->execute([...$bindings, $limit, $offset]);
         $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 🔧 แปลง JSON strings เป็น objects
+        foreach ($tickets as &$ticket) {
+            if ($ticket['customer']) {
+                $ticket['customer'] = json_decode($ticket['customer'], true);
+            }
+            if ($ticket['supplier']) {
+                $ticket['supplier'] = json_decode($ticket['supplier'], true);
+            }
+        }
 
         sendSuccess([
             'data' => $tickets,

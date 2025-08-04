@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../../services/supabase";
-import { toThaiTimeZone } from "../../../utils/helpers";
+import { ticketApi } from "../../../services/ticketApi";
 
 /**
  * สร้าง Multi-Segment Route Format (จำกัดแสดงสูงสุด 5 airports)
@@ -81,173 +80,27 @@ export const useFlightTicketsData = ({
     setError(null);
 
     try {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+      // เตรียม filters สำหรับ API
+      const filters = {
+        from_date: startDate,
+        to_date: endDate,
+        limit: 1000, // ดึงข้อมูลเยอะๆ เพื่อให้ filter ได้ครบ
+        page: 1,
+      };
 
-      let query = supabase
-        .from("bookings_ticket")
-        .select(
-          `
-  id,
-  reference_number,
-  status,
-  payment_status,
-  created_at,
-  updated_at,
-  po_number,
-  po_generated_at,
-  cancelled_at,
-  cancelled_by,
-  cancel_reason,
-  customer:customer_id(name, code),
-  supplier:information_id(name, code),
-  cancelled_user:cancelled_by(fullname)
-`
-        )
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString());
+      // เรียก API
+      const result = await ticketApi.getFlightTickets(filters);
 
-      const { data: tickets, error: ticketError } = await query;
-
-      if (ticketError) {
-        console.error("Error fetching flight tickets:", ticketError);
-        setError("ไม่สามารถโหลดข้อมูลตั๋วเครื่องบินได้");
-        setAllTickets([]);
-        setFilteredTickets([]);
-        return;
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch tickets");
       }
 
-      // ปรับ created_at ให้อยู่ใน timezone +07:00
-      const adjustedTickets = tickets.map((ticket) => {
-        const createdAt = new Date(ticket.created_at);
-        createdAt.setHours(createdAt.getHours() + 7);
-        return {
-          ...ticket,
-          created_at: createdAt.toISOString(),
-        };
-      });
+      const tickets = result.data || [];
+      console.log("🔍 API Response tickets:", tickets);
+      console.log("🔍 First ticket structure:", tickets[0]);
 
-      // ดึงข้อมูล ticket_additional_info แยก
-      const ticketIds = adjustedTickets.map((ticket) => ticket.id);
-      const { data: additionalInfo, error: additionalInfoError } =
-        await supabase
-          .from("ticket_additional_info")
-          .select("bookings_ticket_id, code")
-          .in("bookings_ticket_id", ticketIds);
-
-      if (additionalInfoError) {
-        console.error(
-          "Error fetching ticket_additional_info:",
-          additionalInfoError
-        );
-      }
-
-      // ดึงข้อมูลผู้โดยสาร พร้อม ticket_number และ ticket_code
-      const { data: passengers, error: passengersError } = await supabase
-        .from("tickets_passengers")
-        .select(
-          "bookings_ticket_id, passenger_name, ticket_number, ticket_code"
-        )
-        .in("bookings_ticket_id", ticketIds)
-        .order("id"); // เรียงตาม id เพื่อให้ได้ผู้โดยสารคนแรก
-
-      if (passengersError) {
-        console.error("Error fetching passengers:", passengersError);
-      }
-
-      // ดึงข้อมูลเส้นทาง
-      const { data: routes, error: routesError } = await supabase
-        .from("tickets_routes")
-        .select("bookings_ticket_id, origin, destination")
-        .in("bookings_ticket_id", ticketIds)
-        .order("id");
-
-      if (routesError) {
-        console.error("Error fetching routes:", routesError);
-      }
-
-      // สร้าง Maps สำหรับจับคู่ข้อมูล
-      const additionalInfoMap = new Map(
-        additionalInfo?.map((info) => [info.bookings_ticket_id, info.code]) ||
-          []
-      );
-
-      const passengersMap = new Map();
-      const firstPassengerTicketMap = new Map(); // Map สำหรับเก็บข้อมูล ticket ของผู้โดยสารคนแรก
-
-      passengers?.forEach((passenger) => {
-        if (!passengersMap.has(passenger.bookings_ticket_id)) {
-          passengersMap.set(passenger.bookings_ticket_id, []);
-          // เก็บข้อมูล ticket ของผู้โดยสารคนแรก
-          firstPassengerTicketMap.set(passenger.bookings_ticket_id, {
-            ticket_number: passenger.ticket_number,
-            ticket_code: passenger.ticket_code,
-          });
-        }
-        passengersMap.get(passenger.bookings_ticket_id).push(passenger);
-      });
-
-      const routesMap = new Map();
-      routes?.forEach((route) => {
-        if (!routesMap.has(route.bookings_ticket_id)) {
-          routesMap.set(route.bookings_ticket_id, []);
-        }
-        routesMap.get(route.bookings_ticket_id).push(route);
-      });
-
-      // รวมข้อมูลทั้งหมด
-      const processedData = adjustedTickets.map((ticket) => {
-        const ticketPassengers = passengersMap.get(ticket.id) || [];
-        const ticketRoutes = routesMap.get(ticket.id) || [];
-        const firstPassengerTicketInfo =
-          firstPassengerTicketMap.get(ticket.id) || {};
-
-        // สร้างชื่อผู้โดยสาร
-        let passengersDisplay = "";
-        if (ticketPassengers.length > 0) {
-          const firstName = ticketPassengers[0].passenger_name || "Unknown";
-          if (ticketPassengers.length === 1) {
-            passengersDisplay = firstName;
-          } else {
-            const additionalCount = ticketPassengers.length - 1;
-            passengersDisplay = `${firstName}...+${additionalCount}`;
-          }
-        }
-
-        let routingDisplay = "";
-        if (ticketRoutes.length > 0) {
-          routingDisplay = generateMultiSegmentRoute(ticketRoutes);
-        }
-
-        let ticketNumberDisplay = "-";
-        if (ticketPassengers.length > 0) {
-          const ticketCodes = ticketPassengers
-            .map((p) => p.ticket_code)
-            .filter((code) => code && code.trim() !== "");
-
-          if (ticketCodes.length === 1) {
-            ticketNumberDisplay = ticketCodes[0];
-          } else if (ticketCodes.length > 1) {
-            const firstCode = ticketCodes[0];
-            const lastCode = ticketCodes[ticketCodes.length - 1];
-            const lastThreeDigits = lastCode.slice(-3);
-            ticketNumberDisplay = `${firstCode}-${lastThreeDigits}`;
-          }
-        }
-
-        return {
-          ...ticket,
-          code: additionalInfoMap.get(ticket.id) || null,
-          passengersDisplay,
-          routingDisplay,
-          passengersCount: ticketPassengers.length,
-          ticketNumberDisplay, // เพิ่มฟิลด์ใหม่
-          firstPassengerTicketInfo,
-          cancelled_by_name: ticket.cancelled_user?.fullname,
-        };
-      });
+      // ประมวลผลข้อมูลให้ตรงกับ format เดิม
+      const processedData = await processTicketData(tickets);
 
       console.log("Processed tickets with additional data:", processedData);
 
@@ -255,12 +108,165 @@ export const useFlightTicketsData = ({
       filterData(processedData, searchTerm);
     } catch (error) {
       console.error("Error in fetchFlightTickets:", error);
-      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล: " + error.message);
       setAllTickets([]);
       setFilteredTickets([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * ประมวลผลข้อมูล ticket ให้ตรงกับ format ที่ component ต้องการ
+   */
+  const processTicketData = async (tickets) => {
+    // ดึงข้อมูลเพิ่มเติมแบบ parallel สำหรับทุก ticket
+    const processedTickets = await Promise.all(
+      tickets.map(async (ticket) => {
+        try {
+          // ดึงข้อมูลรายละเอียดของแต่ละ ticket
+          const detailResult = await ticketApi.getFlightTicket(ticket.id);
+
+          if (!detailResult.success) {
+            console.warn(`Failed to get details for ticket ${ticket.id}`);
+            return mapBasicTicketData(ticket);
+          }
+
+          const fullTicketData = detailResult.data;
+          return mapFullTicketData(fullTicketData);
+        } catch (error) {
+          console.warn(`Error processing ticket ${ticket.id}:`, error);
+          return mapBasicTicketData(ticket);
+        }
+      })
+    );
+
+    return processedTickets.filter(Boolean); // กรองข้อมูลที่ null ออก
+  };
+
+  /**
+   * แปลงข้อมูล ticket พื้นฐาน (กรณีดึงรายละเอียดไม่ได้)
+   */
+  const mapBasicTicketData = (ticket) => {
+    console.log("🔍 Mapping basic ticket:", ticket);
+    console.log("🔍 Customer data:", ticket.customer_name, ticket.customer);
+    console.log("🔍 Supplier data:", ticket.supplier_name, ticket.supplier);
+
+    return {
+      id: ticket.id,
+      reference_number: ticket.reference_number,
+      status: ticket.status || "not_invoiced",
+      payment_status: ticket.payment_status || "pending",
+      created_at: ticket.created_at,
+      updated_at: ticket.updated_at,
+      po_number: ticket.po_number,
+      po_generated_at: ticket.po_generated_at,
+      cancelled_at: ticket.cancelled_at,
+      cancelled_by: ticket.cancelled_by,
+      cancel_reason: ticket.cancel_reason,
+      // 🔧 แก้ไข: รองรับทั้ง API format และ Supabase format
+      customer: ticket.customer_name
+        ? { name: ticket.customer_name, code: ticket.customer_code || null }
+        : ticket.customer || null,
+      supplier: ticket.supplier_name
+        ? { name: ticket.supplier_name, code: ticket.supplier_code || null }
+        : ticket.supplier || null,
+      code: null,
+      passengersDisplay: "Loading...",
+      routingDisplay: "Loading...",
+      passengersCount: 0,
+      ticketNumberDisplay: "-",
+      firstPassengerTicketInfo: {},
+      cancelled_by_name: null,
+    };
+  };
+
+  /**
+   * แปลงข้อมูล ticket แบบเต็ม
+   */
+  const mapFullTicketData = (ticketData) => {
+    console.log("🔍 Mapping FULL ticket data:", ticketData);
+
+    const ticket = ticketData.ticket || {};
+    const passengers = ticketData.passengers || [];
+    const routes = ticketData.routes || [];
+    const additional = ticket.ticket_additional_info?.[0] || {};
+
+    console.log("🔍 Ticket customer:", ticket.customer);
+    console.log("🔍 Ticket supplier:", ticket.supplier);
+
+    // สร้างชื่อผู้โดยสาร
+    let passengersDisplay = "";
+    if (passengers.length > 0) {
+      const firstName = passengers[0].passenger_name || "Unknown";
+      if (passengers.length === 1) {
+        passengersDisplay = firstName;
+      } else {
+        const additionalCount = passengers.length - 1;
+        passengersDisplay = `${firstName}...+${additionalCount}`;
+      }
+    }
+
+    // สร้างเส้นทาง
+    let routingDisplay = "";
+    if (routes.length > 0) {
+      routingDisplay = generateMultiSegmentRoute(routes);
+    }
+
+    // สร้าง ticket number display
+    let ticketNumberDisplay = "-";
+    if (passengers.length > 0) {
+      const ticketCodes = passengers
+        .map((p) => p.ticket_code)
+        .filter((code) => code && code.trim() !== "");
+
+      if (ticketCodes.length === 1) {
+        ticketNumberDisplay = ticketCodes[0];
+      } else if (ticketCodes.length > 1) {
+        const firstCode = ticketCodes[0];
+        const lastCode = ticketCodes[ticketCodes.length - 1];
+        const lastThreeDigits = lastCode.slice(-3);
+        ticketNumberDisplay = `${firstCode}-${lastThreeDigits}`;
+      }
+    }
+
+    // ข้อมูล ticket ของผู้โดยสารคนแรก
+    const firstPassengerTicketInfo =
+      passengers.length > 0
+        ? {
+            ticket_number: passengers[0].ticket_number,
+            ticket_code: passengers[0].ticket_code,
+          }
+        : {};
+
+    const result = {
+      id: ticket.id,
+      reference_number: ticket.reference_number,
+      status: ticket.status || "not_invoiced",
+      payment_status: ticket.payment_status || "pending",
+      created_at: ticket.created_at,
+      updated_at: ticket.updated_at,
+      po_number: ticket.po_number,
+      po_generated_at: ticket.po_generated_at,
+      cancelled_at: ticket.cancelled_at,
+      cancelled_by: ticket.cancelled_by,
+      cancel_reason: ticket.cancel_reason,
+      customer: ticket.customer,
+      supplier: ticket.supplier,
+      code: additional.code || null,
+      passengersDisplay,
+      routingDisplay,
+      passengersCount: passengers.length,
+      ticketNumberDisplay,
+      firstPassengerTicketInfo,
+      cancelled_by_name: ticket.cancelled_user?.fullname || null,
+    };
+
+    console.log("🔍 Final mapped result:", result);
+    console.log("🔍 Result customer:", result.customer);
+    console.log("🔍 Result supplier:", result.supplier);
+
+    return result;
   };
 
   const filterData = (data = allTickets, search = searchTerm) => {
