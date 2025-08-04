@@ -12,6 +12,7 @@ import ActivityLog from "./pages/Admin/ActivityLog";
 import PrivateRoute from "./pages/Login/PrivateRoute";
 import { AuthProvider } from "./pages/Login/AuthContext";
 import { AlertDialogProvider } from "./contexts/AlertDialogContext";
+import ApiTest from "./components/common/ApiTest";
 
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -219,6 +220,8 @@ const App = () => {
                             element={<ActivityLog />}
                           />
                         </Route>
+
+                        <Route path="/api-test" element={<ApiTest />} />
 
                         <Route
                           path="/search"

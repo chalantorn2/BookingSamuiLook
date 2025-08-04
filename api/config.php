@@ -1,12 +1,33 @@
 <?php
-// api/config.php - Database Configuration & Helper Functions
-header("Access-Control-Allow-Origin: *");
+// api/config.php - Final CORS Fix
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// ✅ Fixed CORS headers
+$allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://samuilookbiz.com',
+    'https://www.samuilookbiz.com'
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    // Development fallback
+    header("Access-Control-Allow-Origin: http://localhost:5173");
+}
+
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json; charset=utf-8");
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
     exit(0);
 }
 
@@ -31,6 +52,7 @@ function getDB()
         ]);
         return $pdo;
     } catch (PDOException $e) {
+        logError("Database connection failed", ['error' => $e->getMessage()]);
         sendError("Database connection failed: " . $e->getMessage(), 500);
     }
 }
@@ -173,59 +195,6 @@ function getThaiTimestamp()
 }
 
 /**
- * Format date for Thai timezone
- */
-function formatThaiDate($date)
-{
-    if (!$date) return null;
-
-    try {
-        $dt = new DateTime($date);
-        $dt->setTimezone(new DateTimeZone('Asia/Bangkok'));
-        return $dt->format('Y-m-d H:i:s');
-    } catch (Exception $e) {
-        return null;
-    }
-}
-
-/**
- * Pagination helper
- */
-function paginate($query, $params = [], $page = 1, $limit = 10)
-{
-    $pdo = getDB();
-
-    // Count total records
-    $countQuery = preg_replace('/SELECT.*?FROM/i', 'SELECT COUNT(*) as total FROM', $query);
-    $stmt = $pdo->prepare($countQuery);
-    $stmt->execute($params);
-    $total = $stmt->fetch()['total'];
-
-    // Calculate offset
-    $offset = ($page - 1) * $limit;
-
-    // Add LIMIT and OFFSET to original query
-    $query .= " LIMIT :limit OFFSET :offset";
-    $params['limit'] = $limit;
-    $params['offset'] = $offset;
-
-    // Execute paginated query
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    $data = $stmt->fetchAll();
-
-    return [
-        'data' => $data,
-        'pagination' => [
-            'total' => (int)$total,
-            'page' => (int)$page,
-            'limit' => (int)$limit,
-            'pages' => ceil($total / $limit)
-        ]
-    ];
-}
-
-/**
  * Log error for debugging
  */
 function logError($message, $context = [])
@@ -241,7 +210,8 @@ function logError($message, $context = [])
 // Test database connection on first load
 try {
     $testDB = getDB();
-    // Connection successful
+    // Connection successful - ไม่ต้องทำอะไร
 } catch (Exception $e) {
     logError("Database connection test failed", ['error' => $e->getMessage()]);
+    // ยังให้ script ทำงานต่อไป แต่ log error ไว้
 }

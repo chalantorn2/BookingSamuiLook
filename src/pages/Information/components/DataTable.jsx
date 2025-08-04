@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Edit, Trash, Save, X, ChevronsUpDown } from "lucide-react";
-import { supabase } from "../../../services/supabase";
 import SupplierForm from "./SupplierForm";
 
 const DataTable = ({
@@ -14,7 +13,9 @@ const DataTable = ({
   editingItem,
   handleInputChange,
   handleCancelEdit,
-  handleSaveEdit,
+  handleSaveEdit, // 👈 รับจาก parent
+  onSaveCustomer, // 👈 เพิ่ม callback สำหรับ Customer
+  onSaveSupplier, // 👈 เพิ่ม callback สำหรับ Supplier
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentEditItem, setCurrentEditItem] = useState(null);
@@ -89,6 +90,7 @@ const DataTable = ({
     setCurrentEditSupplier(null);
   };
 
+  // ✅ ใช้ callback จาก parent แทน Supabase
   const handleSaveSupplierEdit = async () => {
     if (
       !currentEditSupplier.code.trim() ||
@@ -108,32 +110,10 @@ const DataTable = ({
       return;
     }
 
-    // แปลงประเภทเป็น category
-    let category = "supplier-other"; // ค่าเริ่มต้น
-
-    if (currentEditSupplier.type === "Airline") {
-      category = "airline";
-    } else if (currentEditSupplier.type === "Voucher") {
-      category = "supplier-voucher";
-    } else if (currentEditSupplier.type === "Other") {
-      category = "supplier-other";
-    }
-
     try {
-      const { error } = await supabase
-        .from("information")
-        .update({
-          category: category,
-          code: currentEditSupplier.code,
-          name: currentEditSupplier.name,
-          type: currentEditSupplier.type,
-          numeric_code: currentEditSupplier.numeric_code || null,
-        })
-        .eq("id", currentEditSupplier.id);
-
-      if (error) throw error;
+      // 👈 เรียก callback แทน Supabase
+      await onSaveSupplier(currentEditSupplier.id, currentEditSupplier);
       handleCloseSupplierModal();
-      window.location.reload(); // รีเฟรชข้อมูลหลังบันทึก
     } catch (err) {
       alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
     }
@@ -151,6 +131,7 @@ const DataTable = ({
     }
   };
 
+  // ✅ ใช้ callback จาก parent แทน Supabase
   const handleSaveModalEdit = async () => {
     if (!currentEditItem.name.trim()) {
       alert("กรุณากรอกชื่อลูกค้า");
@@ -169,7 +150,7 @@ const DataTable = ({
       currentEditItem.branch_type === "Branch" &&
       !currentEditItem.branch_number
     ) {
-      throw new Error("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 4 หลัก)");
+      alert("กรุณากรอกหมายเลขสาขา (ต้องเป็นตัวเลข 4 หลัก)");
       return;
     }
 
@@ -192,44 +173,9 @@ const DataTable = ({
     }
 
     try {
-      // อัปเดตข้อมูล - แปลงเป็นตัวพิมพ์ใหญ่
-      const { error } = await supabase
-        .from("customers")
-        .update({
-          name: currentEditItem.name
-            ? currentEditItem.name.toUpperCase()
-            : null,
-          code: currentEditItem.code
-            ? currentEditItem.code.toUpperCase()
-            : null,
-          email: currentEditItem.email
-            ? currentEditItem.email.toLowerCase()
-            : null, // email เป็นตัวเล็ก
-          address_line1: currentEditItem.address_line1
-            ? currentEditItem.address_line1.toUpperCase()
-            : null,
-          address_line2: currentEditItem.address_line2
-            ? currentEditItem.address_line2.toUpperCase()
-            : null,
-          address_line3: currentEditItem.address_line3
-            ? currentEditItem.address_line3.toUpperCase()
-            : null,
-          id_number: currentEditItem.id_number || null, // ไม่แปลง
-          phone: currentEditItem.phone
-            ? currentEditItem.phone.toUpperCase()
-            : null,
-          branch_type: currentEditItem.branch_type || "Head Office",
-          branch_number:
-            currentEditItem.branch_type === "Branch"
-              ? currentEditItem.branch_number
-              : null,
-          credit_days: currentEditItem.credit_days || 0,
-        })
-        .eq("id", currentEditItem.id);
-
-      if (error) throw error;
+      // 👈 เรียก callback แทน Supabase
+      await onSaveCustomer(currentEditItem.id, currentEditItem);
       handleCloseModal();
-      window.location.reload(); // รีเฟรชข้อมูลหลังบันทึก
     } catch (err) {
       alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
     }

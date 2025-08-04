@@ -117,6 +117,13 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       ],
       showOnlyForRoles: ["admin"], // เพิ่มเงื่อนไขนี้
     },
+    {
+      id: 999,
+      title: "API Test",
+      icon: <Activity size={18} />,
+      path: "/api-test",
+      submenu: [],
+    },
   ];
 
   const toggleMenu = (menuId) => {
