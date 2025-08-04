@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
 
   // Information (Suppliers & Customers)
   INFORMATION: "/information.php",
+  TICKETS: "/tickets.php",
 
   // Future endpoints
   TICKETS: "/tickets.php",

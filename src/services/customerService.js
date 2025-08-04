@@ -1,5 +1,5 @@
-import { supabase, insertData, fetchData } from "./supabase";
 import { transformToUpperCase } from "../utils/helpers";
+import { informationApi } from "./informationApi";
 
 // ฟังก์ชันตัดข้อความให้มีความยาวสูงสุด
 const truncateText = (text, maxLength = 50) => {
@@ -18,51 +18,19 @@ const formatFullAddress = (customer) => {
   return addressParts.join(" ");
 };
 
-export const getCustomers = async (search = "", limit = 10) => {
+export const getCustomers = async (options = {}) => {
   try {
-    let query = supabase
-      .from("customers")
-      .select("*")
-      .eq("active", true)
-      .order("name");
+    const result = await informationApi.getCustomers({
+      active: true,
+      ...options,
+    });
 
-    if (search) {
-      // ตรวจสอบว่าเป็นการค้นหาด้วย code หรือไม่
-      const isCodeSearch = search.length <= 5 && /^[A-Za-z0-9]+$/.test(search);
-
-      if (isCodeSearch) {
-        // ถ้าเป็นการค้นหาด้วย code ให้จำกัดผลลัพธ์และเรียงตามวันที่ล่าสุด
-        query = query
-          .eq("code", search.toUpperCase())
-          .order("created_at", { ascending: false })
-          .limit(3);
-      } else {
-        // การค้นหาปกติ
-        query = query.or(
-          `name.ilike.%${search}%,code.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,address_line1.ilike.%${search}%`
-        );
-      }
-    }
-
-    if (limit) {
-      query = query.limit(limit);
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    return data.map((customer) => ({
-      ...customer,
-      name: truncateText(customer.name),
-      address: formatFullAddress(customer), // สำหรับ backward compatibility
-      full_address: formatFullAddress(customer),
-      full_name: customer.name,
-    }));
+    return result.success ? result.data : [];
   } catch (error) {
-    console.error("Error fetching customers:", error);
+    console.error("Error getting customers:", error);
     return [];
   }
+  console.log("getCustomers function:", getCustomers);
 };
 
 export const getCustomerById = async (id) => {
@@ -91,57 +59,8 @@ export const getCustomerById = async (id) => {
 // ในไฟล์ customerService.js
 export const createCustomer = async (customerData) => {
   try {
-    // ตรวจสอบรหัสลูกค้า
-
-    if (customerData.code) {
-      // ตรวจสอบความยาว 3-5 ตัว
-      if (customerData.code.length < 3 || customerData.code.length > 5) {
-        return { success: false, error: "รหัสลูกค้าต้องเป็น 3-5 ตัวอักษร" };
-      }
-      // ลบการเช็ครหัสซ้ำออก - อนุญาตให้ซ้ำกันได้
-    }
-
-    // ตรวจสอบรูปแบบอีเมล
-    if (customerData.email && customerData.email.trim() !== "") {
-      const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-      if (!emailRegex.test(customerData.email)) {
-        return { success: false, error: "รูปแบบอีเมลไม่ถูกต้อง" };
-      }
-    }
-
-    // จัดการข้อมูลที่อยู่ - ถ้าเป็นแบบเก่า (address) ให้ย้ายไป address_line1
-    let addressLine1 = customerData.address_line1;
-    let addressLine2 = customerData.address_line2;
-    let addressLine3 = customerData.address_line3;
-
-    // Backward compatibility: ถ้ามี address แต่ไม่มี address_line1
-    if (!addressLine1 && customerData.address) {
-      addressLine1 = customerData.address;
-    }
-
-    // เตรียมข้อมูลสำหรับบันทึก - แปลงเป็นตัวพิมพ์ใหญ่
-    const payload = {
-      name: customerData.name ? customerData.name.toUpperCase() : null,
-      code: customerData.code ? customerData.code.toUpperCase() : null,
-      email: customerData.email ? customerData.email.toLowerCase() : null, // email เป็นตัวเล็ก
-      address_line1: addressLine1 ? addressLine1.toUpperCase() : null,
-      address_line2: addressLine2 ? addressLine2.toUpperCase() : null,
-      address_line3: addressLine3 ? addressLine3.toUpperCase() : null,
-      id_number: customerData.id_number || null, // ไม่แปลง
-      phone: customerData.phone ? customerData.phone.toUpperCase() : null,
-      credit_days: customerData.credit_days || 0,
-      branch_type: customerData.branch_type || "Head Office",
-      branch_number: customerData.branch_number || null,
-      active: true,
-    };
-
-    const { data, error } = await supabase
-      .from("customers")
-      .insert(payload)
-      .select();
-
-    if (error) throw error;
-    return { success: true, customerId: data[0].id };
+    const result = await informationApi.createCustomer(customerData);
+    return result;
   } catch (error) {
     console.error("Error creating customer:", error);
     return { success: false, error: error.message };

@@ -44,10 +44,6 @@ const usePricing = (
         newPricing[category].total = sale * pax;
       }
 
-      console.log(
-        `Updated ${category}.${field} to ${value}, total: ${newPricing[category].total}`
-      );
-
       return newPricing;
     });
   };

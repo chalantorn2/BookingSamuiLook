@@ -10,11 +10,17 @@ import ExtrasSection from "./ticket/ExtrasSection";
 import PricingSummarySection from "./ticket/PricingSummarySection";
 import usePricing from "../../hooks/usePricing";
 import SaleStyles, { combineClasses } from "./common/SaleStyles";
-import { createFlightTicket } from "../../services/ticketService";
-import { getSuppliers } from "../../services/supplierService";
+import {
+  createFlightTicket,
+  validateTicketData,
+} from "../../services/ticketService";
+import {
+  getSuppliers,
+  searchSupplierByCode,
+  searchSupplierByNumericCode,
+} from "../../services/supplierService";
 import { getCustomers, createCustomer } from "../../services/customerService";
 import { validateFlightTicket } from "../../utils/validation";
-import { supabase } from "../../services/supabase";
 import { useAuth } from "../../pages/Login/AuthContext";
 
 const SaleTicket = () => {
@@ -25,6 +31,7 @@ const SaleTicket = () => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [globalEditMode, setGlobalEditMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     customer: "",
@@ -49,10 +56,21 @@ const SaleTicket = () => {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      const airlinesData = await getSuppliers("airline");
+      console.log("🔄 1. Starting to load initial data..."); // 🆕 เพิ่มบรรทัดนี้
+
+      const airlinesData = await getSuppliers("Airline");
+      console.log("✈️ 2. Suppliers loaded:", airlinesData); // 🆕 เพิ่มบรรทัดนี้
+      console.log(
+        "📋 Numeric codes available:",
+        airlinesData.map((s) => s.numeric_code)
+      );
       setSuppliers(airlinesData);
+
       const customersData = await getCustomers();
+      console.log("👥 3. Customers loaded:", customersData); // 🆕 เพิ่มบรรทัดนี้
       setCustomers(customersData);
+
+      console.log("✅ 4. Initial data loading completed"); // 🆕 เพิ่มบรรทัดนี้
     };
     loadInitialData();
   }, []);
@@ -88,58 +106,49 @@ const SaleTicket = () => {
     },
   ]);
 
-  const searchSupplierByNumericCode = async (numericCode) => {
-    try {
-      const { data, error } = await supabase
-        .from("information")
-        .select("*")
-        .eq("category", "airline")
-        .eq("active", true)
-        .eq("numeric_code", numericCode)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 = not found
-        console.error("Error searching supplier:", error);
-        return null;
-      }
-
-      return data;
-    } catch (err) {
-      console.error("Error in searchSupplierByNumericCode:", err);
-      return null;
-    }
-  };
-
+  // ✅ แทนที่ useEffect นี้
   useEffect(() => {
     const searchSupplier = async () => {
       if (
         formData.searchTicketNumber &&
         formData.searchTicketNumber.length === 3
       ) {
-        const supplier = await searchSupplierByNumericCode(
+        console.log(
+          "🔍 5. Searching by ticket number:",
           formData.searchTicketNumber
-        );
+        ); // 🆕 เพิ่ม debug
 
-        if (supplier) {
-          // เจอ supplier -> อัปเดทข้อมูล
+        try {
+          const supplier = await searchSupplierByNumericCode(
+            formData.searchTicketNumber
+          ); // ✅ ใช้ฟังก์ชันจาก supplierService
+          console.log("📊 6. Supplier found:", supplier); // 🆕 เพิ่ม debug
+
+          if (supplier) {
+            setFormData((prev) => ({
+              ...prev,
+              supplier: supplier.code,
+              supplierName: supplier.name,
+              supplierId: supplier.id,
+              supplierNumericCode: supplier.numeric_code,
+              searchTicketNumber: "", // clear search flag
+            }));
+          } else {
+            console.log("❌ 7. No supplier found for ticket number"); // 🆕 เพิ่ม debug
+            setFormData((prev) => ({
+              ...prev,
+              supplier: "",
+              supplierName: "",
+              supplierId: null,
+              supplierNumericCode: prev.searchTicketNumber, // เก็บเลขที่พิมพ์ไว้
+              searchTicketNumber: "", // clear search flag
+            }));
+          }
+        } catch (error) {
+          console.error("💥 8. Error searching by ticket number:", error); // 🆕 เพิ่ม debug
           setFormData((prev) => ({
             ...prev,
-            supplier: supplier.code,
-            supplierName: supplier.name,
-            supplierId: supplier.id,
-            supplierNumericCode: supplier.numeric_code,
-            searchTicketNumber: "", // clear search flag
-          }));
-        } else {
-          // ไม่เจอ supplier -> clear ข้อมูล supplier ทั้งหมด
-          setFormData((prev) => ({
-            ...prev,
-            supplier: "",
-            supplierName: "",
-            supplierId: null,
-            supplierNumericCode: prev.searchTicketNumber, // เก็บเลขที่พิมพ์ไว้
-            searchTicketNumber: "", // clear search flag
+            searchTicketNumber: "",
           }));
         }
       }
@@ -149,56 +158,75 @@ const SaleTicket = () => {
   }, [formData.searchTicketNumber]);
 
   useEffect(() => {
-    // เมื่อ formData.supplierNumericCode เปลี่ยนแปลง ให้อัปเดท ticket numbers ของผู้โดยสารทุกคน
-    if (formData.supplierNumericCode) {
-      const updatedPassengers = passengers.map((passenger) => ({
-        ...passenger,
-        ticketNumber: formData.supplierNumericCode,
-      }));
-      setPassengers(updatedPassengers);
-    } else {
-      // ถ้าไม่มี supplierNumericCode ให้ clear ticket numbers และ supplier info
-      const updatedPassengers = passengers.map((passenger) => ({
-        ...passenger,
-        ticketNumber: "",
-      }));
-      setPassengers(updatedPassengers);
+    const searchSupplierByCodeFunc = async () => {
+      if (
+        formData.searchSupplierCode &&
+        formData.searchSupplierCode.length >= 2
+      ) {
+        console.log(
+          "Searching for supplier code:",
+          formData.searchSupplierCode
+        );
 
-      // Clear supplier info ด้วย
-      setFormData((prev) => ({
-        ...prev,
-        supplier: "",
-        supplierName: "",
-        supplierId: null,
-      }));
-    }
-  }, [formData.supplierNumericCode]);
+        try {
+          const supplier = await searchSupplierByCode(
+            formData.searchSupplierCode
+          );
+          console.log("Search result:", supplier);
 
-  const searchSupplierByCode = async (code) => {
-    console.log("searchSupplierByCode called with:", code);
+          if (supplier) {
+            console.log("Found supplier:", supplier.code, supplier.name);
+            console.log("Numeric code:", supplier.numeric_code);
 
-    try {
-      const { data, error } = await supabase
-        .from("information")
-        .select("*")
-        .eq("category", "airline")
-        .eq("active", true)
-        .eq("code", code.toUpperCase())
-        .single();
+            setFormData((prev) => ({
+              ...prev,
+              supplier: supplier.code,
+              supplierName: supplier.name,
+              supplierId: supplier.id,
+              supplierNumericCode: supplier.numeric_code || "",
+              searchSupplierCode: "",
+            }));
 
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 = not found
-        console.error("Error searching supplier by code:", error);
-        return null;
+            const ticketNumber = supplier.numeric_code || "";
+            console.log("Setting ticket number to:", ticketNumber);
+
+            const updatedPassengers = passengers.map((passenger) => ({
+              ...passenger,
+              ticketNumber: ticketNumber,
+            }));
+            setPassengers(updatedPassengers);
+          } else {
+            console.log(
+              "Supplier not found for code:",
+              formData.searchSupplierCode
+            );
+
+            setFormData((prev) => ({
+              ...prev,
+              supplierName: "",
+              supplierId: null,
+              supplierNumericCode: "",
+              searchSupplierCode: "",
+            }));
+
+            const updatedPassengers = passengers.map((passenger) => ({
+              ...passenger,
+              ticketNumber: "",
+            }));
+            setPassengers(updatedPassengers);
+          }
+        } catch (error) {
+          console.error("Error in searchSupplierByCodeFunc:", error);
+          setFormData((prev) => ({
+            ...prev,
+            searchSupplierCode: "",
+          }));
+        }
       }
+    };
 
-      console.log("Database search result:", data);
-      return data;
-    } catch (err) {
-      console.error("Error in searchSupplierByCode:", err);
-      return null;
-    }
-  };
+    searchSupplierByCodeFunc();
+  }, [formData.searchSupplierCode]);
 
   // เพิ่ม useEffect สำหรับค้นหาด้วย supplier code
   useEffect(() => {
@@ -280,195 +308,95 @@ const SaleTicket = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setValidationErrors({});
 
-    console.log("Form submitted", { formData, passengers, routes, pricing });
-    console.log("ticketType to be saved:", formData.ticketType);
-
-    // ✅ เพิ่ม debug สำหรับ ticket type details
-    console.log("Ticket Type Details Debug:", {
-      ticketType: formData.ticketType,
-      b2bDetails: formData.b2bDetails,
-      otherDetails: formData.otherDetails,
-      tgDetails: formData.tgDetails,
-    });
-
-    const { isValid, errors } = validateFlightTicket({
-      customer: formData.customer,
-      supplier: formData.supplier,
-      passengers,
-      routes,
-      pricing,
-      ticketType: formData.ticketType,
-      b2bDetails: formData.b2bDetails,
-      otherDetails: formData.otherDetails,
-    });
-
-    if (!isValid) {
-      console.log("Validation failed", errors);
-      setValidationErrors(errors);
-      setLoading(false);
+    // ✅ ป้องกันการบันทึกซ้ำ
+    if (isSubmitting || loading) {
+      console.log("⏸️ Form is already submitting, ignoring...");
       return;
     }
 
+    console.log("📝 10. Form submitted!");
+
+    setIsSubmitting(true);
+    setLoading(true);
+    setValidationErrors({});
+
+    console.log("Form data debug:", {
+      formData,
+      passengers,
+      routes,
+      pricing,
+      extras,
+    });
+
+    // ✅ ตรวจสอบ validation ก่อน
+    const validation = validateTicketData({
+      customerId: selectedCustomer?.id || formData.customerId,
+      supplierId: formData.supplierId,
+      passengers,
+      routes,
+    });
+
+    if (!validation.isValid) {
+      console.log("❌ Validation failed:", validation.errors);
+      setValidationErrors(validation.errors);
+      setLoading(false);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // ✅ เตรียมข้อมูลสำหรับส่ง API (เพิ่มส่วนที่หายไป)
+    const ticketData = {
+      customerId: selectedCustomer?.id || formData.customerId,
+      supplierId: formData.supplierId,
+      createdBy: currentUser?.id,
+
+      date: formData.date,
+      dueDate: formData.dueDate,
+      creditDays: formData.creditDays,
+
+      paymentMethod: formData.paymentMethod,
+      companyPaymentDetails: formData.companyPaymentDetails,
+      customerPayment: formData.customerPayment,
+      customerPaymentDetails: formData.customerPaymentDetails,
+
+      code: formData.code,
+      ticketType: formData.ticketType,
+      ticketTypeDetails: formData.ticketTypeDetails,
+
+      vatPercent: formData.vatPercent,
+      pricing,
+      passengers,
+      routes,
+      extras,
+    };
+
+    console.log("📤 11. Sending ticket data to API:", ticketData);
+
     try {
-      let userId = currentUser?.id;
-      let userFullname = currentUser?.fullname;
-
-      if (!userId) {
-        const userData = await supabase.auth.getUser();
-        userId = userData.data?.user?.id;
-      }
-
-      let customerId = selectedCustomer?.id;
-
-      if (!customerId && formData.customer) {
-        console.log("Creating new customer from form submission");
-        const newCustomerResult = await createCustomer({
-          name: formData.customer,
-          code: formData.customerCode || null,
-          address: formData.contactDetails || "",
-          id_number: formData.id || "",
-          phone: formData.phone || "",
-          credit_days: parseInt(formData.creditDays) || 0,
-        });
-
-        if (newCustomerResult.success) {
-          customerId = newCustomerResult.customerId;
-          console.log("New customer created with ID:", customerId);
-          alert(`สร้างลูกค้าใหม่สำเร็จ: ${formData.customer}`);
-        } else {
-          console.error("Failed to create customer:", newCustomerResult.error);
-          alert(`ไม่สามารถสร้างลูกค้าใหม่ได้: ${newCustomerResult.error}`);
-          setLoading(false);
-          return;
-        }
-      } else if (customerId && formData.creditDays) {
-        try {
-          await supabase
-            .from("customers")
-            .update({ credit_days: parseInt(formData.creditDays) || 0 })
-            .eq("id", customerId);
-          console.log("Updated customer credit days:", formData.creditDays);
-        } catch (updateError) {
-          console.error("Error updating customer credit days:", updateError);
-        }
-      }
-
-      const subtotalAmount = calculateSubtotal();
-      const vatAmount =
-        (subtotalAmount * parseFloat(formData.vatPercent || 0)) / 100;
-      const totalAmount = subtotalAmount + vatAmount;
-
-      const validTicketTypes = ["bsp", "airline", "web", "tg", "b2b", "other"];
-      let ticketTypeFixed = formData.ticketType.toLowerCase();
-      if (!validTicketTypes.includes(ticketTypeFixed)) {
-        ticketTypeFixed = "bsp";
-      }
-
-      let ticketTypeDetails = null;
-      if (ticketTypeFixed === "b2b") {
-        ticketTypeDetails = formData.b2bDetails || "";
-      } else if (ticketTypeFixed === "other") {
-        ticketTypeDetails = formData.otherDetails || "";
-      } else if (ticketTypeFixed === "tg") {
-        ticketTypeDetails = formData.tgDetails || "";
-      }
-
-      console.log("Final ticket type details to send:", {
-        ticketType: ticketTypeFixed,
-        ticketTypeDetails: ticketTypeDetails,
-      });
-
-      console.log("Payment details before sending:", {
-        companyMethod: formData.paymentMethod,
-        companyDetails: formData.companyPaymentDetails,
-        customerMethod: formData.customerPayment,
-        customerDetails: formData.customerPaymentDetails,
-      });
-
-      const ticketData = {
-        customerId: customerId,
-        supplierId: formData.supplierId || null,
-        status: "pending",
-        paymentStatus: "unpaid",
-        createdBy: userId,
-        updatedBy: userId,
-        bookingDate: formData.date || new Date().toISOString().split("T")[0],
-        dueDate:
-          formData.dueDate ||
-          formData.date ||
-          new Date().toISOString().split("T")[0], // ✅ ป้องกัน empty string
-        creditDays: formData.creditDays,
-        totalAmount: totalAmount,
-        code: formData.code || "",
-        ticketType: ticketTypeFixed,
-        ticketTypeDetails: ticketTypeDetails,
-        companyPaymentMethod: formData.paymentMethod,
-        companyPaymentDetails: formData.companyPaymentDetails || "",
-        customerPaymentMethod: formData.customerPayment,
-        customerPaymentDetails: formData.customerPaymentDetails || "",
-        pricing: pricing,
-        subtotalAmount,
-        vatPercent: parseFloat(formData.vatPercent || 0),
-        vatAmount,
-        passengers: passengers
-          .filter((p) => p.name.trim())
-          .map((p) => ({
-            name: p.name,
-            age: p.type,
-            ticketNumber: p.ticketNumber,
-            ticket_code: p.ticketCode || "",
-          })),
-        routes: routes
-          .filter((r) => r.origin || r.destination)
-          .map((r) => ({
-            flight: r.flight, // ใช้ flight number ที่ user กรอกโดยตรง
-            flight_number: r.flight, // ไม่ต้องเชื่อมโยงกับ supplier code
-            rbd: r.rbd,
-            date: r.date,
-            origin: r.origin,
-            destination: r.destination,
-            departure: r.departure,
-            arrival: r.arrival,
-          })),
-        extras: extras
-          .filter((e) => e.description)
-          .map((e) => ({
-            description: e.description,
-            net_price: e.net_price || 0,
-            sale_price: e.sale_price || 0,
-            quantity: e.quantity || 1,
-            total_amount: e.total_amount || 0,
-          })),
-        remarks: formData.remarks || "",
-        salesName: userFullname || formData.salesName,
-      };
-
-      console.log("Sending data to createFlightTicket:", ticketData);
-      console.log("Details sending for debugging:", {
-        paymentMethod: formData.paymentMethod,
-        companyPaymentDetails: formData.companyPaymentDetails,
-        customerPayment: formData.customerPayment,
-        customerPaymentDetails: formData.customerPaymentDetails,
-        ticketType: formData.ticketType,
-        ticketTypeDetails,
-      });
-
       const result = await createFlightTicket(ticketData);
+      console.log("📨 12. API Response:", result);
 
       if (result.success) {
-        alert(`บันทึกข้อมูลสำเร็จ เลขที่อ้างอิง: ${result.referenceNumber}`);
+        console.log("🎉 13. Ticket created successfully:", result);
+
+        // แสดงผลสำเร็จ
+        alert(
+          `ตั๋วถูกสร้างเรียบร้อยแล้ว!\nReference Number: ${result.referenceNumber}`
+        );
+
+        // ✅ รีเซ็ทหน้าเหมือนกด F5
         window.location.reload();
       } else {
-        alert(`เกิดข้อผิดพลาด: ${result.error}`);
+        console.error("❌ 14. Error creating ticket:", result.error);
+        setValidationErrors({ submit: result.error });
       }
     } catch (error) {
-      console.error("Error saving ticket:", error);
-      alert(`เกิดข้อผิดพลาด: ${error.message}`);
+      console.error("💥 15. Error submitting form:", error);
+      setValidationErrors({ submit: error.message });
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 

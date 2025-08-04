@@ -86,35 +86,51 @@ const SaleHeader = ({
     return "";
   };
 
-  const handleCustomerCodeSearch = async (e) => {
-    const value = e.target.value.toUpperCase().substring(0, 5);
-    setFormData({ ...formData, customerCode: value });
-
-    if (value.length >= 1 && !readOnly && value.toUpperCase() !== "WKIN") {
-      try {
-        const results = await getCustomers(value, 3);
-        setCodeSearchResults(results);
-        setShowCodeResults(results.length > 0);
-      } catch (err) {
-        console.error("Error searching by code:", err);
-        setShowCodeResults(false);
-      }
-    } else {
-      setCodeSearchResults([]);
-      setShowCodeResults(false);
-    }
-  };
-
   const debouncedSearch = useCallback(
     debounce(async (term) => {
+      console.log("🔍 Customer Name Search:", term); // 🆕 debug
+
       if (term.length >= 1) {
         setIsLoading(true);
         setError(null);
         try {
-          const results = await getCustomers(term, 5);
+          console.log("📞 Calling getCustomers with:", {
+            search: term,
+            limit: 5,
+            active: true,
+          }); // 🆕 debug
+
+          const result = await getCustomers({
+            search: term,
+            limit: 5,
+            active: true,
+          });
+
+          console.log("📨 getCustomers result:", result);
+
+          // ✅ ปรับให้รองรับทุกรูปแบบ
+          let results = [];
+
+          if (Array.isArray(result)) {
+            // ถ้า result เป็น array โดยตรง
+            results = result;
+          } else if (result && result.success && Array.isArray(result.data)) {
+            // ถ้า result มี success และ data
+            results = result.data;
+          } else if (result && Array.isArray(result.data)) {
+            // ถ้า result มี data แต่ไม่มี success
+            results = result.data;
+          } else if (result && result.length !== undefined) {
+            // ถ้า result เป็น array-like object
+            results = Array.from(result);
+          }
+
+          console.log("👥 Customer results:", results);
+
           setSearchResults(results);
           setShowResults(results.length > 0);
         } catch (err) {
+          console.error("💥 Customer search error:", err); // 🆕 debug
           setError("ไม่สามารถค้นหาลูกค้าได้ กรุณาลองใหม่");
           setShowResults(false);
         } finally {
@@ -127,6 +143,48 @@ const SaleHeader = ({
     }, 150),
     []
   );
+
+  const handleCustomerCodeSearch = async (e) => {
+    const value = e.target.value.toUpperCase().substring(0, 5);
+    console.log("🔍 Customer Code Search:", value); // 🆕 debug
+
+    setFormData({ ...formData, customerCode: value });
+
+    if (value.length >= 1) {
+      try {
+        console.log("📞 Calling getCustomers for code:", value); // 🆕 debug
+
+        const result = await getCustomers({
+          search: value,
+          limit: 5,
+          active: true,
+        });
+
+        console.log("📨 Code search result:", result);
+
+        // ✅ ใช้วิธีเดียวกัน
+        let results = [];
+        if (Array.isArray(result)) {
+          results = result;
+        } else if (result && result.success && Array.isArray(result.data)) {
+          results = result.data;
+        } else if (result && Array.isArray(result.data)) {
+          results = result.data;
+        }
+
+        console.log("👥 Code results:", results);
+
+        setCodeSearchResults(results);
+        setShowCodeResults(results.length > 0);
+      } catch (err) {
+        console.error("💥 Code search error:", err); // 🆕 debug
+        setShowCodeResults(false);
+      }
+    } else {
+      setCodeSearchResults([]);
+      setShowCodeResults(false);
+    }
+  };
 
   const handleSearchCustomer = (term) => {
     setSearchTerm(term);

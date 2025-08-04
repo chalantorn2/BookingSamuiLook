@@ -1,60 +1,17 @@
-import { supabase } from "./supabase";
 import { transformToUpperCase } from "../utils/helpers";
+import { informationApi } from "./informationApi";
 
-export const getSuppliers = async (
-  type = "Airline",
-  search = "",
-  limit = 100
-) => {
+export const getSuppliers = async (type = "airline", options = {}) => {
   try {
-    let query = supabase.from("information").select("*").eq("active", true);
+    const result = await informationApi.getSuppliers({
+      type: type === "airline" ? "Airline" : type,
+      active: true,
+      ...options,
+    });
 
-    // กรองตามประเภท (Airline, Voucher, Other)
-    if (type === "Airline") {
-      // ใช้ category เดิม
-      query = query.eq("category", "airline");
-    } else if (type === "Voucher") {
-      query = query.eq("category", "supplier-voucher");
-    } else if (type === "Other") {
-      query = query.eq("category", "supplier-other");
-    }
-
-    // ถ้ามีการใช้คอลัมน์ type แล้ว สามารถเพิ่มเงื่อนไขได้
-    if (type) {
-      query = query.or(
-        `type.eq.${type},category.eq.${
-          type === "Airline"
-            ? "airline"
-            : type === "Voucher"
-            ? "supplier-voucher"
-            : type === "Other"
-            ? "supplier-other"
-            : ""
-        }`
-      );
-    }
-
-    // ค้นหาตามชื่อ, รหัส, หรือ numeric_code
-    if (search) {
-      query = query.or(
-        `code.ilike.%${search}%,name.ilike.%${search}%,numeric_code.ilike.%${search}%`
-      );
-    }
-
-    // จำกัดจำนวนผลลัพธ์
-    if (limit) {
-      query = query.limit(limit);
-    }
-
-    // เรียงข้อมูลตามรหัส
-    query = query.order("code");
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    return data;
+    return result.success ? result.data : [];
   } catch (error) {
-    console.error("Error fetching suppliers:", error);
+    console.error("Error getting suppliers:", error);
     return [];
   }
 };
@@ -107,5 +64,60 @@ export const createSupplier = async (supplierData) => {
   } catch (error) {
     console.error("Error creating supplier:", error);
     return { success: false, error: error.message };
+  }
+};
+
+export const searchSupplierByCode = async (code) => {
+  try {
+    const result = await informationApi.getSuppliers({
+      type: "Airline",
+      search: code.toUpperCase(),
+      active: true,
+      limit: 1,
+    });
+
+    return result.success && result.data.length > 0 ? result.data[0] : null;
+  } catch (error) {
+    console.error("Error searching supplier by code:", error);
+    return null;
+  }
+};
+
+// แก้ใน supplierService.js
+export const searchSupplierByNumericCode = async (numericCode) => {
+  try {
+    console.log(
+      "🔎 Searching for numeric_code:",
+      numericCode,
+      typeof numericCode
+    );
+
+    // ✅ ใช้ search parameter แทน limit
+    const result = await informationApi.getSuppliers({
+      type: "Airline",
+      search: numericCode, // 🆕 ใช้ search แทน
+      active: true,
+      limit: 100, // 🆕 เพิ่ม limit ให้มากขึ้น
+    });
+
+    console.log("📦 All suppliers returned:", result.data);
+    console.log(
+      "🔢 Available numeric_codes:",
+      result.data.map((s) => `${s.numeric_code} (${typeof s.numeric_code})`)
+    );
+
+    const exactMatch =
+      result.success && result.data.length > 0
+        ? result.data.find(
+            (supplier) => String(supplier.numeric_code) === String(numericCode)
+          )
+        : null;
+
+    console.log("🎯 Exact match found:", exactMatch);
+
+    return exactMatch || null;
+  } catch (error) {
+    console.error("Error searching supplier by numeric code:", error);
+    return null;
   }
 };

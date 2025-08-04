@@ -8,18 +8,6 @@ const TicketTypeSection = ({ formData, setFormData, readOnly = false }) => {
     return normalizeTicketType(type1) === normalizeTicketType(type2);
   };
 
-  // เพิ่มการล็อกเพื่อดูการเปลี่ยนแปลงค่า
-  console.log("Current ticketType:", formData.ticketType);
-  console.log(
-    "Normalized ticketType:",
-    normalizeTicketType(formData.ticketType)
-  );
-  console.log("Current details:", {
-    b2bDetails: formData.b2bDetails,
-    otherDetails: formData.otherDetails,
-    tgDetails: formData.tgDetails,
-  });
-
   const RadioButton = ({ id, value, label, checked, onChange }) => {
     if (readOnly) {
       // ReadOnly mode - ใช้ div แทน radio ที่ชัดเจน
